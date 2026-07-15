@@ -19,7 +19,11 @@ class TemplateResource extends JsonResource
 
             'description' => $this->description,
 
-            'thumbnail' => $this->thumbnail,
+            'thumbnail' => $this->thumbnail ? (
+                str_starts_with($this->thumbnail, 'http://') || str_starts_with($this->thumbnail, 'https://')
+                    ? $this->thumbnail
+                    : url('storage/' . ltrim($this->thumbnail, '/'))
+            ) : null,
 
             'version' => $this->version,
 

@@ -1,0 +1,88 @@
+.support-btn{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 12px;
+  padding: 10px 16px;
+  color: rgba(255,255,255,0.9);
+  background: rgba(255,255,255,0.06);
+  backdrop-filter: blur(18px);
+  border: 1px solid rgba(255,255,255,0.15);
+  position: relative;
+  transition: transform .2s ease, background .2s ease;
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.06), 0 18px 40px rgba(124,58,237,0.25);
+}
+
+.support-btn::before{
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(99,102,241,0.8), rgba(139,92,246,0.8), rgba(236,72,153,0.55));
+  opacity: 0;
+  filter: blur(10px);
+  transition: opacity .25s ease;
+  z-index: -1;
+}
+
+.support-btn:hover{
+  background: rgba(255,255,255,0.10);
+}
+
+.support-btn:hover::before{
+  opacity: .55;
+}
+
+.support-popover{
+  position: absolute;
+  right: 0;
+  top: calc(100% + 10px);
+  width: 220px;
+  border-radius: 18px;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(2, 6, 23, 0.65);
+  backdrop-filter: blur(16px);
+  padding: 14px;
+  opacity: 0;
+  transform: translateY(-6px) scale(0.98);
+  pointer-events: none;
+  transition: opacity .18s ease, transform .18s ease;
+  box-shadow: 0 25px 60px rgba(0,0,0,0.45);
+}
+
+.relative:hover .support-popover,
+.relative:focus-within .support-popover{
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+
+.support-link{
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-radius: 12px;
+  padding: 10px 12px;
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(255,255,255,0.05);
+  color: rgba(255,255,255,0.75);
+  transition: background .15s ease, color .15s ease, border-color .15s ease;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.support-link:hover{
+  background: rgba(255,255,255,0.10);
+  color: rgba(255,255,255,1);
+  border-color: rgba(255,255,255,0.15);
+}
+
+.support-dot{
+  display: inline-flex;
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  box-shadow: 0 0 20px rgba(255,255,255,0.25);
+}
+

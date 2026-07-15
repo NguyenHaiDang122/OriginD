@@ -3,6 +3,11 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.tsx'
 
+import { useAuthStore } from './store/authStore'
+
+// Hydrate auth state once on app startup so UI (Header login/logout) stays consistent after refresh.
+useAuthStore.getState().hydrate();
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <App />

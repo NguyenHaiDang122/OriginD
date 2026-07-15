@@ -136,23 +136,29 @@ class TemplateService
         return $template->load('fields');
     }
 
-    public function update(Template $template, array $data): Template
+    public function update(Template $template, Request|array $input): Template
     {
-        $template->update([
+        $updateData = [];
+        $data = $input instanceof Request ? $input->all() : $input;
 
-            'name' => $data['name'],
+        if (isset($data['name'])) $updateData['name'] = $data['name'];
+        if (isset($data['slug'])) $updateData['slug'] = $data['slug'];
+        if (array_key_exists('description', $data)) $updateData['description'] = $data['description'];
+        if (isset($data['version'])) $updateData['version'] = $data['version'];
+        if (isset($data['status'])) $updateData['status'] = $data['status'];
 
-            'slug' => $data['slug'],
+        if ($input instanceof Request && $input->hasFile('thumbnail')) {
+            if ($template->thumbnail && !str_starts_with($template->thumbnail, 'http') && Storage::disk('public')->exists($template->thumbnail)) {
+                Storage::disk('public')->delete($template->thumbnail);
+            }
+            $updateData['thumbnail'] = $input->file('thumbnail')->store('thumbnails', 'public');
+        } elseif (isset($data['thumbnail']) && is_string($data['thumbnail'])) {
+            $updateData['thumbnail'] = $data['thumbnail'];
+        } elseif (array_key_exists('thumbnail', $data) && is_null($data['thumbnail'])) {
+            $updateData['thumbnail'] = null;
+        }
 
-            'description' => $data['description'] ?? null,
-
-            'thumbnail' => $data['thumbnail'] ?? $template->thumbnail,
-
-            'version' => $data['version'] ?? '1.0.0',
-
-            'status' => $data['status'] ?? 'draft',
-
-        ]);
+        $template->update($updateData);
 
         return $template->fresh()->load('fields');
     }

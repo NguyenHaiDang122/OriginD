@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\AdminUserController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\SubscriptionController;
 use App\Http\Controllers\Api\TemplateController;
@@ -23,21 +24,25 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/templates/{template}', [TemplateController::class, 'show']);
 
     Route::get('/templates/{template}/fields', [TemplateFieldController::class, 'index']);
+    Route::post('/templates/{template}/preview', [TemplateController::class, 'preview']);
     Route::post('/templates/{template}/landing-pages', [LandingPageController::class,'store']);
+    Route::get('/landing-pages', [LandingPageController::class, 'index']);
+    Route::get('/landing-pages/{landingPage}', [LandingPageController::class, 'show']);
+    Route::put('/landing-pages/{landingPage}', [LandingPageController::class, 'update']);
+    Route::delete('/landing-pages/{landingPage}', [LandingPageController::class, 'destroy']);
     Route::get('/landing-pages/{landingPage}/render', [LandingPageController::class, 'render']);
-    Route::get(
-    '/landing-pages/{landingPage}/render',
-    [LandingPageController::class,'render']
-);
 
     // Admin
     Route::prefix('admin')
         ->middleware('role:Admin')
         ->group(function () {
 
+            Route::get('/templates', [TemplateController::class, 'index']);
+
             Route::post('/templates', [TemplateController::class, 'store']);
 
             Route::put('/templates/{template}', [TemplateController::class, 'update']);
+            Route::post('/templates/{template}', [TemplateController::class, 'update']);
 
             Route::delete('/templates/{template}', [TemplateController::class, 'destroy']);
 
@@ -48,6 +53,11 @@ Route::middleware('auth:sanctum')->group(function () {
 
             Route::delete('/template-fields/{field}', [TemplateFieldController::class, 'destroy']);
 
-            
+            // User & Role Management
+            Route::get('/users', [AdminUserController::class, 'index']);
+            Route::get('/users/{user}', [AdminUserController::class, 'show']);
+            Route::put('/users/{user}/role', [AdminUserController::class, 'updateRole']);
+            Route::put('/users/{user}/status', [AdminUserController::class, 'updateStatus']);
+            Route::delete('/users/{user}', [AdminUserController::class, 'destroy']);
         });
 });

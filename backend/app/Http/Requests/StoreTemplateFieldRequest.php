@@ -16,7 +16,8 @@ class StoreTemplateFieldRequest extends FormRequest
         return [
             'label' => 'required|string|max:255',
 
-            'key' => 'required|string|max:255|unique:template_fields,key',
+            // key không unique toàn bảng, chỉ unique theo từng template
+            'key' => 'required|string|max:255|unique:template_fields,key,NULL,id,template_id,' . $this->route('template')->id,
 
             'type' => 'required|in:text,textarea,image,link,number,color,select,checkbox,repeater',
 

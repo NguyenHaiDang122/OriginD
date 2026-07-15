@@ -62,7 +62,7 @@ class TemplateScannerService
 
             'img' => 'src',
 
-            'a' => 'href',
+            'a' => ($node->getAttribute('href') === '#' || empty($node->getAttribute('href'))) ? 'text' : 'href',
 
             'input' => 'value',
 
@@ -78,7 +78,9 @@ class TemplateScannerService
 
             'img' => $node->getAttribute('src'),
 
-            'a' => $node->getAttribute('href'),
+            'a' => ($node->getAttribute('href') === '#' || empty($node->getAttribute('href')))
+                ? trim($node->textContent)
+                : $node->getAttribute('href'),
 
             'input' => $node->getAttribute('value'),
 

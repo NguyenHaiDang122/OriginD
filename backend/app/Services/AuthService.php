@@ -46,6 +46,12 @@ class AuthService
             ]);
         }
 
+        if ($user->status === 'locked') {
+            throw ValidationException::withMessages([
+                'email' => ['Tài khoản của bạn đã bị khóa. Vui lòng liên hệ Quản trị viên để được hỗ trợ.'],
+            ]);
+        }
+
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return [

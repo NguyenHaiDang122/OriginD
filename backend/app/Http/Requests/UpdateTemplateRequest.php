@@ -17,9 +17,10 @@ class UpdateTemplateRequest extends FormRequest
         $template = $this->route('template');
 
         return [
-            'name' => ['required', 'string', 'max:255'],
+            'name' => ['sometimes', 'required', 'string', 'max:255'],
 
             'slug' => [
+                'sometimes',
                 'required',
                 'string',
                 'max:255',
@@ -28,7 +29,7 @@ class UpdateTemplateRequest extends FormRequest
 
             'description' => ['nullable', 'string'],
 
-            'thumbnail' => ['nullable', 'string'],
+            'thumbnail' => ['nullable'],
 
             'version' => ['nullable', 'string'],
 
