@@ -26,7 +26,7 @@ class AdminCustomDomainController extends Controller
 
         $inputPage = trim($request->input('landing_page'));
         // Extract slug if user enters full URL like http://localhost:5173/page/slug-abc or /page/slug-abc
-        $slug = preg_replace('#^.*?/page/([^/?#]+).*$#i', '$1', $inputPage);
+        $slug = preg_replace('~^.*?/page/([^/?#]+).*$~i', '$1', $inputPage);
         $slug = trim($slug, '/');
 
         $landingPage = LandingPage::where('slug', $slug)
@@ -83,7 +83,7 @@ class AdminCustomDomainController extends Controller
         ]);
 
         $inputPage = trim($request->input('landing_page'));
-        $slug = preg_replace('#^.*?/page/([^/?#]+).*$#i', '$1', $inputPage);
+        $slug = preg_replace('~^.*?/page/([^/?#]+).*$~i', '$1', $inputPage);
         $slug = trim($slug, '/');
 
         $landingPage = LandingPage::where('slug', $slug)
