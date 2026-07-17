@@ -222,7 +222,7 @@ export default function Upgrade() {
                           {p.custom_domain ? "✓" : "–"}
                         </span>
                         <span className={p.custom_domain ? "text-white/90" : "text-white/40 line-through"}>
-                          Kết nối tên miền riêng (Custom Domain)
+                          Kết nối tên miền riêng (Customa Domain)
                         </span>
                       </div>
 

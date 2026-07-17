@@ -275,6 +275,36 @@ export default function AdminDashboard() {
             </div>
           </div>
         </div>
+
+        {/* Card 7: Quản lý Kết Nối Domain Riêng - Không sử dụng icon */}
+        <div
+          onClick={() => navigate("/admin/custom-domains")}
+          className="group relative cursor-pointer overflow-hidden rounded-3xl border border-cyan-400/30 bg-gradient-to-br from-cyan-900/25 via-slate-900/60 to-slate-900/90 p-6 backdrop-blur-xl transition duration-300 hover:-translate-y-1.5 hover:border-cyan-400/60 hover:shadow-2xl hover:shadow-cyan-500/15 flex flex-col justify-between min-h-[220px]"
+        >
+          <div>
+            <div className="flex items-center justify-between">
+              <span className="rounded-full border border-cyan-400/30 bg-cyan-500/15 px-3 py-1 text-xs font-bold text-cyan-300">
+                DNS • Cloudflare SSL
+              </span>
+            </div>
+
+            <h3 className="mt-5 text-xl font-bold text-white/95 group-hover:text-cyan-300 transition">
+              Quản lý Kết Nối Domain Riêng
+            </h3>
+            <p className="mt-2 text-sm text-white/65 leading-relaxed">
+              Thiết lập liên kết tên miền riêng (Custom Domain) của khách hàng trỏ về Landing Page tương ứng trên hệ thống OriginD.
+            </p>
+          </div>
+
+          <div className="mt-6 pt-4 border-t border-white/10 flex items-center justify-between">
+            <span className="text-xs font-semibold text-white/50 group-hover:text-white/80 transition">
+              Truy cập thiết lập tên miền
+            </span>
+            <div className="primary-btn px-4 py-2 text-xs font-bold border-cyan-400/40 bg-cyan-500/20 text-cyan-200 hover:bg-cyan-500/30">
+              Quản Lý Tên Miền →
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Quick Status / Guidance Bottom Banner */}

@@ -36,6 +36,11 @@ class LandingPage extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function customDomains()
+    {
+        return $this->hasMany(CustomDomain::class);
+    }
+
     public function isExpired(): bool
     {
         if ($this->expires_at) {

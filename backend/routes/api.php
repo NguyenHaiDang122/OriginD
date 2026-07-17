@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\LandingPageController;
 use App\Http\Controllers\Api\DepositController;
 use App\Http\Controllers\Api\AdminDepositController;
 use App\Http\Controllers\Api\PlanController;
+use App\Http\Controllers\Api\AdminCustomDomainController;
 
 
 Route::post('/register', [AuthController::class, 'register']);
@@ -89,5 +90,10 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::post('/plans', [PlanController::class, 'store']);
             Route::put('/plans/{plan}', [PlanController::class, 'update']);
             Route::delete('/plans/{plan}', [PlanController::class, 'destroy']);
+
+            // Admin Custom Domain Management
+            Route::get('/custom-domains', [AdminCustomDomainController::class, 'index']);
+            Route::post('/custom-domains', [AdminCustomDomainController::class, 'store']);
+            Route::delete('/custom-domains/{id}', [AdminCustomDomainController::class, 'destroy']);
         });
 });

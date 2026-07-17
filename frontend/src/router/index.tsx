@@ -18,6 +18,7 @@ import AdminPlans from "../pages/admin/AdminPlans";
 import ProtectedAdminRoute from "../pages/admin/ProtectedAdminRoute";
 import GuestRoute from "../components/auth/GuestRoute";
 import Upgrade from "../pages/Upgrade/Upgrade";
+import AdminCustomDomains from "../pages/admin/AdminCustomDomains";
 
 export const router = createBrowserRouter([
   {
@@ -81,6 +82,14 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedAdminRoute>
             <AdminPlans />
+          </ProtectedAdminRoute>
+        ),
+      },
+      {
+        path: "admin/custom-domains",
+        element: (
+          <ProtectedAdminRoute>
+            <AdminCustomDomains />
           </ProtectedAdminRoute>
         ),
       },
