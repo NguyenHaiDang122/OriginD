@@ -229,9 +229,9 @@ export default function AdminCustomDomains() {
                     </span>
                     <button
                       onClick={() => handleDelete(item.id, item.domain)}
-                      className="rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-1.5 text-xs font-semibold text-red-300 hover:bg-red-500/20 transition"
+                      className="rounded-xl border border-red-500/40 bg-red-500/20 px-3.5 py-1.5 text-xs font-bold text-red-200 hover:bg-red-500/30 transition shadow-sm"
                     >
-                      Hủy kết nối
+                      Xóa / Hủy kết nối
                     </button>
                   </div>
                 </div>
