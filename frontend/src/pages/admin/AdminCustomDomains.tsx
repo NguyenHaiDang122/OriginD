@@ -3,6 +3,7 @@ import { useAuthStore } from "../../store/authStore";
 import {
   fetchAdminCustomDomains,
   connectAdminCustomDomain,
+  updateAdminCustomDomain,
   deleteAdminCustomDomain,
   type CustomDomainItem,
 } from "../../services/customDomainApi";
@@ -19,6 +20,7 @@ export default function AdminCustomDomains() {
 
   // Form states
   const [showModal, setShowModal] = useState(false);
+  const [editingDomain, setEditingDomain] = useState<CustomDomainItem | null>(null);
   const [landingPageInput, setLandingPageInput] = useState("");
   const [domainInput, setDomainInput] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -41,6 +43,22 @@ export default function AdminCustomDomains() {
     loadDomains();
   }, [token]);
 
+  const openCreateModal = () => {
+    setEditingDomain(null);
+    setLandingPageInput("");
+    setDomainInput("");
+    setError(null);
+    setShowModal(true);
+  };
+
+  const openEditModal = (item: CustomDomainItem) => {
+    setEditingDomain(item);
+    setLandingPageInput(item.landing_page?.slug || String(item.landing_page_id));
+    setDomainInput(item.domain);
+    setError(null);
+    setShowModal(true);
+  };
+
   const handleConnect = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!token) return;
@@ -48,20 +66,33 @@ export default function AdminCustomDomains() {
     setError(null);
     setSuccess(null);
     try {
-      const res = await connectAdminCustomDomain(
-        {
-          landing_page: landingPageInput,
-          domain: domainInput,
-        },
-        token
-      );
-      setSuccess(res?.message || "Kết nối tên miền thành công!");
+      let res;
+      if (editingDomain) {
+        res = await updateAdminCustomDomain(
+          editingDomain.id,
+          {
+            landing_page: landingPageInput,
+            domain: domainInput,
+          },
+          token
+        );
+      } else {
+        res = await connectAdminCustomDomain(
+          {
+            landing_page: landingPageInput,
+            domain: domainInput,
+          },
+          token
+        );
+      }
+      setSuccess(res?.message || (editingDomain ? "Cập nhật kết nối thành công!" : "Kết nối tên miền thành công!"));
       setLandingPageInput("");
       setDomainInput("");
+      setEditingDomain(null);
       setShowModal(false);
       loadDomains();
     } catch (err: any) {
-      setError(err?.response?.data?.message || "Lỗi khi kết nối tên miền.");
+      setError(err?.response?.data?.message || "Lỗi khi xử lý tên miền.");
     } finally {
       setSubmitting(false);
     }
@@ -97,10 +128,7 @@ export default function AdminCustomDomains() {
           </div>
 
           <button
-            onClick={() => {
-              setShowModal(true);
-              setError(null);
-            }}
+            onClick={openCreateModal}
             className="rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 px-4 py-2 text-xs font-bold text-white shadow-lg shadow-cyan-500/20 hover:from-cyan-400 hover:to-blue-500 transition"
           >
             + Kết nối Domain
@@ -176,7 +204,7 @@ export default function AdminCustomDomains() {
                 Bấm nút "Kết nối Domain" phía trên để liên kết đường dẫn Landing Page của khách hàng với tên miền riêng của họ.
               </p>
               <button
-                onClick={() => setShowModal(true)}
+                onClick={openCreateModal}
                 className="rounded-xl bg-white/10 px-4 py-2 text-xs font-bold text-white hover:bg-white/20 transition"
               >
                 + Kết nối Domain ngay
@@ -227,12 +255,20 @@ export default function AdminCustomDomains() {
                     <span className="text-white/40">
                       Ngày tạo: {item.created_at ? new Date(item.created_at).toLocaleDateString("vi-VN") : "N/A"}
                     </span>
-                    <button
-                      onClick={() => handleDelete(item.id, item.domain)}
-                      className="rounded-xl border border-red-500/40 bg-red-500/20 px-3.5 py-1.5 text-xs font-bold text-red-200 hover:bg-red-500/30 transition shadow-sm"
-                    >
-                      Xóa / Hủy kết nối
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => openEditModal(item)}
+                        className="rounded-xl border border-cyan-500/40 bg-cyan-500/20 px-3 py-1.5 text-xs font-bold text-cyan-200 hover:bg-cyan-500/30 transition shadow-sm"
+                      >
+                        Sửa
+                      </button>
+                      <button
+                        onClick={() => handleDelete(item.id, item.domain)}
+                        className="rounded-xl border border-red-500/40 bg-red-500/20 px-3.5 py-1.5 text-xs font-bold text-red-200 hover:bg-red-500/30 transition shadow-sm"
+                      >
+                        Xóa / Hủy kết nối
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -246,7 +282,9 @@ export default function AdminCustomDomains() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
           <div className="w-full max-w-lg rounded-3xl border border-white/15 bg-[#111827] p-6 shadow-2xl space-y-6">
             <div className="flex items-center justify-between border-b border-white/10 pb-4">
-              <h3 className="text-lg font-bold text-white">Kết Nối Domain Riêng</h3>
+              <h3 className="text-lg font-bold text-white">
+                {editingDomain ? "Cập nhật Kết Nối Domain" : "Kết Nối Domain Riêng"}
+              </h3>
               <button
                 onClick={() => setShowModal(false)}
                 className="rounded-xl p-2 text-white/50 hover:bg-white/10 hover:text-white transition"
@@ -303,7 +341,7 @@ export default function AdminCustomDomains() {
                   disabled={submitting}
                   className="rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 px-5 py-2 text-xs font-bold text-white shadow-lg shadow-cyan-500/20 hover:from-cyan-400 hover:to-blue-500 disabled:opacity-50 transition"
                 >
-                  {submitting ? "Đang kết nối..." : "Xác nhận kết nối"}
+                  {submitting ? "Đang xử lý..." : editingDomain ? "Lưu thay đổi" : "Xác nhận kết nối"}
                 </button>
               </div>
             </form>

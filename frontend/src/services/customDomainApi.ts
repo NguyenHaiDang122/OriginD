@@ -41,6 +41,17 @@ export const connectAdminCustomDomain = async (
   return res.data;
 };
 
+export const updateAdminCustomDomain = async (
+  id: number,
+  payload: { landing_page: string; domain: string },
+  token: string
+): Promise<any> => {
+  const res = await api.put(`/admin/custom-domains/${id}`, payload, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return res.data;
+};
+
 export const deleteAdminCustomDomain = async (id: number, token: string): Promise<any> => {
   const res = await api.delete(`/admin/custom-domains/${id}`, {
     headers: { Authorization: `Bearer ${token}` },

@@ -73,6 +73,57 @@ class AdminCustomDomainController extends Controller
         ], 201);
     }
 
+    public function update(Request $request, $id)
+    {
+        $customDomain = CustomDomain::findOrFail($id);
+
+        $request->validate([
+            'landing_page' => 'required|string',
+            'domain' => 'required|string',
+        ]);
+
+        $inputPage = trim($request->input('landing_page'));
+        $slug = preg_replace('#^.*?/page/([^/?#]+).*$#i', '$1', $inputPage);
+        $slug = trim($slug, '/');
+
+        $landingPage = LandingPage::where('slug', $slug)
+            ->orWhere('id', $inputPage)
+            ->first();
+
+        if (!$landingPage) {
+            return response()->json([
+                'message' => 'Không tìm thấy Landing Page với link hoặc slug: "' . $inputPage . '"'
+            ], 422);
+        }
+
+        $domain = preg_replace('/^https?:\/\//i', '', trim($request->input('domain')));
+        $domain = rtrim($domain, '/');
+        $domain = preg_replace('/^www\./i', '', $domain);
+
+        if (empty($domain)) {
+            return response()->json([
+                'message' => 'Tên miền không hợp lệ.'
+            ], 422);
+        }
+
+        $existing = CustomDomain::where('domain', $domain)->where('id', '!=', $id)->first();
+        if ($existing) {
+            return response()->json([
+                'message' => 'Tên miền "' . $domain . '" đã được liên kết với một Landing Page khác trên hệ thống.'
+            ], 422);
+        }
+
+        $customDomain->domain = $domain;
+        $customDomain->landing_page_id = $landingPage->id;
+        $customDomain->status = 'active';
+        $customDomain->save();
+
+        return response()->json([
+            'message' => 'Cập nhật kết nối cho Domain "' . $domain . '" thành công!',
+            'data' => $customDomain->load(['landingPage.user'])
+        ]);
+    }
+
     public function destroy($id)
     {
         $domain = CustomDomain::findOrFail($id);

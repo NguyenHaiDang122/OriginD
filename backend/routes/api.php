@@ -94,6 +94,7 @@ Route::middleware('auth:sanctum')->group(function () {
             // Admin Custom Domain Management
             Route::get('/custom-domains', [AdminCustomDomainController::class, 'index']);
             Route::post('/custom-domains', [AdminCustomDomainController::class, 'store']);
+            Route::put('/custom-domains/{id}', [AdminCustomDomainController::class, 'update']);
             Route::delete('/custom-domains/{id}', [AdminCustomDomainController::class, 'destroy']);
         });
 });
