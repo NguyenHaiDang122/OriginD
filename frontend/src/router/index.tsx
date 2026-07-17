@@ -13,8 +13,11 @@ import Profile from "../pages/Profile/Profile";
 import AdminTemplates from "../pages/admin/AdminTemplates";
 import AdminDashboard from "../pages/admin/AdminDashboard";
 import AdminUsers from "../pages/admin/AdminUsers";
+import AdminDeposits from "../pages/admin/AdminDeposits";
+import AdminPlans from "../pages/admin/AdminPlans";
 import ProtectedAdminRoute from "../pages/admin/ProtectedAdminRoute";
 import GuestRoute from "../components/auth/GuestRoute";
+import Upgrade from "../pages/Upgrade/Upgrade";
 
 export const router = createBrowserRouter([
   {
@@ -28,6 +31,10 @@ export const router = createBrowserRouter([
       {
         path: "templates",
         element: <Templates />,
+      },
+      {
+        path: "upgrade",
+        element: <Upgrade />,
       },
       {
         path: "admin",
@@ -58,6 +65,22 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedAdminRoute>
             <AdminUsers />
+          </ProtectedAdminRoute>
+        ),
+      },
+      {
+        path: "admin/deposits",
+        element: (
+          <ProtectedAdminRoute>
+            <AdminDeposits />
+          </ProtectedAdminRoute>
+        ),
+      },
+      {
+        path: "admin/plans",
+        element: (
+          <ProtectedAdminRoute>
+            <AdminPlans />
           </ProtectedAdminRoute>
         ),
       },

@@ -1,12 +1,22 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import GlassCard from "../../components/common/GlassCard";
-import { fetchTemplates } from "../../services/templateApi";
+import { fetchTemplates, getCachedTemplates } from "../../services/templateApi";
 import { useAuthStore } from "../../store/authStore";
 
 export default function Dashboard() {
   const navigate = useNavigate();
   const token = useAuthStore((s) => s.token);
+  const user = useAuthStore((s) => s.user) as any;
+
+  const isLimitReached = Boolean(
+    user && (
+      user.can_create_landing_page === false ||
+      (typeof user.landing_pages_count === "number" && typeof user.landing_page_limit === "number" && user.landing_pages_count >= user.landing_page_limit) ||
+      (user.role !== "Admin" && (!user.roles || !user.roles.some((r: any) => r.name === "Admin")) && typeof user.landing_page_limit !== "number" && ((typeof user.landing_pages_count === "number" && user.landing_pages_count >= 1) || (user.landing_pages && Object.keys(user.landing_pages).length >= 1)))
+    )
+  );
+
   const [templates, setTemplates] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -14,7 +24,20 @@ export default function Dashboard() {
   useEffect(() => {
     let mounted = true;
     async function load() {
-      setLoading(true);
+      const cached = getCachedTemplates();
+      if (cached) {
+        const listCached = Array.isArray((cached as any)?.data)
+          ? (cached as any).data
+          : Array.isArray(cached)
+            ? cached
+            : [];
+        if (listCached.length > 0 && mounted) {
+          setTemplates(listCached);
+          setLoading(false);
+        }
+      } else {
+        setLoading(true);
+      }
       try {
         const res = await fetchTemplates(token);
         const list = Array.isArray((res as any)?.data)
@@ -27,7 +50,7 @@ export default function Dashboard() {
           setError(null);
         }
       } catch (err: any) {
-        if (mounted) {
+        if (mounted && !cached) {
           setError("Không thể tải danh sách mẫu. Vui lòng thử lại sau.");
         }
       } finally {
@@ -64,10 +87,22 @@ export default function Dashboard() {
               <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
                 <button
                   type="button"
-                  onClick={() => navigate("/templates")}
-                  className="primary-btn justify-center sm:w-auto hover:scale-105 transition"
+                  onClick={() => {
+                    if (isLimitReached) {
+                      alert(`Bạn đã dùng hết số lượt tạo Landing Page (${user?.landing_pages_count || 1}/${user?.landing_page_limit || 1} trang). Vui lòng nâng cấp dịch vụ để tạo thêm!`);
+                      return;
+                    }
+                    navigate("/templates");
+                  }}
+                  disabled={isLimitReached}
+                  className={`justify-center sm:w-auto transition ${
+                    isLimitReached
+                      ? "cursor-not-allowed border border-white/10 bg-white/5 text-white/35 px-6 py-3 rounded-xl font-semibold text-sm"
+                      : "primary-btn hover:scale-105"
+                  }`}
+                  title={isLimitReached ? "Bạn đã hết lượt tạo Landing Page" : "Bắt đầu tạo website"}
                 >
-                  Bắt đầu tạo website
+                  {isLimitReached ? "Hết lượt tạo website" : "Bắt đầu tạo website"}
                 </button>
                 <button
                   type="button"
@@ -126,10 +161,22 @@ export default function Dashboard() {
                     </div>
                     <button
                       type="button"
-                      onClick={() => navigate("/templates")}
-                      className="primary-btn px-4 py-2 text-sm"
+                      onClick={() => {
+                        if (isLimitReached) {
+                          alert(`Bạn đã dùng hết số lượt tạo Landing Page (${user?.landing_pages_count || 1}/${user?.landing_page_limit || 1} trang). Vui lòng nâng cấp dịch vụ để tạo thêm!`);
+                          return;
+                        }
+                        navigate("/templates");
+                      }}
+                      disabled={isLimitReached}
+                      className={
+                        isLimitReached
+                          ? "cursor-not-allowed border border-white/10 bg-white/5 text-white/35 px-4 py-2 rounded-xl font-semibold text-sm"
+                          : "primary-btn px-4 py-2 text-sm"
+                      }
+                      title={isLimitReached ? "Bạn đã hết lượt tạo Landing Page" : "Tạo ngay"}
                     >
-                      Tạo ngay
+                      {isLimitReached ? "Hết lượt tạo" : "Tạo ngay"}
                     </button>
                   </div>
                 </div>
@@ -230,9 +277,16 @@ export default function Dashboard() {
                         <span className="text-[10px] text-white/40 mt-0.5">Chưa có ảnh xem trước</span>
                       </div>
                     )}
-                    <div className="absolute top-3 left-3 rounded-full border border-white/15 bg-slate-900/80 backdrop-blur-md px-2.5 py-0.5 text-[10px] font-bold tracking-wide uppercase text-white/80">
-                      {tpl.status === "published" ? "🔥 Live" : "Draft"}
-                    </div>
+                    {tpl.status === "published" ? (
+                      <div className="absolute top-3 left-3 flex items-center gap-1.5 rounded-full border border-emerald-400/30 bg-slate-900/80 backdrop-blur-md px-2.5 py-0.5 text-[10px] font-bold tracking-wide uppercase text-emerald-300 shadow-sm">
+                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                        <span>Live</span>
+                      </div>
+                    ) : (
+                      <div className="absolute top-3 left-3 rounded-full border border-white/15 bg-slate-900/80 backdrop-blur-md px-2.5 py-0.5 text-[10px] font-bold tracking-wide uppercase text-white/70">
+                        Draft
+                      </div>
+                    )}
                     {tpl.version && (
                       <div className="absolute top-3 right-3 rounded-full border border-white/15 bg-black/60 backdrop-blur-md px-2 py-0.5 text-[10px] font-mono text-white/70">
                         v{tpl.version}
@@ -260,17 +314,37 @@ export default function Dashboard() {
                   <div className="flex items-center gap-2">
                     <button
                       type="button"
-                      onClick={() => navigate(`/templates?templateId=${tpl.id}`)}
+                      onClick={() => navigate(`/templates?templateId=${tpl.id}&mode=preview`)}
                       className="ghost-btn px-3.5 py-1.5 text-xs border-white/15 hover:bg-white/10"
                     >
                       Xem
                     </button>
                     <button
                       type="button"
-                      onClick={() => navigate(`/templates?templateId=${tpl.id}`)}
-                      className="primary-btn px-4 py-1.5 text-xs font-semibold"
+                      className={`px-4 py-1.5 text-xs font-semibold rounded-xl transition ${
+                        isLimitReached
+                          ? "cursor-not-allowed border border-white/10 bg-white/5 text-white/35"
+                          : "primary-btn"
+                      }`}
+                      disabled={isLimitReached}
+                      title={
+                        isLimitReached
+                          ? `Bạn đã hết lượt tạo Landing Page (${user?.landing_pages_count || 1}/${user?.landing_page_limit || 1} trang). Vui lòng nâng cấp dịch vụ!`
+                          : "Tạo trang web với mẫu này"
+                      }
+                      onClick={() => {
+                        if (!token) {
+                          navigate("/login");
+                          return;
+                        }
+                        if (isLimitReached) {
+                          alert(`Bạn đã hết lượt tạo Landing Page (${user?.landing_pages_count || 1}/${user?.landing_page_limit || 1} trang). Vui lòng gia hạn hoặc nâng cấp gói để tạo thêm!`);
+                          return;
+                        }
+                        navigate(`/templates?templateId=${tpl.id}&mode=create`);
+                      }}
                     >
-                      Tạo
+                      {isLimitReached ? "Hết lượt tạo" : "Tạo"}
                     </button>
                   </div>
                 </div>
@@ -307,10 +381,22 @@ export default function Dashboard() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => navigate("/templates")}
-                  className="primary-btn justify-center px-6 py-3 text-sm font-bold hover:scale-105 transition"
+                  onClick={() => {
+                    if (isLimitReached) {
+                      alert(`Bạn đã dùng hết số lượt tạo Landing Page (${user?.landing_pages_count || 1}/${user?.landing_page_limit || 1} trang). Vui lòng nâng cấp dịch vụ để tạo thêm!`);
+                      return;
+                    }
+                    navigate("/templates");
+                  }}
+                  disabled={isLimitReached}
+                  className={`justify-center px-6 py-3 text-sm font-bold transition ${
+                    isLimitReached
+                      ? "cursor-not-allowed border border-white/10 bg-white/5 text-white/35 rounded-xl"
+                      : "primary-btn hover:scale-105"
+                  }`}
+                  title={isLimitReached ? "Bạn đã hết lượt tạo Landing Page" : "Tạo website ngay"}
                 >
-                  Tạo website ngay
+                  {isLimitReached ? "Hết lượt tạo" : "Tạo website ngay"}
                 </button>
               </div>
             </div>

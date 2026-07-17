@@ -27,6 +27,7 @@ export default function AdminTemplates() {
   const [editDesc, setEditDesc] = useState("");
   const [editStatus, setEditStatus] = useState<string>("draft");
   const [editVersion, setEditVersion] = useState("");
+  const [editRenewalPrice, setEditRenewalPrice] = useState<string>("50000");
   const [editThumbnail, setEditThumbnail] = useState<File | null>(null);
   const [editThumbnailPreview, setEditThumbnailPreview] = useState<string | null>(null);
   const [savingEdit, setSavingEdit] = useState(false);
@@ -38,6 +39,7 @@ export default function AdminTemplates() {
   const [status, setStatus] = useState<"draft" | "published" | "archived">(
     "draft"
   );
+  const [renewalPrice, setRenewalPrice] = useState<string>("50000");
   const [thumbnail, setThumbnail] = useState<File | null>(null);
   const [zipFile, setZipFile] = useState<File | null>(null);
 
@@ -72,6 +74,7 @@ export default function AdminTemplates() {
     setEditDesc(t.description ?? "");
     setEditStatus(t.status ?? "draft");
     setEditVersion(t.version ?? "1.0.0");
+    setEditRenewalPrice(t.renewal_price != null ? String(t.renewal_price) : "50000");
     setEditThumbnail(null);
     setEditThumbnailPreview(t.thumbnail ?? null);
   }
@@ -89,6 +92,7 @@ export default function AdminTemplates() {
         if (editDesc.trim()) formData.append("description", editDesc.trim());
         formData.append("status", editStatus);
         formData.append("version", editVersion.trim() || "1.0.0");
+        formData.append("renewal_price", editRenewalPrice.trim() || "50000");
         formData.append("thumbnail", editThumbnail);
         payload = formData;
       } else {
@@ -98,6 +102,7 @@ export default function AdminTemplates() {
           description: editDesc.trim() || null,
           status: editStatus,
           version: editVersion.trim() || "1.0.0",
+          renewal_price: Number(editRenewalPrice) || 50000,
           ...(editThumbnailPreview === null && editingTemplate.thumbnail ? { thumbnail: null } : {}),
         };
       }
@@ -143,6 +148,7 @@ export default function AdminTemplates() {
     setDescription("");
     setVersion("");
     setStatus("draft");
+    setRenewalPrice("50000");
     setThumbnail(null);
     setZipFile(null);
   }
@@ -154,7 +160,7 @@ export default function AdminTemplates() {
     setSuccess(null);
 
     try {
-      if (!zipFile) throw new Error("Bạn chưa chọn file .zip");
+      if (!zipFile) throw new Error("Bạn chưa chọn file mẫu (.zip hoặc .html)");
       if (!name.trim()) throw new Error("Thiếu name");
       if (!slug.trim()) throw new Error("Thiếu slug");
 
@@ -164,6 +170,7 @@ export default function AdminTemplates() {
         description: description.trim() ? description.trim() : null,
         version: version.trim() ? version.trim() : null,
         status,
+        renewal_price: Number(renewalPrice) || 50000,
         thumbnail,
         zip_file: zipFile,
       };
@@ -240,7 +247,7 @@ export default function AdminTemplates() {
                 />
               </label>
 
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <label className="block">
                   <div className="text-xs text-white/60 mb-1">Version (optional)</div>
                   <input
@@ -263,6 +270,17 @@ export default function AdminTemplates() {
                     <option value="archived">archived</option>
                   </select>
                 </label>
+
+                <label className="block">
+                  <div className="text-xs text-white/60 mb-1">Giá gia hạn / tháng</div>
+                  <input
+                    type="text"
+                    value={renewalPrice}
+                    onChange={(e) => setRenewalPrice(e.target.value.replace(/\D/g, ""))}
+                    className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-white/90 outline-none focus:border-white/20"
+                    placeholder="50000"
+                  />
+                </label>
               </div>
 
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -277,10 +295,10 @@ export default function AdminTemplates() {
                 </label>
 
                 <label className="block">
-                  <div className="text-xs text-white/60 mb-1">ZIP file (required)</div>
+                  <div className="text-xs text-white/60 mb-1">File mẫu (.zip hoặc .html) (bắt buộc)</div>
                   <input
                     type="file"
-                    accept="application/zip,.zip"
+                    accept=".zip,.html,.htm,application/zip,text/html"
                     onChange={(e) => setZipFile(e.target.files?.[0] ?? null)}
                     className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-white/90"
                   />
@@ -352,6 +370,9 @@ export default function AdminTemplates() {
                       </span>
                       <span className="text-xs rounded-full border border-white/15 bg-white/5 px-2.5 py-0.5 text-white/70 shrink-0">
                         v{t.version ?? "1.0.0"}
+                      </span>
+                      <span className="text-xs font-mono font-bold rounded-full border border-emerald-400/30 bg-emerald-500/15 px-2.5 py-0.5 text-emerald-300 shrink-0 shadow-sm" title="Chi phí khi user gia hạn landing page dùng mẫu này">
+                        💰 {(t.renewal_price != null ? t.renewal_price : 50000).toLocaleString("vi-VN")} đ / 30 ngày
                       </span>
                     </div>
                     <div className="mt-1 text-xs text-white/60 font-mono truncate max-w-full">/templates/{t.slug}</div>
@@ -465,6 +486,22 @@ export default function AdminTemplates() {
                     <option value="archived">archived (Lưu trữ)</option>
                   </select>
                 </div>
+              </div>
+
+              <div>
+                <label className="block text-xs text-white/70 mb-1">
+                  Giá gia hạn Landing Page (VNĐ / 30 ngày)
+                </label>
+                <input
+                  type="text"
+                  value={editRenewalPrice}
+                  onChange={(e) => setEditRenewalPrice(e.target.value.replace(/\D/g, ""))}
+                  className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2.5 text-white outline-none focus:border-violet-400"
+                  placeholder="Ví dụ: 50000"
+                />
+                <p className="mt-1 text-[11px] text-white/50">
+                  Khi user gia hạn các Landing Page được tạo từ mẫu này, hệ thống sẽ trừ đúng số tiền này vào tài khoản của họ.
+                </p>
               </div>
 
               <div>

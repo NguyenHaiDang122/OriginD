@@ -29,6 +29,8 @@ class TemplateResource extends JsonResource
 
             'status' => $this->status,
 
+            'renewal_price' => (int) ($this->renewal_price ?? 50000),
+
             'fields' => $this->fields,
 
         ];

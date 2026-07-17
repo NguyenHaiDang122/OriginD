@@ -22,6 +22,24 @@ class LandingPageController extends Controller
             'slug' => 'nullable|string',
         ]);
 
+        $user = Auth::user();
+        $subscription = $user ? $user->subscription : null;
+        $plan = $subscription ? $subscription->plan : null;
+        $isFreeOrStarter = !$plan || in_array(strtolower($plan->slug), ['free', 'starter']) || $plan->landing_page_limit <= 1;
+
+        $limit = $user->getEffectiveLandingPageLimit();
+        if ($user->landingPages()->count() >= $limit) {
+            return response()->json([
+                'message' => 'Bạn đã đạt giới hạn tối đa '.$limit.' Landing Page cho phép của tài khoản. Vui lòng gia hạn hoặc nâng cấp dịch vụ để tạo thêm!'
+            ], 403);
+        }
+
+        if ($user && ($user->role === 'Admin' || ($user->roles && $user->roles->some('name', 'Admin')))) {
+            $expiresAt = null;
+        } else {
+            $expiresAt = now()->addDays(30);
+        }
+
         if ($request->filled('slug')) {
             $slug = Str::slug($request->slug);
             if (empty($slug)) {
@@ -38,12 +56,13 @@ class LandingPageController extends Controller
         }
 
         $page = LandingPage::create([
-            'user_id' => Auth::id(),
+            'user_id' => $user->id,
             'template_id' => $template->id,
             'title' => $request->title,
             'slug' => $slug,
             'data' => $request->data,
             'status' => 'draft',
+            'expires_at' => $expiresAt,
         ]);
 
         return response()->json([
@@ -55,6 +74,9 @@ class LandingPageController extends Controller
         LandingPage $landingPage,
         LandingPageRendererService $renderer
     ){
+        if ($landingPage->isExpired()) {
+            return response($renderer->renderExpiredPage($landingPage), 403)->header('Content-Type', 'text/html');
+        }
 
         return response(
             $renderer->render($landingPage)
@@ -91,8 +113,14 @@ class LandingPageController extends Controller
 
     public function update(Request $request, LandingPage $landingPage)
     {
-        if ($landingPage->user_id !== Auth::id()) {
+        if ($landingPage->user_id !== Auth::id() && Auth::user()->role !== 'Admin') {
             return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        if ($landingPage->isExpired() && Auth::user()->role !== 'Admin') {
+            return response()->json([
+                'message' => 'Trang Landing Page này đã hết hạn lưu trữ. Vui lòng gia hạn dịch vụ trước khi tiếp tục chỉnh sửa!'
+            ], 403);
         }
 
         $request->validate([

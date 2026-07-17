@@ -86,6 +86,8 @@ class TemplateService
 
                 'status' => $request->status ?? 'draft',
 
+                'renewal_price' => $request->has('renewal_price') && $request->renewal_price !== null ? (int) $request->renewal_price : 50000,
+
                 'created_by' => Auth::id(),
 
             ]);
@@ -146,6 +148,7 @@ class TemplateService
         if (array_key_exists('description', $data)) $updateData['description'] = $data['description'];
         if (isset($data['version'])) $updateData['version'] = $data['version'];
         if (isset($data['status'])) $updateData['status'] = $data['status'];
+        if (isset($data['renewal_price'])) $updateData['renewal_price'] = (int) $data['renewal_price'];
 
         if ($input instanceof Request && $input->hasFile('thumbnail')) {
             if ($template->thumbnail && !str_starts_with($template->thumbnail, 'http') && Storage::disk('public')->exists($template->thumbnail)) {
@@ -184,28 +187,40 @@ class TemplateService
         Storage::disk('public')
             ->makeDirectory("templates/$folder");
 
-        $zipPath = Storage::disk('public')
-            ->path("templates/$folder/template.zip");
-
-        copy(
-            $zip->getRealPath(),
-            $zipPath
-        );
-
         $extractPath = Storage::disk('public')
             ->path("templates/$folder");
 
-        $zipArchive = new ZipArchive();
+        $ext = strtolower($zip->getClientOriginalExtension());
 
-        if ($zipArchive->open($zipPath) !== true) {
-            throw new \Exception(
-                'Không thể mở file ZIP.'
+        if (in_array($ext, ['html', 'htm']) || str_contains(strtolower($zip->getMimeType() ?? ''), 'html')) {
+            $htmlPath = Storage::disk('public')
+                ->path("templates/$folder/index.html");
+
+            copy(
+                $zip->getRealPath(),
+                $htmlPath
             );
+        } else {
+            $zipPath = Storage::disk('public')
+                ->path("templates/$folder/template.zip");
+
+            copy(
+                $zip->getRealPath(),
+                $zipPath
+            );
+
+            $zipArchive = new ZipArchive();
+
+            if ($zipArchive->open($zipPath) !== true) {
+                throw new \Exception(
+                    'Không thể mở hoặc giải nén file ZIP.'
+                );
+            }
+
+            $zipArchive->extractTo($extractPath);
+
+            $zipArchive->close();
         }
-
-        $zipArchive->extractTo($extractPath);
-
-        $zipArchive->close();
 
         return [
 

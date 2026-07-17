@@ -13,6 +13,11 @@ class Subscription extends Model
         'expired_at',
     ];
 
+    protected $casts = [
+        'started_at' => 'datetime',
+        'expired_at' => 'datetime',
+    ];
+
     public function user()
     {
         return $this->belongsTo(User::class);

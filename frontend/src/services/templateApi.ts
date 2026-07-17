@@ -1,7 +1,8 @@
 import axios from "axios";
+import { API_BASE_URL } from "../config/api";
 
 const api = axios.create({
-  baseURL: "http://localhost:8000/api",
+  baseURL: API_BASE_URL,
 });
 
 export type UploadTemplatePayload = {
@@ -10,6 +11,7 @@ export type UploadTemplatePayload = {
   description?: string | null;
   version?: string | null;
   status?: "draft" | "published" | "archived" | null;
+  renewal_price?: number | null;
   thumbnail?: File | null;
   zip_file: File;
 };
@@ -22,6 +24,7 @@ export type TemplateResource = {
   thumbnail?: string | null;
   version?: string;
   status?: string;
+  renewal_price?: number;
   template_path?: string;
 };
 
@@ -33,6 +36,7 @@ export async function uploadTemplate(payload: UploadTemplatePayload, token?: str
   if (payload.description) form.append("description", payload.description);
   if (payload.version) form.append("version", payload.version);
   if (payload.status) form.append("status", payload.status);
+  if (payload.renewal_price != null) form.append("renewal_price", String(payload.renewal_price));
 
   if (payload.thumbnail) form.append("thumbnail", payload.thumbnail);
   form.append("zip_file", payload.zip_file);
@@ -47,12 +51,31 @@ export async function uploadTemplate(payload: UploadTemplatePayload, token?: str
   return res.data as { data: TemplateResource } | TemplateResource;
 }
 
+let cachedTemplates: any = null;
+
+export function getCachedTemplates() {
+  if (cachedTemplates) return cachedTemplates;
+  try {
+    const raw = sessionStorage.getItem("cached_templates_data");
+    if (raw) {
+      cachedTemplates = JSON.parse(raw);
+      return cachedTemplates;
+    }
+  } catch (e) {}
+  return null;
+}
+
 export async function fetchTemplates(token?: string | null) {
   const res = await api.get("/templates", {
     headers: {
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
   });
+
+  cachedTemplates = res.data;
+  try {
+    sessionStorage.setItem("cached_templates_data", JSON.stringify(res.data));
+  } catch (e) {}
 
   return res.data;
 }

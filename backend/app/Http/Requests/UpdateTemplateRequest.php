@@ -34,6 +34,8 @@ class UpdateTemplateRequest extends FormRequest
             'version' => ['nullable', 'string'],
 
             'status' => ['nullable', 'in:draft,published,archived'],
+
+            'renewal_price' => ['nullable', 'numeric', 'min:0'],
         ];
     }
 }

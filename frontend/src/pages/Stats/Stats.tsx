@@ -8,6 +8,9 @@ import {
   updateLandingPage,
 } from "../../services/landingPageApi";
 import { previewTemplate } from "../../services/landingPageRenderApi";
+import { PAGE_BASE_URL } from "../../config/api";
+import { renewService } from "../../services/depositApi";
+import DepositModal from "../../components/common/DepositModal";
 
 function FakeStatRow({
   label,
@@ -43,6 +46,25 @@ export default function Stats() {
   const [editPreviewLoading, setEditPreviewLoading] = useState(false);
   const [savingEdit, setSavingEdit] = useState(false);
   const [editViewMode, setEditViewMode] = useState<"desktop" | "mobile">("desktop");
+  const [isDepositModalOpen, setIsDepositModalOpen] = useState(false);
+  const [renewLoadingId, setRenewLoadingId] = useState<number | null>(null);
+
+  async function handleRenewPage(p: any) {
+    const cost = p.template?.renewal_price != null ? p.template.renewal_price : 50000;
+    const costStr = cost.toLocaleString("vi-VN");
+    if (!window.confirm(`Gia hạn trang Landing Page "${p.title}" thêm 30 ngày với chi phí ${costStr} VNĐ trừ từ số dư của bạn?`)) return;
+    setRenewLoadingId(p.id);
+    try {
+      const res = await renewService(token, p.id);
+      alert(res.message);
+      loadPages();
+    } catch (e: any) {
+      alert(e?.response?.data?.message || `Số dư của bạn không đủ (cần ${costStr} đ). Vui lòng nạp tiền vào tài khoản!`);
+      setIsDepositModalOpen(true);
+    } finally {
+      setRenewLoadingId(null);
+    }
+  }
 
   async function loadPages() {
     setLoading(true);
@@ -94,22 +116,53 @@ export default function Stats() {
     };
   }, [editingPage?.template_id, editValues, token]);
 
+  const getCleanScalar = (val: any): string => {
+    if (val === null || val === undefined) return "";
+    if (Array.isArray(val)) {
+      return val.length > 0 ? getCleanScalar(val[0]) : "";
+    }
+    if (typeof val === "string") {
+      const trimmed = val.trim();
+      if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
+        try {
+          const parsed = JSON.parse(trimmed);
+          if (Array.isArray(parsed)) {
+            return parsed.length > 0 ? getCleanScalar(parsed[0]) : "";
+          }
+        } catch {}
+      }
+      return val;
+    }
+    if (typeof val === "object") return JSON.stringify(val);
+    return String(val);
+  };
+
   async function handleOpenEdit(p: any) {
     setEditingPage(p);
     setEditTitle(p.title ?? "");
     setEditSlug(p.slug ?? "");
     setEditStatus(p.status ?? "draft");
-    setEditValues(typeof p.data === "object" && p.data !== null ? { ...p.data } : {});
+    const cleaned: Record<string, any> = {};
+    if (typeof p.data === "object" && p.data !== null) {
+      for (const [k, v] of Object.entries(p.data)) {
+        cleaned[k] = getCleanScalar(v);
+      }
+    }
+    setEditValues(cleaned);
   }
 
   async function handleTogglePageStatus(p: any) {
     if (!token) return;
-    const nextStatus = p.status === "published" ? "draft" : "published";
+    if (p.status === "published") {
+      alert("Trang này đã được xuất bản thành công và không thể chuyển về bản nháp (draft) nữa.");
+      return;
+    }
+    if (!window.confirm(`Bạn có chắc chắn muốn xuất bản chính thức trang "${p.title}" lên Internet?`)) return;
     try {
-      await updateLandingPage(p.id, { status: nextStatus }, token);
+      await updateLandingPage(p.id, { status: "published" }, token);
       await loadPages();
     } catch (err: any) {
-      alert(err?.response?.data?.message ?? err?.message ?? "Lỗi cập nhật trạng thái");
+      alert(err?.response?.data?.message ?? err?.message ?? "Lỗi xuất bản trang");
     }
   }
 
@@ -218,14 +271,21 @@ export default function Stats() {
 
                   <div>
                     <label className="block text-sm text-white/70">Trạng thái (Status)</label>
-                    <select
-                      value={editStatus}
-                      onChange={(e) => setEditStatus(e.target.value)}
-                      className="mt-1 w-full rounded-xl border border-white/15 bg-slate-900 px-4 py-3 text-white outline-none focus:border-white/30"
-                    >
-                      <option value="draft">📝 Draft (Bản nháp - Đang thử nghiệm/chỉnh sửa)</option>
-                      <option value="published">🚀 Published (Đã xuất bản - Hoạt động chính thức)</option>
-                    </select>
+                    {editingPage?.status === "published" ? (
+                      <div className="mt-1 flex items-center gap-2 rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-3 text-sm font-semibold text-emerald-300">
+                        <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+                        <span>🟢 Thành công (Không thể về Draft)</span>
+                      </div>
+                    ) : (
+                      <select
+                        value={editStatus}
+                        onChange={(e) => setEditStatus(e.target.value)}
+                        className="mt-1 w-full rounded-xl border border-white/15 bg-slate-900 px-4 py-3 text-white outline-none focus:border-white/30"
+                      >
+                        <option value="draft">📝 Draft (Bản nháp - Đang chỉnh sửa)</option>
+                        <option value="published">🚀 Xuất bản (Hoạt động chính thức)</option>
+                      </select>
+                    )}
                   </div>
 
                   {templateFields
@@ -306,7 +366,7 @@ export default function Stats() {
                         : "bg-white/5 text-white/60 hover:text-white border border-white/10"
                     }`}
                   >
-                    💻 Desktop
+                    Desktop
                   </button>
                   <button
                     type="button"
@@ -317,7 +377,7 @@ export default function Stats() {
                         : "bg-white/5 text-white/60 hover:text-white border border-white/10"
                     }`}
                   >
-                    📱 Mobile
+                    Mobile
                   </button>
                 </div>
               </div>
@@ -394,6 +454,21 @@ export default function Stats() {
                             <div className="text-xs text-white/55 mt-0.5">
                               Template: {p.template?.name ?? `#${p.template_id}`}
                             </div>
+                            {p.expires_at ? (
+                              <div className="mt-1.5 text-xs font-medium">
+                                {new Date(p.expires_at).getTime() < Date.now() ? (
+                                  <span className="text-rose-400 font-semibold">
+                                    Hết hạn: {new Date(p.expires_at).toLocaleDateString("vi-VN")} (Đã hết hạn)
+                                  </span>
+                                ) : (
+                                  <span className="text-emerald-300/90">
+                                    Hết hạn: {new Date(p.expires_at).toLocaleDateString("vi-VN")}
+                                  </span>
+                                )}
+                              </div>
+                            ) : (
+                              <div className="mt-1.5 text-xs text-white/50">Hết hạn: Không giới hạn</div>
+                            )}
                           </div>
                           <span
                             className={`rounded-full border px-2.5 py-0.5 text-[10px] font-bold tracking-wider ${
@@ -402,39 +477,54 @@ export default function Stats() {
                                 : "border-amber-400/40 bg-amber-500/15 text-amber-300"
                             }`}
                           >
-                            {p.status === "published" ? "⚡ Published" : "📝 Draft"}
+                            {p.status === "published" ? "Published" : "Draft"}
                           </span>
                         </div>
 
-                        <div className="mt-3.5 flex items-center justify-between border-t border-white/10 pt-3">
+                        <div className="mt-3.5 flex flex-wrap items-center justify-between gap-3 border-t border-white/10 pt-3">
                           <a
-                            href={`http://localhost:8000/page/${p.slug}${p.status === "draft" && token ? `?token=${token}` : ""}`}
+                            href={`${PAGE_BASE_URL}/${p.slug}${p.status === "draft" && token ? `?token=${token}` : ""}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             onClick={(e) => e.stopPropagation()}
-                            className="text-xs font-medium text-violet-300 hover:text-violet-200 hover:underline flex items-center gap-1"
+                            className="text-xs font-medium text-violet-300 hover:text-violet-200 hover:underline shrink-0"
                           >
-                            <span>Xem trang</span>
-                            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                            </svg>
+                            Xem trang
                           </a>
 
-                          <div className="flex items-center gap-2">
+                          <div className="flex flex-wrap items-center gap-2">
+                            {p.status === "published" ? (
+                              <span
+                                className="inline-flex items-center justify-center h-8 px-3 rounded-xl border border-emerald-400/30 bg-emerald-500/10 text-xs font-semibold text-emerald-300 select-none shadow-sm transition shrink-0"
+                                title="Trang đã xuất bản thành công và đang hoạt động chính thức trên Internet"
+                              >
+                                <span>Thành công</span>
+                              </span>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleTogglePageStatus(p);
+                                }}
+                                className="inline-flex items-center justify-center h-8 px-3 rounded-xl border border-amber-400/30 bg-amber-500/10 text-xs font-semibold text-amber-300 hover:bg-amber-500/20 shadow-sm transition shrink-0"
+                                title="Click để xuất bản chính thức trang này lên Internet"
+                              >
+                                <span>Xuất bản</span>
+                              </button>
+                            )}
+
                             <button
                               type="button"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                handleTogglePageStatus(p);
+                                handleRenewPage(p);
                               }}
-                              className={`px-2.5 py-1 text-xs rounded-xl font-semibold border transition ${
-                                p.status === "published"
-                                  ? "border-amber-400/30 bg-amber-500/10 text-amber-300 hover:bg-amber-500/20"
-                                  : "border-emerald-400/30 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20"
-                              }`}
-                              title={p.status === "published" ? "Chuyển về bản nháp" : "Chính thức xuất bản trang này"}
+                              disabled={renewLoadingId === p.id}
+                              className="inline-flex items-center justify-center gap-1.5 h-8 px-3 rounded-xl border border-violet-400/40 bg-gradient-to-r from-violet-600/30 to-indigo-600/30 text-xs font-semibold text-violet-200 hover:from-violet-600/50 hover:to-indigo-600/50 shadow-sm transition shrink-0 disabled:opacity-50"
+                              title={`Gia hạn thêm 30 ngày cho trang này (${(p.template?.renewal_price != null ? p.template.renewal_price : 50000).toLocaleString("vi-VN")} đ)`}
                             >
-                              {p.status === "published" ? "👁️‍🗨️ Về Draft" : "🚀 Xuất bản"}
+                              <span>Gia hạn {renewLoadingId === p.id ? "..." : ""}</span>
                             </button>
 
                             <button
@@ -443,9 +533,9 @@ export default function Stats() {
                                 e.stopPropagation();
                                 handleOpenEdit(p);
                               }}
-                              className="ghost-btn px-2.5 py-1 text-xs border border-white/20 hover:bg-white/20"
+                              className="inline-flex items-center justify-center h-8 px-3 rounded-xl border border-white/20 bg-white/5 text-xs font-semibold text-white/90 hover:bg-white/15 hover:border-white/30 shadow-sm transition shrink-0"
                             >
-                              Sửa
+                              <span>Sửa</span>
                             </button>
                             <button
                               type="button"
@@ -453,9 +543,9 @@ export default function Stats() {
                                 e.stopPropagation();
                                 handleDelete(p.id);
                               }}
-                              className="rounded-xl border border-rose-400/30 bg-rose-500/10 px-2.5 py-1 text-xs text-rose-300 hover:bg-rose-500/20 transition"
+                              className="inline-flex items-center justify-center h-8 px-3 rounded-xl border border-rose-400/30 bg-rose-500/10 text-xs font-semibold text-rose-300 hover:bg-rose-500/20 shadow-sm transition shrink-0"
                             >
-                              Xóa
+                              <span>Xóa</span>
                             </button>
                           </div>
                         </div>
@@ -471,7 +561,7 @@ export default function Stats() {
           <div className="lg:col-span-2">
             <GlassCard
               title={selectedPage ? `Thống kê cho: ${selectedPage.title}` : "Tổng quan thống kê"}
-              subtitle={selectedPage ? `URL: http://localhost:8000/page/${selectedPage.slug}` : "Toàn bộ tài khoản"}
+              subtitle={selectedPage ? `URL: ${PAGE_BASE_URL}/${selectedPage.slug}` : "Toàn bộ tài khoản"}
             >
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <FakeStatRow label="Tổng trang đã tạo" value={`${computedStats.total} trang`} />
@@ -484,6 +574,12 @@ export default function Stats() {
                   value={selectedPage ? `${Math.floor(((selectedPage.id * 142 + 250) % 3500) * 0.045).toLocaleString()} leads` : computedStats.totalLeads}
                 />
                 <FakeStatRow label="Tỷ lệ chuyển đổi" value={computedStats.convRate} />
+                {selectedPage ? (
+                  <FakeStatRow
+                    label="Thời gian hết hạn"
+                    value={selectedPage.expires_at ? new Date(selectedPage.expires_at).toLocaleDateString("vi-VN") + (new Date(selectedPage.expires_at).getTime() < Date.now() ? " (Đã hết hạn)" : "") : "Không giới hạn"}
+                  />
+                ) : null}
               </div>
 
               {/* Biểu đồ lượt truy cập */}
@@ -495,8 +591,12 @@ export default function Stats() {
                       {selectedPage ? `Số liệu trang "${selectedPage.title}"` : "Số liệu tổng hợp"}
                     </div>
                   </div>
-                  <div className="text-xs rounded-full border border-emerald-400/30 bg-emerald-500/10 px-3 py-1 text-emerald-300 font-medium">
-                    Active
+                  <div className={`text-xs rounded-full border px-3 py-1 font-medium ${
+                    selectedPage && selectedPage.expires_at && new Date(selectedPage.expires_at).getTime() < Date.now()
+                      ? "border-rose-400/30 bg-rose-500/10 text-rose-300"
+                      : "border-emerald-400/30 bg-emerald-500/10 text-emerald-300"
+                  }`}>
+                    {selectedPage && selectedPage.expires_at && new Date(selectedPage.expires_at).getTime() < Date.now() ? "Expired" : "Active"}
                   </div>
                 </div>
 
@@ -537,6 +637,13 @@ export default function Stats() {
           </div>
         </div>
       </PageSection>
+
+      <DepositModal
+        isOpen={isDepositModalOpen}
+        onClose={() => setIsDepositModalOpen(false)}
+        onSuccess={() => loadPages()}
+        initialAmount={50000}
+      />
     </div>
   );
 }

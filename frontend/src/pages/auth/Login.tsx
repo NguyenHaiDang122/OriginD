@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuthStore } from "../../store/authStore";
+import GoogleAuthButton from "../../components/common/GoogleAuthButton";
 
 export default function Login() {
   const navigate = useNavigate();
   const token = useAuthStore((s) => s.token);
   const login = useAuthStore((s) => s.login);
+  const googleLogin = useAuthStore((s) => s.googleLogin);
   const loading = useAuthStore((s) => s.loading);
   const error = useAuthStore((s) => s.error);
 
@@ -71,6 +73,24 @@ export default function Login() {
           <button type="submit" className="primary-btn w-full" disabled={loading}>
             {loading ? "Đang đăng nhập..." : "Đăng nhập"}
           </button>
+
+          <div className="relative my-4 flex items-center justify-center">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-white/10" />
+            </div>
+            <span className="relative bg-[#161a2b] px-3 text-xs text-white/50">
+              Hoặc tiếp tục với
+            </span>
+          </div>
+
+          <GoogleAuthButton
+            text="signin_with"
+            onSuccess={async (credential) => {
+              await googleLogin(credential);
+              const token = useAuthStore.getState().token;
+              if (token) navigate("/");
+            }}
+          />
 
           <div className="text-center text-sm text-white/60">
             Chưa có tài khoản?{" "}

@@ -212,6 +212,69 @@ export default function AdminDashboard() {
             </div>
           </div>
         </div>
+
+        {/* Card 5: Quản lý Nạp tiền & Duyệt đơn */}
+        <div
+          onClick={() => navigate("/admin/deposits")}
+          className="group relative cursor-pointer overflow-hidden rounded-3xl border border-emerald-400/30 bg-gradient-to-br from-emerald-900/25 via-slate-900/60 to-slate-900/90 p-6 backdrop-blur-xl transition duration-300 hover:-translate-y-1.5 hover:border-emerald-400/60 hover:shadow-2xl hover:shadow-emerald-500/15 flex flex-col justify-between min-h-[220px]"
+        >
+          <div>
+            <div className="flex items-center justify-between">
+              <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-white/15 bg-white/10 text-3xl shadow-lg transition duration-300 group-hover:scale-110">
+                💰
+              </div>
+              <span className="rounded-full border border-emerald-400/30 bg-emerald-500/15 px-3 py-1 text-xs font-bold text-emerald-300">
+                Tài chính • VietQR
+              </span>
+            </div>
+
+            <h3 className="mt-5 text-xl font-bold text-white/95 group-hover:text-emerald-300 transition">
+              Duyệt đơn & Quản lý Nạp tiền
+            </h3>
+            <p className="mt-2 text-sm text-white/65 leading-relaxed">
+              Kiểm tra đơn nạp tiền từ người dùng qua <code className="text-emerald-300 bg-white/10 px-1.5 py-0.5 rounded text-xs">VietQR ACB</code>, xác nhận chuyển khoản thành công để cộng tiền tự động vào số dư hoặc từ chối đơn sai.
+            </p>
+          </div>
+
+          <div className="mt-6 pt-4 border-t border-white/10 flex items-center justify-between">
+            <span className="text-xs font-semibold text-white/50 group-hover:text-white/80 transition">
+              Truy cập quản lý giao dịch
+            </span>
+            <div className="primary-btn px-4 py-2 text-xs font-bold border-emerald-400/40 bg-emerald-500/20 text-emerald-200 hover:bg-emerald-500/30">
+              Quản Lý Nạp Tiền →
+            </div>
+          </div>
+        </div>
+
+        {/* Card 6: Quản lý Gói Tài Khoản (Plans) - Không sử dụng icon */}
+        <div
+          onClick={() => navigate("/admin/plans")}
+          className="group relative cursor-pointer overflow-hidden rounded-3xl border border-indigo-400/30 bg-gradient-to-br from-indigo-900/25 via-slate-900/60 to-slate-900/90 p-6 backdrop-blur-xl transition duration-300 hover:-translate-y-1.5 hover:border-indigo-400/60 hover:shadow-2xl hover:shadow-indigo-500/15 flex flex-col justify-between min-h-[220px]"
+        >
+          <div>
+            <div className="flex items-center justify-between">
+              <span className="rounded-full border border-indigo-400/30 bg-indigo-500/15 px-3 py-1 text-xs font-bold text-indigo-300">
+                Đặc quyền • Định giá
+              </span>
+            </div>
+
+            <h3 className="mt-5 text-xl font-bold text-white/95 group-hover:text-indigo-300 transition">
+              Quản lý Gói Tài Khoản (Plans)
+            </h3>
+            <p className="mt-2 text-sm text-white/65 leading-relaxed">
+              Tạo mới, chỉnh sửa giá bán và cập nhật giới hạn quyền lợi cho các gói nâng hạng của người dùng trên toàn hệ thống OriginD.
+            </p>
+          </div>
+
+          <div className="mt-6 pt-4 border-t border-white/10 flex items-center justify-between">
+            <span className="text-xs font-semibold text-white/50 group-hover:text-white/80 transition">
+              Truy cập thiết lập gói
+            </span>
+            <div className="primary-btn px-4 py-2 text-xs font-bold border-indigo-400/40 bg-indigo-500/20 text-indigo-200 hover:bg-indigo-500/30">
+              Quản Lý Gói Tài Khoản →
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Quick Status / Guidance Bottom Banner */}

@@ -48,11 +48,25 @@ class StoreTemplateRequest extends FormRequest
                 'in:draft,published,archived',
             ],
 
+            'renewal_price' => [
+                'nullable',
+                'numeric',
+                'min:0',
+            ],
+
             'zip_file' => [
                 'required',
                 'file',
-                'mimes:zip',
                 'max:51200', // 50MB
+                function ($attribute, $value, $fail) {
+                    if (!$value instanceof \Illuminate\Http\UploadedFile) {
+                        return;
+                    }
+                    $ext = strtolower($value->getClientOriginalExtension());
+                    if (!in_array($ext, ['zip', 'html', 'htm'])) {
+                        $fail('File tải lên phải là file nén (.zip) hoặc file giao diện HTML (.html, .htm).');
+                    }
+                },
             ],
         ];
     }

@@ -1,23 +1,36 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 import { useAuthStore } from "../../store/authStore";
 import GlassCard from "../../components/common/GlassCard";
 import PageSection from "../../components/common/PageSection";
 
-import { fetchTemplates } from "../../services/templateApi";
+import { fetchTemplates, getCachedTemplates } from "../../services/templateApi";
+import { API_BASE_URL, PAGE_BASE_URL } from "../../config/api";
 
 import TemplateCreatePage from "./TemplateCreatePage";
 
 
 
 export default function TemplatesLandingSelect() {
+  const navigate = useNavigate();
   const token = useAuthStore((s) => s.token);
+  const user = useAuthStore((s) => s.user) as any;
+
+  const isLimitReached = Boolean(
+    user && (
+      user.can_create_landing_page === false ||
+      (typeof user.landing_pages_count === "number" && typeof user.landing_page_limit === "number" && user.landing_pages_count >= user.landing_page_limit) ||
+      (user.role !== "Admin" && (!user.roles || !user.roles.some((r: any) => r.name === "Admin")) && typeof user.landing_page_limit !== "number" && ((typeof user.landing_pages_count === "number" && user.landing_pages_count >= 1) || (user.landing_pages && Object.keys(user.landing_pages).length >= 1)))
+    )
+  );
 
   const [templates, setTemplates] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const [activeTemplate, setActiveTemplate] = useState<any | null>(null);
+  const [activeMode, setActiveMode] = useState<"preview" | "create">("create");
 
   const [_createdUrl, setCreatedUrl] = useState<string | null>(null);
   const [createdLink, setCreatedLink] = useState<string | null>(null);
@@ -41,7 +54,22 @@ export default function TemplatesLandingSelect() {
   }, [templates]);
 
   async function loadTemplates() {
-    setLoading(true);
+    const cached = getCachedTemplates();
+    if (cached) {
+      const listCached = Array.isArray((cached as any)?.data)
+        ? (cached as any).data
+        : Array.isArray(cached)
+          ? (cached as any)
+          : (cached as any);
+      if (listCached && listCached.length > 0) {
+        setTemplates(listCached);
+        setLoading(false);
+      } else {
+        setLoading(true);
+      }
+    } else {
+      setLoading(true);
+    }
     setError(null);
     try {
       const data = await fetchTemplates(token);
@@ -57,12 +85,18 @@ export default function TemplatesLandingSelect() {
 
       const params = new URLSearchParams(window.location.search);
       const templateId = params.get("templateId");
+      const modeParam = params.get("mode");
       if (templateId && safeList.length > 0) {
         const found = safeList.find(
           (t: any) => String(t.id) === String(templateId) || String(t.slug) === String(templateId)
         );
         if (found) {
+          if (modeParam === "create" && !token) {
+            navigate("/login");
+            return;
+          }
           setActiveTemplate(found);
+          setActiveMode(modeParam === "preview" ? "preview" : "create");
         }
       }
     } catch (e: any) {
@@ -73,8 +107,7 @@ export default function TemplatesLandingSelect() {
   }
 
   // load ngay
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useMemo(() => {
+  useEffect(() => {
     loadTemplates();
 
     // Nếu vừa tạo xong, backend FE redirect về /templates?createdId=...
@@ -85,11 +118,8 @@ export default function TemplatesLandingSelect() {
       setCreatedUrl(`landing page id: ${createdIdParam}`);
     }
     if (slugParam) {
-      setCreatedLink(`http://localhost:8000/page/${slugParam}`);
+      setCreatedLink(`${PAGE_BASE_URL}/${slugParam}`);
     }
-
-
-
   }, []);
 
 
@@ -98,7 +128,18 @@ export default function TemplatesLandingSelect() {
     return (
       <TemplateCreatePage
         template={activeTemplate}
-        onCreated={() => setActiveTemplate(null)}
+        mode={activeMode}
+        onSwitchMode={(newMode) => {
+          if (newMode === "create" && !token) {
+            navigate("/login");
+            return;
+          }
+          setActiveMode(newMode);
+        }}
+        onCreated={() => {
+          setActiveTemplate(null);
+          setActiveMode("create");
+        }}
       />
     );
   }
@@ -106,8 +147,8 @@ export default function TemplatesLandingSelect() {
   return (
     <div>
       <PageSection
-        title="Chọn template"
-        subtitle="Admin up mẫu → user bấm Tạo → nhập fields để tạo landing page"
+        title="Chọn mẫu website (Templates)"
+        subtitle="Tạo nhanh Portfolio cá nhân. Nhập thông tin cá nhân, ảnh đại diện, dự án & liên kết mạng xã hội để sinh ngay trang web chuyên nghiệp, hoàn toàn miễn phí."
       >
         <GlassCard>
           {error ? (
@@ -139,16 +180,34 @@ export default function TemplatesLandingSelect() {
                 <div className="mt-2">
                   <a
                     className="text-white/90 underline underline-offset-4 hover:text-white"
-                    href={createdLink ? createdLink : (createdSlug ? `http://localhost:8000/page/${createdSlug}` : `http://localhost:8000/api/landing-pages/${createdId}/render`)}
+                    href={createdLink ? createdLink : (createdSlug ? `${PAGE_BASE_URL}/${createdSlug}` : `${API_BASE_URL}/landing-pages/${createdId}/render`)}
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    {createdLink ?? (createdSlug ? `http://localhost:8000/page/${createdSlug}` : "Xem landing page")}
+                    {createdLink ?? (createdSlug ? `${PAGE_BASE_URL}/${createdSlug}` : "Xem landing page")}
                   </a>
                 </div>
               </div>
             </div>
           ) : null}
+
+          {isLimitReached && (
+            <div className="col-span-full mb-4 rounded-2xl border border-amber-400/30 bg-amber-500/10 p-4 text-amber-200 flex flex-col md:flex-row md:items-center justify-between gap-3">
+              <div>
+                <div className="font-bold text-sm">Bạn đã dùng hết số lượt tạo Landing Page ({user?.landing_pages_count || 1}/{user?.landing_page_limit || 1} trang)</div>
+                <div className="text-xs text-amber-200/80 mt-0.5">
+                  Gói tài khoản hiện tại không cho phép tạo thêm Landing Page mới. Bạn vẫn có thể xem trước (Preview) các mẫu giao diện dưới đây.
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => navigate("/dashboard")}
+                className="shrink-0 px-4 py-2 rounded-xl border border-amber-400/40 bg-amber-500/20 text-xs font-semibold hover:bg-amber-500/30 transition text-amber-100"
+              >
+                Gia hạn / Nâng cấp ngay
+              </button>
+            </div>
+          )}
 
           {sortedTemplates.map((tpl: any) => (
               <div
@@ -197,16 +256,38 @@ export default function TemplatesLandingSelect() {
                         className="ghost-btn px-3 py-1.5 text-xs"
                         onClick={() => {
                           setActiveTemplate(tpl);
+                          setActiveMode("preview");
                         }}
                       >
                         Xem
                       </button>
                       <button
                         type="button"
-                        className="primary-btn px-4 py-1.5 text-xs font-semibold"
-                        onClick={() => setActiveTemplate(tpl)}
+                        className={`px-4 py-1.5 text-xs font-semibold rounded-xl transition ${
+                          isLimitReached
+                            ? "cursor-not-allowed border border-white/10 bg-white/5 text-white/35"
+                            : "primary-btn"
+                        }`}
+                        disabled={isLimitReached}
+                        title={
+                          isLimitReached
+                            ? `Bạn đã hết lượt tạo Landing Page (${user?.landing_pages_count || 1}/${user?.landing_page_limit || 1} trang). Vui lòng nâng cấp dịch vụ!`
+                            : "Tạo trang web với mẫu này"
+                        }
+                        onClick={() => {
+                          if (!token) {
+                            navigate("/login");
+                            return;
+                          }
+                          if (isLimitReached) {
+                            alert(`Bạn đã hết lượt tạo Landing Page (${user?.landing_pages_count || 1}/${user?.landing_page_limit || 1} trang). Vui lòng gia hạn hoặc nâng cấp gói để tạo thêm!`);
+                            return;
+                          }
+                          setActiveTemplate(tpl);
+                          setActiveMode("create");
+                        }}
                       >
-                        Tạo
+                        {isLimitReached ? "Hết lượt tạo" : "Tạo"}
                       </button>
                     </div>
                   </div>

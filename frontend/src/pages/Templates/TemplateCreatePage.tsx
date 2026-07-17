@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 
 import { createLandingPage } from "../../services/landingPageApi";
 import { previewTemplate, renderLandingPage } from "../../services/landingPageRenderApi";
+import { PAGE_BASE_URL } from "../../config/api";
 
 import GlassCard from "../../components/common/GlassCard";
 
@@ -19,8 +21,31 @@ export type TemplateField = {
   sort_order?: number;
 };
 
+const getCleanScalar = (val: any): string => {
+  if (val === null || val === undefined) return "";
+  if (Array.isArray(val)) {
+    return val.length > 0 ? getCleanScalar(val[0]) : "";
+  }
+  if (typeof val === "string") {
+    const trimmed = val.trim();
+    if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
+      try {
+        const parsed = JSON.parse(trimmed);
+        if (Array.isArray(parsed)) {
+          return parsed.length > 0 ? getCleanScalar(parsed[0]) : "";
+        }
+      } catch {}
+    }
+    return val;
+  }
+  if (typeof val === "object") return JSON.stringify(val);
+  return String(val);
+};
+
 export default function TemplateCreatePage({
   template,
+  mode = "create",
+  onSwitchMode,
   onCreated,
 }: {
   template: {
@@ -30,18 +55,26 @@ export default function TemplateCreatePage({
     description?: string | null;
     fields: TemplateField[];
   };
+  mode?: "preview" | "create";
+  onSwitchMode?: (newMode: "preview" | "create") => void;
   onCreated?: () => void;
 }) {
+  const navigate = useNavigate();
   const token = useAuthStore((s) => s.token);
+  const user = useAuthStore((s) => s.user) as any;
+
+  const isLimitReached = Boolean(
+    user && (
+      user.can_create_landing_page === false ||
+      (typeof user.landing_pages_count === "number" && typeof user.landing_page_limit === "number" && user.landing_pages_count >= user.landing_page_limit) ||
+      (user.role !== "Admin" && (!user.roles || !user.roles.some((r: any) => r.name === "Admin")) && typeof user.landing_page_limit !== "number" && ((typeof user.landing_pages_count === "number" && user.landing_pages_count >= 1) || (user.landing_pages && Object.keys(user.landing_pages).length >= 1)))
+    )
+  );
 
   const initial = useMemo(() => {
     const obj: Record<string, any> = {};
     for (const f of template.fields || []) {
-      if (f.default_value !== null && f.default_value !== undefined) {
-        obj[f.key] = f.default_value;
-      } else {
-        obj[f.key] = "";
-      }
+      obj[f.key] = getCleanScalar(f.default_value);
     }
     return obj;
   }, [template.fields]);
@@ -54,41 +87,53 @@ export default function TemplateCreatePage({
 
   const [previewHtml, setPreviewHtml] = useState<string>("");
   const [previewLoading, setPreviewLoading] = useState<boolean>(false);
+  const [previewError, setPreviewError] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<"desktop" | "mobile">("desktop");
 
+  // Tự động render preview mẫu khi vừa vào / khi values thay đổi
   useEffect(() => {
-    let isMounted = true;
-    setPreviewLoading(true);
+    let active = true;
 
-    const timer = setTimeout(async () => {
+    async function doPreview() {
+      setPreviewLoading(true);
+      setPreviewError(null);
       try {
-        const html = await previewTemplate(template.id, values, token);
-        if (isMounted) {
-          setPreviewHtml(html);
+        const res: any = await previewTemplate(template.id, values);
+        if (active) {
+          if (res && typeof res === "object" && res.html) {
+            setPreviewHtml(res.html);
+          } else if (typeof res === "string") {
+            setPreviewHtml(res);
+          } else {
+            setPreviewHtml("<p class='p-4 text-center text-white/50'>Không có dữ liệu preview</p>");
+          }
         }
-      } catch (err) {
-        console.error("Preview error:", err);
+      } catch (err: any) {
+        if (active) {
+          setPreviewError(err?.response?.data?.message || "Lỗi khi render preview mẫu giao diện");
+        }
       } finally {
-        if (isMounted) {
-          setPreviewLoading(false);
-        }
+        if (active) setPreviewLoading(false);
       }
-    }, 350);
+    }
 
+    const timer = setTimeout(doPreview, 500);
     return () => {
-      isMounted = false;
+      active = false;
       clearTimeout(timer);
     };
-  }, [template.id, values, token]);
-
+  }, [template.id, values]);
 
   async function onSubmit(e: React.FormEvent) {
-
     e.preventDefault();
 
     if (!token) {
-
       setError("Bạn cần đăng nhập");
+      return;
+    }
+
+    if (isLimitReached) {
+      setError(`Bạn đã hết lượt tạo Landing Page (${user?.landing_pages_count || 1}/${user?.landing_page_limit || 1} trang). Vui lòng nâng cấp dịch vụ!`);
       return;
     }
 
@@ -141,6 +186,107 @@ export default function TemplateCreatePage({
     }
   }
 
+  if (mode === "preview") {
+    return (
+      <div className="space-y-6">
+        <GlassCard>
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="flex h-2.5 w-2.5 rounded-full bg-emerald-400 animate-pulse" />
+                <h2 className="text-lg font-bold text-white">Xem trước mẫu: {template.name}</h2>
+              </div>
+              <p className="mt-1 text-xs text-white/60">
+                Chế độ chỉ xem giao diện thực tế. Bạn không thể nhập liệu hay tạo trang ở chế độ xem mẫu này.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="flex items-center rounded-xl border border-white/15 bg-black/40 p-1">
+                <button
+                  type="button"
+                  onClick={() => setViewMode("desktop")}
+                  className={`px-3 py-1.5 text-xs rounded-lg font-medium transition-all ${
+                    viewMode === "desktop"
+                      ? "bg-violet-600 text-white shadow-md"
+                      : "text-white/60 hover:text-white"
+                  }`}
+                >
+                  💻 Desktop
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setViewMode("mobile")}
+                  className={`px-3 py-1.5 text-xs rounded-lg font-medium transition-all ${
+                    viewMode === "mobile"
+                      ? "bg-violet-600 text-white shadow-md"
+                      : "text-white/60 hover:text-white"
+                  }`}
+                >
+                  📱 Mobile
+                </button>
+              </div>
+
+              {onCreated ? (
+                <button
+                  type="button"
+                  onClick={onCreated}
+                  className="ghost-btn px-4 py-2 text-xs"
+                >
+                  ← Quay lại danh sách
+                </button>
+              ) : null}
+
+              {onSwitchMode ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!token) {
+                      navigate("/login");
+                      return;
+                    }
+                    onSwitchMode("create");
+                  }}
+                  className="primary-btn px-5 py-2 text-xs font-semibold shadow-lg shadow-violet-500/20"
+                >
+                  🚀 Sử dụng mẫu này để tạo website
+                </button>
+              ) : null}
+            </div>
+          </div>
+        </GlassCard>
+
+        <div className="relative overflow-hidden rounded-3xl border border-white/15 bg-slate-950/60 p-4 backdrop-blur-xl shadow-2xl">
+          {previewLoading ? (
+            <div className="flex h-[500px] flex-col items-center justify-center gap-3 text-center">
+              <div className="h-8 w-8 animate-spin rounded-full border-2 border-violet-500 border-t-transparent" />
+              <div className="text-sm font-medium text-white/80">Đang dựng bản xem trước giao diện...</div>
+            </div>
+          ) : viewMode === "desktop" ? (
+            <iframe
+              className="w-full h-[750px] rounded-2xl bg-white shadow-2xl transition-all duration-300 border-0"
+              srcDoc={previewHtml}
+              title={`Preview Desktop: ${template.name}`}
+            />
+          ) : (
+            <div className="py-6 flex justify-center bg-black/40 rounded-2xl">
+              <div className="mx-auto w-[375px] h-[750px] rounded-[52px] border-[14px] border-gray-900 bg-gray-900 shadow-2xl relative overflow-hidden shrink-0">
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 h-6 w-32 bg-gray-900 rounded-b-2xl z-10 flex items-center justify-center">
+                  <div className="h-1.5 w-14 bg-gray-800 rounded-full" />
+                </div>
+                <iframe
+                  className="w-full h-full bg-white border-0"
+                  srcDoc={previewHtml}
+                  title={`Preview Mobile: ${template.name}`}
+                />
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div>
       <PageSection
@@ -176,7 +322,7 @@ export default function TemplateCreatePage({
                   </label>
                   <div className="mt-1.5 flex items-center rounded-xl border border-white/20 bg-black/30 overflow-hidden focus-within:border-violet-400 transition">
                     <span className="bg-white/10 px-3 py-3 text-xs font-mono text-white/50 border-r border-white/10 select-none">
-                      http://localhost:8000/page/
+                      {PAGE_BASE_URL}/
                     </span>
                     <input
                       type="text"
@@ -188,7 +334,7 @@ export default function TemplateCreatePage({
                   </div>
                   <div className="mt-1.5 text-[11px] text-white/60">
                     {customSlug.trim() ? (
-                      <span>Link của bạn sẽ là: <strong className="text-violet-300">http://localhost:8000/page/{customSlug.trim().toLowerCase().replace(/[^a-z0-9-_]/g, "-")}</strong></span>
+                      <span>Link của bạn sẽ là: <strong className="text-violet-300">{PAGE_BASE_URL}/{customSlug.trim().toLowerCase().replace(/[^a-z0-9-_]/g, "-")}</strong></span>
                     ) : (
                       <span>Nếu để trống, hệ thống sẽ tự động thêm dãy số ở sau tên trang.</span>
                     )}
@@ -225,7 +371,7 @@ export default function TemplateCreatePage({
                             value={v}
                             onChange={(e) => setValues((s) => ({ ...s, [field.key]: e.target.value }))}
                             className="mt-1 w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-white placeholder:text-white/40 outline-none focus:border-white/30"
-                            placeholder={field.default_value ?? ""}
+                            placeholder={getCleanScalar(field.default_value)}
                           />
                         )}
                       </div>
@@ -244,14 +390,30 @@ export default function TemplateCreatePage({
                 </div>
               ) : null}
 
-              <div className="mt-6 flex items-center justify-end gap-3">
-                <button
-                  type="submit"
-                  className="primary-btn w-full justify-center py-3 sm:w-auto"
-                  disabled={loading}
-                >
-                  {loading ? "Đang tạo..." : "Tạo landing page ngay"}
-                </button>
+              <div className="mt-6 flex flex-col sm:flex-row items-center justify-end gap-3">
+                {!token ? (
+                  <div className="w-full rounded-xl border border-amber-400/30 bg-amber-500/10 p-3.5 text-center sm:text-left flex flex-col sm:flex-row items-center justify-between gap-3 shadow-lg">
+                    <span className="text-xs text-amber-200 font-medium">Bạn cần đăng nhập để có thể lưu và xuất bản trang landing page này.</span>
+                    <Link to="/login" className="primary-btn shrink-0 px-4 py-2 text-xs font-semibold">Đăng nhập ngay</Link>
+                  </div>
+                ) : isLimitReached ? (
+                  <div className="w-full rounded-xl border border-rose-400/30 bg-rose-500/10 p-3.5 text-center sm:text-left flex flex-col sm:flex-row items-center justify-between gap-3 shadow-lg">
+                    <span className="text-xs text-rose-200 font-medium">
+                      Bạn đã dùng hết số lượt tạo Landing Page ({user?.landing_pages_count || 1}/{user?.landing_page_limit || 1} trang). Vui lòng nâng cấp dịch vụ!
+                    </span>
+                    <Link to="/dashboard" className="shrink-0 px-4 py-2 rounded-xl border border-rose-400/40 bg-rose-500/20 text-xs font-semibold hover:bg-rose-500/30 transition text-rose-100">
+                      Gia hạn / Nâng cấp
+                    </Link>
+                  </div>
+                ) : (
+                  <button
+                    type="submit"
+                    className="primary-btn w-full justify-center py-3 sm:w-auto"
+                    disabled={loading}
+                  >
+                    {loading ? "Đang tạo..." : "Tạo landing page ngay"}
+                  </button>
+                )}
               </div>
             </GlassCard>
           </form>
@@ -270,6 +432,11 @@ export default function TemplateCreatePage({
                   <span className="text-xs text-white/50">(Tự động làm mới khi nhập)</span>
                 )}
               </div>
+              {previewError && (
+                <div className="text-xs text-rose-300 bg-rose-500/20 px-2 py-1 rounded">
+                  {previewError}
+                </div>
+              )}
 
               <div className="flex items-center gap-2">
                 <button

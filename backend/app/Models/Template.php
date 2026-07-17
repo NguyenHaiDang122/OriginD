@@ -17,6 +17,7 @@ class Template extends Model
         'thumbnail',
         'version',
         'status',
+        'renewal_price',
         'template_path',   // thêm dòng này
         'created_by',
     ];

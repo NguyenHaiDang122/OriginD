@@ -9,6 +9,8 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 use App\Models\Subscription;
+use App\Models\LandingPage;
+use App\Models\Deposit;
 
 
 class User extends Authenticatable
@@ -25,6 +27,8 @@ class User extends Authenticatable
         'name',
         'email',
         'status',
+        'balance',
+        'landing_page_limit',
         'password',
     ];
 
@@ -48,11 +52,38 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'balance' => 'decimal:2',
+            'landing_page_limit' => 'integer',
         ];
     }
     
     public function subscription()
     {
-        return $this->hasOne(Subscription::class);
+        return $this->hasOne(Subscription::class)->latestOfMany();
+    }
+
+    public function landingPages()
+    {
+        return $this->hasMany(LandingPage::class);
+    }
+
+    public function deposits()
+    {
+        return $this->hasMany(Deposit::class);
+    }
+
+    public function getEffectiveLandingPageLimit(): int
+    {
+        if (!is_null($this->landing_page_limit)) {
+            return (int) $this->landing_page_limit;
+        }
+
+        $subscription = $this->subscription;
+        $plan = $subscription ? $subscription->plan : null;
+        if (!$plan || in_array(strtolower($plan->slug), ['free', 'starter']) || $plan->landing_page_limit <= 1) {
+            return 1;
+        }
+
+        return $plan->landing_page_limit > 0 ? (int) $plan->landing_page_limit : 999;
     }
 }

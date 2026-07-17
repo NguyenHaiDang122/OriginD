@@ -14,7 +14,12 @@ class TemplateScannerService
 
         libxml_use_internal_errors(true);
 
-        $dom->loadHTMLFile($htmlPath);
+        $html = file_get_contents($htmlPath);
+
+        // Ensure UTF-8 characters (Vietnamese, etc.) are correctly converted and parsed without Mojibake (TÃªn hiá»n thá»...)
+        $dom->loadHTML(
+            mb_convert_encoding($html, 'HTML-ENTITIES', 'UTF-8')
+        );
 
         libxml_clear_errors();
 
