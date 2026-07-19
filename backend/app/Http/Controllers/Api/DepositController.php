@@ -202,7 +202,9 @@ class DepositController extends Controller
                             $content = is_array($t) ? ($t['transaction_content'] ?? $t['content'] ?? $t['description'] ?? '') : '';
                             $amountIn = is_array($t) ? floatval($t['amount_in'] ?? $t['transferAmount'] ?? $t['amount'] ?? 0) : 0;
 
-                            if ((str_contains($content, $deposit->code) || str_contains($deposit->code, $content)) && !empty($content) && $amountIn >= floatval($deposit->amount)) {
+                            \Illuminate\Support\Facades\Log::info("Checking BankHub: Content=[$content] vs Code=[{$deposit->code}], AmountIn=[$amountIn] vs DepositAmount=[" . floatval($deposit->amount) . "]");
+
+                            if (stripos($content, $deposit->code) !== false && !empty($content) && $amountIn >= floatval($deposit->amount)) {
                                 $deposit->status = 'approved';
                                 $deposit->save();
 

@@ -15,7 +15,6 @@ export default function DepositModal({ isOpen, onClose, onSuccess, initialAmount
   const [customAmount, setCustomAmount] = useState<string>("");
   const [deposit, setDeposit] = useState<DepositRecord | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
-  const [checkingStatus, setCheckingStatus] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [balance, setBalance] = useState<number>(0);
   const [copied, setCopied] = useState<boolean>(false);
@@ -89,26 +88,6 @@ export default function DepositModal({ isOpen, onClose, onSuccess, initialAmount
       navigator.clipboard.writeText(deposit.code);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    }
-  }
-
-  async function handleCheckSepayStatus() {
-    if (!deposit) return;
-    setCheckingStatus(true);
-    try {
-      const res = await checkSepayDeposit(token, deposit.id);
-      if (res.status === "approved") {
-        if (res.balance !== undefined) setBalance(Number(res.balance));
-        if (onSuccess) onSuccess();
-        onClose();
-        alert(res.message || "🎉 Đã xác nhận thanh toán thành công và cộng tiền vào ví!");
-      } else {
-        alert(res.message || "Đơn hàng vẫn đang ở trạng thái chờ thanh toán.");
-      }
-    } catch (e: any) {
-      alert(e?.response?.data?.message || "Lỗi khi kiểm tra trạng thái thanh toán!");
-    } finally {
-      setCheckingStatus(false);
     }
   }
 
@@ -293,19 +272,16 @@ export default function DepositModal({ isOpen, onClose, onSuccess, initialAmount
               </div>
             </div>
 
-            <p className="text-[11px] text-white/60 text-center italic">
-              * Hệ thống SePay sẽ tự động cộng tiền ngay khi nhận được thanh toán, hoặc bạn bấm kiểm tra trạng thái bên dưới.
-            </p>
-
             <div className="flex flex-col gap-2.5">
-              <button
-                type="button"
-                onClick={handleCheckSepayStatus}
-                disabled={checkingStatus}
-                className="w-full rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 py-3 text-xs font-bold text-white shadow-lg shadow-amber-500/30 hover:from-amber-600 hover:to-orange-600 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
-              >
-                <span>🔄 Kiểm tra trạng thái thanh toán SePay {checkingStatus ? "..." : "(Bấm nếu đã chuyển khoản xong)"}</span>
-              </button>
+              <div className="w-full rounded-xl border border-emerald-400/20 bg-emerald-500/10 py-3.5 flex items-center justify-center gap-3 shadow-inner">
+                <div className="relative flex h-3 w-3">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                </div>
+                <span className="text-xs font-bold text-emerald-400 tracking-wide">
+                  Đang quét và chờ nhận tiền tự động...
+                </span>
+              </div>
 
               <div className="flex gap-3">
                 <button
