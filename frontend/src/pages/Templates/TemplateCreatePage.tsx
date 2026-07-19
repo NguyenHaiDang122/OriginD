@@ -101,13 +101,48 @@ export default function TemplateCreatePage({
       try {
         const res: any = await previewTemplate(template.id, values);
         if (active) {
+          let htmlContent = "";
           if (res && typeof res === "object" && res.html) {
-            setPreviewHtml(res.html);
+            htmlContent = res.html;
           } else if (typeof res === "string") {
-            setPreviewHtml(res);
+            htmlContent = res;
           } else {
-            setPreviewHtml("<p class='p-4 text-center text-white/50'>Không có dữ liệu preview</p>");
+            htmlContent = "<p class='p-4 text-center text-white/50'>Không có dữ liệu preview</p>";
           }
+          
+          // Inject script to prevent navigation inside the preview iframe
+          const interceptScript = `
+            <script>
+              document.addEventListener('click', function(e) {
+                const a = e.target.closest('a');
+                if (a) {
+                  e.preventDefault();
+                  e.stopPropagation(); // Chặn JS của template chạy (để tránh JS đổi hash)
+                  
+                  const href = a.getAttribute('href');
+                  if (href && href.startsWith('#') && href.length > 1) {
+                    const target = document.querySelector(href);
+                    if (target) {
+                      target.scrollIntoView({ behavior: 'smooth' });
+                    }
+                  }
+                }
+              }, true); // Sử dụng capture phase để bắt sự kiện trước template
+
+              document.addEventListener('submit', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+              }, true);
+            </script>
+          `;
+          
+          if (htmlContent.includes("</body>")) {
+            htmlContent = htmlContent.replace("</body>", interceptScript + "</body>");
+          } else {
+            htmlContent += interceptScript;
+          }
+          
+          setPreviewHtml(htmlContent);
         }
       } catch (err: any) {
         if (active) {

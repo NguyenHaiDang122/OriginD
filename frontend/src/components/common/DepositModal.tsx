@@ -17,7 +17,8 @@ export default function DepositModal({ isOpen, onClose, onSuccess, initialAmount
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [balance, setBalance] = useState<number>(0);
-  const [copied, setCopied] = useState<boolean>(false);
+  const [copiedType, setCopiedType] = useState<"code" | "account" | null>(null);
+  const [paymentSuccess, setPaymentSuccess] = useState<boolean>(false);
 
   useEffect(() => {
     if (isOpen && token) {
@@ -39,7 +40,12 @@ export default function DepositModal({ isOpen, onClose, onSuccess, initialAmount
         if (res.status === "approved") {
           if (res.balance !== undefined) setBalance(Number(res.balance));
           if (onSuccess) onSuccess();
-          onClose();
+          
+          setPaymentSuccess(true);
+          setTimeout(() => {
+            setPaymentSuccess(false);
+            onClose();
+          }, 3000);
         }
       } catch (e) {}
     };
@@ -63,6 +69,35 @@ export default function DepositModal({ isOpen, onClose, onSuccess, initialAmount
 
   if (!isOpen) return null;
 
+  if (paymentSuccess) {
+    return (
+      <>
+        <style>{`
+          @keyframes fadeOutGlobal {
+            0% { opacity: 1; transform: scale(0.95); }
+            10% { opacity: 1; transform: scale(1); }
+            75% { opacity: 1; transform: scale(1); }
+            100% { opacity: 0; transform: scale(1.05); }
+          }
+        `}</style>
+        <div 
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/90 backdrop-blur-md p-4"
+          style={{ animation: 'fadeOutGlobal 3s ease-in-out forwards' }}
+        >
+          <div className="relative w-full max-w-sm rounded-3xl border border-emerald-400/20 bg-emerald-500/5 p-8 text-center backdrop-blur-2xl shadow-[0_0_50px_-15px_rgba(52,211,153,0.25)] overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-emerald-400/5 via-transparent to-teal-500/5 pointer-events-none" />
+            <h3 className="relative text-lg md:text-xl font-bold tracking-[0.1em] text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 via-teal-200 to-emerald-300 uppercase mb-3 drop-shadow-sm">
+              Thanh Toán Thành Công
+            </h3>
+            <div className="relative inline-block rounded-full border border-emerald-400/30 bg-emerald-500/10 px-4 py-1.5 text-sm font-bold text-emerald-200 tracking-wide shadow-[0_0_15px_-5px_rgba(52,211,153,0.3)]">
+              +{Number(deposit?.amount || 0).toLocaleString('vi-VN')} VNĐ
+            </div>
+          </div>
+        </div>
+      </>
+    );
+  }
+
   const presets = [50000, 100000, 200000, 500000];
 
   async function handleCreateQR() {
@@ -83,17 +118,15 @@ export default function DepositModal({ isOpen, onClose, onSuccess, initialAmount
     }
   }
 
-  function handleCopyCode() {
-    if (deposit) {
-      navigator.clipboard.writeText(deposit.code);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    }
+  function handleCopy(type: "code" | "account", text: string) {
+    navigator.clipboard.writeText(text);
+    setCopiedType(type);
+    setTimeout(() => setCopiedType(null), 2000);
   }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 overflow-y-auto">
-      <div className="relative w-full max-w-lg rounded-3xl border border-white/20 bg-gradient-to-b from-slate-900/95 to-slate-950/95 p-6 sm:p-8 shadow-2xl text-white">
+      <div className="relative w-full max-w-2xl rounded-3xl border border-white/20 bg-gradient-to-b from-slate-900/95 to-slate-950/95 p-6 sm:p-8 shadow-2xl text-white">
         <button
           type="button"
           onClick={onClose}
@@ -103,9 +136,11 @@ export default function DepositModal({ isOpen, onClose, onSuccess, initialAmount
         </button>
 
         <div className="flex items-center gap-3 mb-6">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500 to-indigo-600 text-2xl shadow-lg shadow-violet-500/30">
-            ord
-          </div>
+          <img 
+            src="https://i.imgur.com/PIrOjbx.png" 
+            alt="Logo" 
+            className="h-12 w-12 rounded-2xl object-cover shadow-lg shadow-black/20"
+          />
           <div>
             <h3 className="text-xl font-extrabold tracking-tight">Nạp tiền vào tài khoản</h3>
             <p className="text-xs text-white/60">
@@ -146,13 +181,15 @@ export default function DepositModal({ isOpen, onClose, onSuccess, initialAmount
                 Hoặc nhập số tiền khác
               </label>
               <input
-                type="number"
-                min={10000}
-                step={10000}
-                value={customAmount}
-                onChange={(e) => setCustomAmount(e.target.value)}
-                placeholder="Nhập số tiền VNĐ (vd: 150000)"
-                className="w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-white placeholder:text-white/30 outline-none focus:border-violet-400 font-semibold"
+                type="text"
+                inputMode="numeric"
+                value={customAmount ? Number(customAmount).toLocaleString("vi-VN") : ""}
+                onChange={(e) => {
+                  const rawValue = e.target.value.replace(/\D/g, "");
+                  setCustomAmount(rawValue);
+                }}
+                placeholder="Nhập số tiền VNĐ (vd: 150.000)"
+                className="w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-white placeholder:text-white/30 outline-none focus:border-violet-400 font-semibold [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               />
             </div>
 
@@ -166,9 +203,9 @@ export default function DepositModal({ isOpen, onClose, onSuccess, initialAmount
               type="button"
               onClick={handleCreateQR}
               disabled={loading}
-              className="w-full rounded-2xl bg-gradient-to-r from-violet-600 to-indigo-600 py-3.5 text-sm font-bold text-white shadow-lg shadow-violet-500/30 hover:from-violet-500 hover:to-indigo-500 transition-all disabled:opacity-50"
+              className="w-full rounded-2xl bg-transparent border border-violet-400/40 py-3.5 text-sm font-bold text-violet-100 hover:bg-violet-500/10 hover:border-violet-400/60 transition-all disabled:opacity-50"
             >
-              {loading ? "Đang tạo đơn..." : "Tiếp tục - Mở cổng thanh toán SePay"}
+              {loading ? "Đang tạo đơn..." : "Tiếp tục - Mở cổng thanh toán tự động"}
             </button>
           </div>
         ) : deposit.checkout_url || deposit.sepay_fields ? (
@@ -221,53 +258,64 @@ export default function DepositModal({ isOpen, onClose, onSuccess, initialAmount
             </div>
           </div>
         ) : (
-          <div className="space-y-6">
-            <div className="rounded-2xl border border-emerald-400/30 bg-emerald-500/10 p-4 text-center">
-              <span className="text-xs font-semibold text-emerald-300">
-                ✅ Mã VietQR ACB đã được tạo! Quét bằng ứng dụng ngân hàng bất kỳ để chuyển khoản tự động.
+          <div className="space-y-4">
+            <div className="rounded-xl border border-emerald-400/30 bg-emerald-500/10 p-3 text-center">
+              <span className="text-[11px] sm:text-xs font-semibold text-emerald-300">
+                QUÉT MÃ QR ĐỂ NẠP TIỀN TỰ ĐỘNG.
               </span>
             </div>
 
-            <div className="flex flex-col items-center justify-center bg-white p-4 rounded-2xl shadow-xl">
-              <img
-                src={`https://img.vietqr.io/image/ACB-19599691-compact2.jpg?amount=${deposit.amount}&addInfo=${encodeURIComponent(deposit.code)}&accountName=NGUYEN%20HAI%20DANG`}
-                alt="VietQR ACB"
-                className="w-64 h-auto sm:w-72 rounded-xl"
-              />
-            </div>
+            <div className="flex flex-col sm:flex-row gap-5 items-center sm:items-stretch">
+              <div className="flex-shrink-0 flex items-center justify-center bg-white p-2.5 rounded-2xl shadow-xl w-fit">
+                <img
+                  src={`https://img.vietqr.io/image/ACB-19599691-compact2.jpg?amount=${deposit.amount}&addInfo=${encodeURIComponent(deposit.code)}&accountName=NGUYEN%20HAI%20DANG`}
+                  alt="VietQR ACB"
+                  className="w-40 sm:w-48 h-auto rounded-xl"
+                />
+              </div>
 
-            <div className="rounded-2xl border border-white/15 bg-white/5 p-4 space-y-2.5 text-xs">
-              <div className="flex justify-between border-b border-white/10 pb-2">
-                <span className="text-white/60">Ngân hàng:</span>
-                <span className="font-bold text-white">ACB (Ngân hàng Á Châu)</span>
-              </div>
-              <div className="flex justify-between border-b border-white/10 pb-2">
-                <span className="text-white/60">Số tài khoản:</span>
-                <span className="font-bold text-white text-sm tracking-wider">19599691</span>
-              </div>
-              <div className="flex justify-between border-b border-white/10 pb-2">
-                <span className="text-white/60">Chủ tài khoản:</span>
-                <span className="font-bold text-white">NGUYEN HAI DANG</span>
-              </div>
-              <div className="flex justify-between border-b border-white/10 pb-2">
-                <span className="text-white/60">Số tiền:</span>
-                <span className="font-extrabold text-violet-300 text-sm">
-                  {Number(deposit.amount).toLocaleString("vi-VN")} VNĐ
-                </span>
-              </div>
-              <div className="flex items-center justify-between pt-1">
-                <span className="text-white/60">Nội dung CK (Bắt buộc):</span>
-                <div className="flex items-center gap-2">
-                  <span className="font-black text-amber-300 text-sm bg-amber-500/20 px-2 py-0.5 rounded border border-amber-400/40 tracking-wider">
-                    {deposit.code}
+              <div className="flex-1 w-full rounded-2xl border border-white/15 bg-white/5 p-4 sm:p-5 text-sm flex flex-col justify-center space-y-3">
+                <div className="flex justify-between border-b border-white/10 pb-2">
+                  <span className="text-white/60">Ngân hàng:</span>
+                  <span className="font-bold text-white text-right">ACB (Á Châu)</span>
+                </div>
+                <div className="flex justify-between items-center border-b border-white/10 pb-2">
+                  <span className="text-white/60">Số tài khoản:</span>
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-white tracking-wider">19599691</span>
+                    <button
+                      type="button"
+                      onClick={() => handleCopy("account", "19599691")}
+                      className="rounded bg-white/10 px-2 py-1 text-[10px] font-bold hover:bg-white/20 transition-all text-white flex-shrink-0"
+                    >
+                      {copiedType === "account" ? "Đã chép!" : "Copy"}
+                    </button>
+                  </div>
+                </div>
+                <div className="flex justify-between border-b border-white/10 pb-2">
+                  <span className="text-white/60">Chủ tài khoản:</span>
+                  <span className="font-bold text-white text-right">NGUYEN HAI DANG</span>
+                </div>
+                <div className="flex justify-between border-b border-white/10 pb-2">
+                  <span className="text-white/60">Số tiền:</span>
+                  <span className="font-extrabold text-violet-300">
+                    {Number(deposit.amount).toLocaleString("vi-VN")} VNĐ
                   </span>
-                  <button
-                    type="button"
-                    onClick={handleCopyCode}
-                    className="rounded bg-white/10 px-2 py-1 text-[10px] font-bold hover:bg-white/20 transition-all text-white"
-                  >
-                    {copied ? "Đã chép!" : "Copy"}
-                  </button>
+                </div>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between pt-1 gap-2">
+                  <span className="text-white/60 whitespace-nowrap">Nội dung CK:</span>
+                  <div className="flex items-center justify-between sm:justify-end gap-2 w-full">
+                    <span className="font-black text-amber-300 text-xs sm:text-sm bg-amber-500/20 px-2 py-0.5 rounded border border-amber-400/40 tracking-wider">
+                      {deposit.code}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => handleCopy("code", deposit.code)}
+                      className="rounded bg-white/10 px-2.5 py-1 text-[10px] font-bold hover:bg-white/20 transition-all text-white flex-shrink-0"
+                    >
+                      {copiedType === "code" ? "Đã chép!" : "Copy"}
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -279,7 +327,7 @@ export default function DepositModal({ isOpen, onClose, onSuccess, initialAmount
                   <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
                 </div>
                 <span className="text-xs font-bold text-emerald-400 tracking-wide">
-                  Đang quét và chờ nhận tiền tự động...
+                  Hệ thống OriginD đang kiểm tra thanh toán...
                 </span>
               </div>
 

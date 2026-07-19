@@ -10,6 +10,7 @@ export default function WebDesignService() {
 
   useEffect(() => {
     setMounted(true);
+    window.scrollTo(0, 0);
   }, []);
 
   const nextSlide = () => setCurrentSlide((p) => (p + 1) % totalSlides);

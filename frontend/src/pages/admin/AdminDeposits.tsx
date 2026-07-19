@@ -72,9 +72,9 @@ export default function AdminDeposits() {
           <div className="flex flex-wrap gap-2">
             {[
               { key: "all", label: "Tất cả đơn" },
-              { key: "pending", label: `⏳ Chờ duyệt (${deposits.filter((x) => x.status === "pending").length})` },
-              { key: "approved", label: "🟢 Đã duyệt" },
-              { key: "rejected", label: "🔴 Từ chối" },
+              { key: "pending", label: `Chờ duyệt (${deposits.filter((x) => x.status === "pending").length})` },
+              { key: "approved", label: "Đã duyệt" },
+              { key: "rejected", label: "Từ chối" },
             ].map((tab) => (
               <button
                 key={tab.key}
@@ -96,7 +96,7 @@ export default function AdminDeposits() {
             disabled={loading}
             className="rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-xs font-semibold hover:bg-white/10 transition"
           >
-            🔄 Làm mới danh sách
+            Làm mới danh sách
           </button>
         </div>
 

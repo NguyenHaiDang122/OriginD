@@ -265,20 +265,10 @@ export default function AdminPlans() {
               <span>Cho phép kết nối Tên Miền Riêng (Custom Domain)</span>
             </label>
 
-            <label className="inline-flex items-center gap-2 cursor-pointer text-sm text-white/80 select-none">
-              <input
-                type="checkbox"
-                checked={premiumTemplates}
-                onChange={(e) => setPremiumTemplates(e.target.checked)}
-                className="rounded border-white/20 bg-white/10 text-violet-600 focus:ring-0"
-              />
-              <span>Sử dụng kho mẫu Giao Diện Cao Cấp (Premium Templates)</span>
-            </label>
-
             <button
               type="submit"
               disabled={creating}
-              className="ml-auto px-5 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 font-bold text-sm text-white transition shadow-lg disabled:opacity-50"
+              className="ml-auto px-5 py-2.5 rounded-xl bg-transparent border border-white/20 hover:bg-white/10 font-bold text-sm text-white transition disabled:opacity-50"
             >
               {creating ? "Đang xử lý..." : "Tạo Gói Mới"}
             </button>
@@ -371,15 +361,6 @@ export default function AdminPlans() {
                             <span>Tên miền riêng</span>
                           </label>
 
-                          <label className="inline-flex items-center gap-2 cursor-pointer text-sm text-white/80 select-none">
-                            <input
-                              type="checkbox"
-                              checked={editPremium}
-                              onChange={(e) => setEditPremium(e.target.checked)}
-                              className="rounded border-white/20 bg-white/10 text-violet-600 focus:ring-0"
-                            />
-                            <span>Mẫu Premium</span>
-                          </label>
                         </div>
 
                         <div className="flex items-center gap-2">
@@ -425,10 +406,6 @@ export default function AdminPlans() {
                           <div>•</div>
                           <div>
                             Tên miền riêng: <strong className={p.custom_domain ? "text-emerald-300" : "text-white/40"}>{p.custom_domain ? "Cho phép" : "Không"}</strong>
-                          </div>
-                          <div>•</div>
-                          <div>
-                            Kho mẫu Premium: <strong className={p.premium_templates ? "text-emerald-300" : "text-white/40"}>{p.premium_templates ? "Có" : "Không"}</strong>
                           </div>
                         </div>
                       </div>
