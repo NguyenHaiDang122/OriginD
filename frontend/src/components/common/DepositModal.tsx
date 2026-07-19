@@ -283,25 +283,6 @@ export default function DepositModal({ isOpen, onClose, onSuccess, initialAmount
                 </span>
               </div>
 
-              <div className="flex gap-3">
-                <button
-                  type="button"
-                  onClick={() => setDeposit(null)}
-                  className="w-1/3 rounded-xl border border-white/15 bg-white/5 py-3 text-xs font-semibold text-white/80 hover:bg-white/10 transition-all"
-                >
-                  ← Tạo đơn khác
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (onSuccess) onSuccess();
-                    onClose();
-                  }}
-                  className="w-2/3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 py-3 text-xs font-bold text-white shadow-lg shadow-emerald-500/30 hover:from-emerald-500 hover:to-teal-500 transition-all"
-                >
-                  ✅ Hoàn tất & Đóng
-                </button>
-              </div>
             </div>
           </div>
         )}
