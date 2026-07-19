@@ -24,7 +24,7 @@
                                 Xin chào <strong>{{ $name }}</strong>,
                             </p>
                             <p style="margin: 0 0 24px; font-size: 15px; line-height: 1.6; color: #8b949e;">
-                                Bạn đã đăng ký tài khoản mới trên hệ thống OriginD. Dưới đây là mã xác nhận OTP của bạn (mã có hiệu lực trong vòng 10 phút):
+                                Bạn đã đăng ký tài khoản mới trên hệ thống OriginD. Dưới đây là mã xác nhận OTP của bạn (mã có hiệu lực trong vòng 10 phút)
                             </p>
                             <div style="text-align: center; margin: 28px 0;">
                                 <div style="display: inline-block; background: linear-gradient(135deg, rgba(138,43,226,0.15) 0%, rgba(75,0,130,0.25) 100%); border: 2px dashed #8a2be2; border-radius: 14px; padding: 18px 36px;">
@@ -41,7 +41,7 @@
                     <tr>
                         <td align="center" style="padding-top: 24px; border-top: 1px solid #21262d; font-size: 12px; color: #484f58;">
                             &copy; {{ date('Y') }} OriginD. Tất cả các quyền được bảo lưu.<br>
-                            Liên hệ hỗ trợ: contact.origind@gmail.com
+                            Liên hệ hỗ trợ: support@origind.id.vn
                         </td>
                     </tr>
                 </table>

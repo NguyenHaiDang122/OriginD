@@ -44,8 +44,16 @@ export async function createDeposit(token: string | null, payload: { amount: num
   return res.data as { message: string; data: DepositRecord };
 }
 
-export async function renewService(token: string | null, landing_page_id?: number) {
-  const res = await api.post("/deposits/renew", { landing_page_id }, { headers: getHeaders(token) });
+export async function renewService(token: string | null, landing_page_id?: number, months: number = 1) {
+  const payload: Record<string, any> = { months };
+  if (landing_page_id) {
+    payload.landing_page_id = landing_page_id;
+  }
+  const res = await api.post("/deposits/renew", payload, {
+    headers: {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  });
   return res.data as { message: string; balance: number | string };
 }
 

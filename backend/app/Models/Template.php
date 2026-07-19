@@ -20,6 +20,7 @@ class Template extends Model
         'renewal_price',
         'template_path',   // thêm dòng này
         'created_by',
+        'is_featured',
     ];
 
     public function creator(): BelongsTo

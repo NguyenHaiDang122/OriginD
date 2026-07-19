@@ -40,7 +40,7 @@ class AdminCustomDomainController extends Controller
         }
 
         // Clean up domain input (remove http://, https://, trailing slash, and leading www.)
-        $domain = preg_replace('/^https?:\/\//i', '', trim($request->input('domain')));
+        $domain = strtolower(preg_replace('/^https?:\/\//i', '', trim($request->input('domain'))));
         $domain = rtrim($domain, '/');
         $domain = preg_replace('/^www\./i', '', $domain);
 
@@ -96,7 +96,7 @@ class AdminCustomDomainController extends Controller
             ], 422);
         }
 
-        $domain = preg_replace('/^https?:\/\//i', '', trim($request->input('domain')));
+        $domain = strtolower(preg_replace('/^https?:\/\//i', '', trim($request->input('domain'))));
         $domain = rtrim($domain, '/');
         $domain = preg_replace('/^www\./i', '', $domain);
 

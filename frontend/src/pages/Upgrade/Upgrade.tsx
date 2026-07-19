@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { useAuthStore } from "../../store/authStore";
 import { fetchPlans, upgradeSubscription } from "../../services/planApi";
 import type { PlanResource } from "../../services/planApi";
@@ -17,6 +18,12 @@ export default function Upgrade() {
   const [isDepositOpen, setIsDepositOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    type: "insufficient" | "confirm";
+    plan: PlanResource | null;
+  }>({ isOpen: false, type: "confirm", plan: null });
 
   const loadAll = async () => {
     setLoading(true);
@@ -52,14 +59,17 @@ export default function Upgrade() {
     }
 
     if (plan.price > 0 && (!user || Number(user.balance || 0) < Number(plan.price))) {
-      alert(`Số dư của bạn (${Number(user?.balance || 0).toLocaleString("vi-VN")} VNĐ) không đủ để nâng cấp gói "${plan.name}" (${Number(plan.price).toLocaleString("vi-VN")} VNĐ). Vui lòng nạp thêm tiền!`);
-      setIsDepositOpen(true);
+      setConfirmModal({ isOpen: true, type: "insufficient", plan });
       return;
     }
 
-    if (!window.confirm(`Xác nhận sử dụng ${Number(plan.price).toLocaleString("vi-VN")} VNĐ từ số dư của bạn để nâng cấp lên gói "${plan.name}"?`)) {
-      return;
-    }
+    setConfirmModal({ isOpen: true, type: "confirm", plan });
+  };
+
+  const executeUpgrade = async () => {
+    const plan = confirmModal.plan;
+    if (!plan || !token) return;
+    setConfirmModal({ isOpen: false, type: "confirm", plan: null });
 
     setUpgradingId(plan.id);
     setError(null);
@@ -201,7 +211,7 @@ export default function Upgrade() {
                           {isFree ? "Miễn Phí" : `${Number(p.price).toLocaleString("vi-VN")} đ`}
                         </span>
                         {!isFree ? (
-                          <span className="text-xs text-emerald-400 font-semibold">/ Vĩnh viễn (Gói không hết hạn)</span>
+                          <span className="text-xs text-emerald-400 font-semibold">/ Vĩnh viễn</span>
                         ) : null}
                       </div>
                     </div>
@@ -213,26 +223,17 @@ export default function Upgrade() {
                           ✓
                         </span>
                         <span>
-                          Giới hạn tạo: <strong className="text-white font-mono">{p.landing_page_limit > 900000 ? "Không giới hạn" : `${p.landing_page_limit} trang`}</strong>
+                          Giới hạn tạo: <strong className="text-white font-mono">{p.landing_page_limit > 900000 ? "Không giới hạn" : (isFree ? `${p.landing_page_limit} trang` : `+ ${p.landing_page_limit} trang`)}</strong>
                         </span>
                       </div>
 
                       <div className="flex items-center gap-3 text-white/90">
-                        <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs font-bold ${p.custom_domain ? "bg-emerald-500/20 text-emerald-400" : "bg-white/10 text-white/40"}`}>
-                          {p.custom_domain ? "✓" : "–"}
+                        <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-400 font-bold text-xs">
+                          ✓
                         </span>
-                        <span className={p.custom_domain ? "text-white/90" : "text-white/40 line-through"}>
-                          Kết nối tên miền riêng (Customa Domain)
-                        </span>
-                      </div>
-
-                      <div className="flex items-center gap-3 text-white/90">
-                        <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs font-bold ${p.premium_templates ? "bg-emerald-500/20 text-emerald-400" : "bg-white/10 text-white/40"}`}>
-                          {p.premium_templates ? "✓" : "–"}
-                        </span>
-                        <span className={p.premium_templates ? "text-white/90" : "text-white/40 line-through"}>
-                          Sử dụng kho mẫu giao diện cao cấp (Premium)
-                        </span>
+                        <Link to="/domain-guide" className="text-white/90 hover:text-emerald-400 hover:underline transition underline-offset-4 decoration-emerald-400/30">
+                          Hỗ trợ kết nối tên miền riêng ( click vào để xem chi tiết )
+                        </Link>
                       </div>
                     </div>
                   </div>
@@ -241,12 +242,12 @@ export default function Upgrade() {
                     type="button"
                     onClick={() => handleUpgrade(p)}
                     disabled={isFree || upgradingId === p.id}
-                    className={`w-full py-3 px-4 rounded-2xl font-bold text-sm transition-all duration-200 shadow-lg ${
+                    className={`w-full py-3 px-4 rounded-2xl font-bold text-sm transition-all duration-200 ${
                       isFree
-                        ? "bg-white/10 text-white/40 cursor-not-allowed border border-white/5"
+                        ? "bg-white/5 text-white/40 cursor-not-allowed border border-white/5"
                         : isPopular
-                        ? "bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white shadow-violet-600/30 active:scale-[0.98]"
-                        : "bg-white hover:bg-white/90 text-slate-950 active:scale-[0.98]"
+                        ? "bg-transparent border border-violet-500 text-violet-300 hover:bg-violet-500/10 active:scale-[0.98]"
+                        : "bg-transparent border border-white/30 text-white hover:bg-white/10 active:scale-[0.98]"
                     }`}
                   >
                     {upgradingId === p.id
@@ -263,11 +264,12 @@ export default function Upgrade() {
 
         {/* Footer notes */}
         <div className="mt-12 p-6 rounded-2xl bg-white/5 border border-white/10 text-xs text-white/60 space-y-2">
-          <div className="font-semibold text-white/80">📌 Lưu ý về chính sách nâng hạng:</div>
+          <div className="font-semibold text-white/80">Lưu ý về chính sách nâng hạng:</div>
           <ul className="list-disc pl-5 space-y-1">
             <li>Số tiền nâng gói được trừ trực tiếp từ số dư ví hiện có trong tài khoản của bạn.</li>
-            <li>Ngay sau khi nâng hạng thành công, toàn bộ các trang Landing Page hiện tại của bạn sẽ lập tức được cộng thêm thời gian gia hạn tương ứng.</li>
+            <li>Ngay sau khi nâng hạng thành công, giới hạn tạo trang sẽ được cộng thêm theo gói tương ứng của bạn.</li>
             <li>Nếu bạn muốn nạp tiền hoặc gặp trở ngại trong quá trình thanh toán, vui lòng nhấn nút "Hỗ trợ" trên thanh menu để liên hệ đội ngũ kỹ thuật OriginD.</li>
+            <li>Để sử dụng tên miền riêng vui lòng liên hệ hỗ trợ để được tư vấn kích hoạt tối ưu nhất.</li>
           </ul>
         </div>
       </div>
@@ -277,6 +279,73 @@ export default function Upgrade() {
         onClose={() => setIsDepositOpen(false)}
         onSuccess={() => loadAll()}
       />
+
+      {/* Confirmation & Insufficient Balance Modal */}
+      {confirmModal.isOpen && confirmModal.plan && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
+          <div className="bg-[#0f172a] border border-white/10 rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl animate-fade-in relative">
+            <button
+              onClick={() => setConfirmModal({ isOpen: false, type: "confirm", plan: null })}
+              className="absolute top-4 right-4 text-white/40 hover:text-white transition"
+            >
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+            </button>
+            
+            {confirmModal.type === "insufficient" ? (
+              <div className="text-center">
+                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-rose-500/20 text-3xl text-rose-400">
+                  ⚠️
+                </div>
+                <h3 className="text-xl font-bold text-white mb-2">Số dư không đủ</h3>
+                <p className="text-sm text-white/70 leading-relaxed mb-6">
+                  Số dư của bạn (<strong className="text-rose-400">{Number(user?.balance || 0).toLocaleString("vi-VN")} VNĐ</strong>) không đủ để nâng cấp gói "{confirmModal.plan.name}" (<strong className="text-emerald-400">{Number(confirmModal.plan.price).toLocaleString("vi-VN")} VNĐ</strong>). Vui lòng nạp thêm tiền!
+                </p>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => setConfirmModal({ isOpen: false, type: "confirm", plan: null })}
+                    className="flex-1 px-4 py-2.5 rounded-xl border border-white/10 text-white/70 hover:bg-white/5 font-semibold transition text-sm"
+                  >
+                    Đóng
+                  </button>
+                  <button
+                    onClick={() => {
+                      setConfirmModal({ isOpen: false, type: "confirm", plan: null });
+                      setIsDepositOpen(true);
+                    }}
+                    className="flex-1 px-4 py-2.5 rounded-xl bg-transparent border border-emerald-500 text-emerald-400 hover:bg-emerald-500/10 font-bold transition text-sm"
+                  >
+                    Nạp tiền ngay
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center">
+                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-violet-500/20 text-3xl text-violet-400">
+                  🚀
+                </div>
+                <h3 className="text-xl font-bold text-white mb-2">Xác nhận nâng hạng</h3>
+                <p className="text-sm text-white/70 leading-relaxed mb-6">
+                  Bạn có chắc chắn muốn sử dụng <strong className="text-emerald-400">{Number(confirmModal.plan.price).toLocaleString("vi-VN")} VNĐ</strong> từ số dư ví để nâng cấp lên gói <strong className="text-violet-300">"{confirmModal.plan.name}"</strong>?
+                </p>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => setConfirmModal({ isOpen: false, type: "confirm", plan: null })}
+                    className="flex-1 px-4 py-2.5 rounded-xl border border-white/10 text-white/70 hover:bg-white/5 font-semibold transition text-sm"
+                  >
+                    Hủy bỏ
+                  </button>
+                  <button
+                    onClick={executeUpgrade}
+                    className="flex-1 px-4 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-bold transition shadow-lg shadow-violet-500/20 text-sm"
+                  >
+                    Xác nhận mua
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

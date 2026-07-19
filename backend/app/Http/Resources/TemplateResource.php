@@ -31,6 +31,8 @@ class TemplateResource extends JsonResource
 
             'renewal_price' => (int) ($this->renewal_price ?? 50000),
 
+            'is_featured' => (bool) $this->is_featured,
+
             'fields' => $this->fields,
 
         ];

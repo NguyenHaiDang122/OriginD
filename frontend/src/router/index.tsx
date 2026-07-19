@@ -1,6 +1,7 @@
 import { createBrowserRouter } from "react-router-dom";
 
 import DashboardLayout from "../layouts/DashboardLayout";
+import AdminLayout from "../layouts/AdminLayout";
 
 import Dashboard from "../pages/dashboard/Dashboard";
 import Templates from "../pages/Templates/Templates";
@@ -19,6 +20,11 @@ import ProtectedAdminRoute from "../pages/admin/ProtectedAdminRoute";
 import GuestRoute from "../components/auth/GuestRoute";
 import Upgrade from "../pages/Upgrade/Upgrade";
 import AdminCustomDomains from "../pages/admin/AdminCustomDomains";
+import DomainGuide from "../pages/DomainGuide/DomainGuide";
+import AdminSupport from "../pages/admin/AdminSupport";
+import AdminStatistics from "../pages/admin/AdminStatistics";
+import AdminPopup from "../pages/admin/AdminPopup";
+import WebDesignService from "../pages/WebDesignService";
 
 export const router = createBrowserRouter([
   {
@@ -38,60 +44,58 @@ export const router = createBrowserRouter([
         element: <Upgrade />,
       },
       {
+        path: "domain-guide",
+        element: <DomainGuide />,
+      },
+      {
         path: "admin",
         element: (
           <ProtectedAdminRoute>
-            <AdminDashboard />
+            <AdminLayout />
           </ProtectedAdminRoute>
         ),
-      },
-      {
-        path: "admin/dashboard",
-        element: (
-          <ProtectedAdminRoute>
-            <AdminDashboard />
-          </ProtectedAdminRoute>
-        ),
-      },
-      {
-        path: "admin/templates",
-        element: (
-          <ProtectedAdminRoute>
-            <AdminTemplates />
-          </ProtectedAdminRoute>
-        ),
-      },
-      {
-        path: "admin/users",
-        element: (
-          <ProtectedAdminRoute>
-            <AdminUsers />
-          </ProtectedAdminRoute>
-        ),
-      },
-      {
-        path: "admin/deposits",
-        element: (
-          <ProtectedAdminRoute>
-            <AdminDeposits />
-          </ProtectedAdminRoute>
-        ),
-      },
-      {
-        path: "admin/plans",
-        element: (
-          <ProtectedAdminRoute>
-            <AdminPlans />
-          </ProtectedAdminRoute>
-        ),
-      },
-      {
-        path: "admin/custom-domains",
-        element: (
-          <ProtectedAdminRoute>
-            <AdminCustomDomains />
-          </ProtectedAdminRoute>
-        ),
+        children: [
+          {
+            index: true,
+            element: <AdminDashboard />,
+          },
+          {
+            path: "dashboard",
+            element: <AdminDashboard />,
+          },
+          {
+            path: "templates",
+            element: <AdminTemplates />,
+          },
+          {
+            path: "users",
+            element: <AdminUsers />,
+          },
+          {
+            path: "deposits",
+            element: <AdminDeposits />,
+          },
+          {
+            path: "plans",
+            element: <AdminPlans />,
+          },
+          {
+            path: "custom-domains",
+            element: <AdminCustomDomains />,
+          },
+          {
+            path: "support",
+            element: <AdminSupport />,
+          },
+          {
+            path: "statistics",
+            element: <AdminStatistics />,
+          },
+          {
+            path: "popup",
+            element: <AdminPopup />,
+          },
+        ]
       },
       {
         path: "support",
@@ -100,6 +104,10 @@ export const router = createBrowserRouter([
       {
         path: "stats",
         element: <Stats />,
+      },
+      {
+        path: "web-design",
+        element: <WebDesignService />,
       },
       {
         path: "profile",

@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import GlassCard from "../../components/common/GlassCard";
+import NeuronNetwork from "../../components/ui/NeuronNetwork";
 import { fetchTemplates, getCachedTemplates } from "../../services/templateApi";
 import { useAuthStore } from "../../store/authStore";
 
@@ -63,14 +64,19 @@ export default function Dashboard() {
     };
   }, [token]);
 
+  const featuredTemplates = useMemo(() => {
+    return templates.filter((t: any) => t.is_featured);
+  }, [templates]);
+
   return (
     <div>
       {/* Hero giới thiệu OriginD */}
       <section className="relative overflow-hidden rounded-3xl border border-white/10 bg-white/5 px-5 py-8 sm:px-8 sm:py-10">
         <div className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full bg-gradient-to-br from-indigo-500/40 via-violet-500/30 to-fuchsia-500/20 blur-2xl" />
         <div className="pointer-events-none absolute -left-24 -bottom-24 h-64 w-64 rounded-full bg-gradient-to-br from-indigo-500/20 via-violet-500/20 to-fuchsia-500/20 blur-2xl" />
+        <NeuronNetwork className="absolute top-0 left-0 w-full h-full pointer-events-none opacity-30 z-0" />
 
-        <div className="relative">
+        <div className="relative z-10">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
             <div className="max-w-xl">
               <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-semibold text-white/80">
@@ -133,7 +139,7 @@ export default function Dashboard() {
                 <div className="h-full rounded-2xl border border-white/10 bg-[#0b1220] p-5">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-500" />
+                      <img src="https://i.imgur.com/PIrOjbx.png" alt="OriginD Logo" className="h-10 w-10 rounded-2xl object-cover" />
                       <div>
                         <div className="text-sm font-bold text-white/90">OriginD Studio</div>
                         <div className="text-xs text-white/55">Preview website</div>
@@ -237,13 +243,12 @@ export default function Dashboard() {
               </button>
             </div>
           </GlassCard>
-        ) : templates.length === 0 ? (
+        ) : featuredTemplates.length === 0 ? (
           <GlassCard>
             <div className="text-center py-10">
-              <div className="text-4xl mb-3">📭</div>
-              <div className="text-white/90 font-bold text-lg mb-1">Chưa có template nào trong thư viện</div>
+              <div className="text-white/90 font-bold text-lg mb-1">Chưa có mẫu giao diện nổi bật</div>
               <div className="text-white/60 text-sm max-w-md mx-auto mb-6">
-                Hiện chưa có mẫu website nào được phát hành. Vui lòng quay lại sau hoặc vào trang Quản trị để thêm mới.
+                OriginD chưa ghim bất kỳ mẫu nào lên trang chủ. Vui lòng bấm vào "Xem tất cả mẫu" để khám phá thư viện đầy đủ.
               </div>
               <button
                 type="button"
@@ -256,7 +261,7 @@ export default function Dashboard() {
           </GlassCard>
         ) : (
           <section className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {templates.slice(0, 6).map((tpl: any) => (
+            {featuredTemplates.slice(0, 6).map((tpl: any) => (
               <div
                 key={tpl.id}
                 className="group relative overflow-hidden rounded-3xl border border-white/10 bg-white/5 p-5 backdrop-blur-xl transition duration-300 hover:-translate-y-1 hover:border-white/25 hover:bg-white/[0.08] hover:shadow-2xl hover:shadow-violet-500/10 flex flex-col justify-between"
@@ -278,13 +283,27 @@ export default function Dashboard() {
                       </div>
                     )}
                     {tpl.status === "published" ? (
-                      <div className="absolute top-3 left-3 flex items-center gap-1.5 rounded-full border border-emerald-400/30 bg-slate-900/80 backdrop-blur-md px-2.5 py-0.5 text-[10px] font-bold tracking-wide uppercase text-emerald-300 shadow-sm">
-                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                        <span>Live</span>
+                      <div className="absolute top-3 left-3 flex items-center gap-2">
+                        <div className="flex items-center gap-1.5 rounded-full border border-emerald-400/30 bg-slate-900/80 backdrop-blur-md px-2.5 py-0.5 text-[10px] font-bold tracking-wide uppercase text-emerald-300 shadow-sm">
+                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                          <span>Live</span>
+                        </div>
+                        {tpl.is_featured && (
+                          <div className="flex items-center justify-center rounded-full border border-yellow-400/30 bg-slate-900/80 backdrop-blur-md px-2 py-0.5 text-[10px] text-yellow-400 shadow-sm shadow-yellow-500/20" title="Được ghim Nổi bật">
+                            ★ Nổi bật
+                          </div>
+                        )}
                       </div>
                     ) : (
-                      <div className="absolute top-3 left-3 rounded-full border border-white/15 bg-slate-900/80 backdrop-blur-md px-2.5 py-0.5 text-[10px] font-bold tracking-wide uppercase text-white/70">
-                        Draft
+                      <div className="absolute top-3 left-3 flex items-center gap-2">
+                        <div className="rounded-full border border-white/15 bg-slate-900/80 backdrop-blur-md px-2.5 py-0.5 text-[10px] font-bold tracking-wide uppercase text-white/70">
+                          Draft
+                        </div>
+                        {tpl.is_featured && (
+                          <div className="flex items-center justify-center rounded-full border border-yellow-400/30 bg-slate-900/80 backdrop-blur-md px-2 py-0.5 text-[10px] text-yellow-400 shadow-sm shadow-yellow-500/20" title="Được ghim Nổi bật">
+                            ★ Nổi bật
+                          </div>
+                        )}
                       </div>
                     )}
                     {tpl.version && (
@@ -362,7 +381,7 @@ export default function Dashboard() {
             <div className="relative flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
               <div className="max-w-xl">
                 <div className="inline-flex items-center gap-2 rounded-full border border-violet-400/30 bg-violet-500/10 px-3 py-1 text-xs font-semibold text-violet-300 mb-3">
-                  🚀 Sẵn sàng xuất bản?
+                  Sẵn sàng xuất bản?
                 </div>
                 <h3 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
                   Sẵn sàng tạo website cho riêng bạn?

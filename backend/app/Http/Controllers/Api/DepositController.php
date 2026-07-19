@@ -137,7 +137,7 @@ class DepositController extends Controller
             if ($deposit->status === 'approved') {
                 return response()->json([
                     'status' => 'approved',
-                    'message' => '🎉 Đơn nạp tiền này đã được thanh toán và duyệt thành công!',
+                    'message' => 'Đơn nạp tiền này đã được thanh toán và duyệt thành công!',
                     'balance' => Auth::user()->balance
                 ]);
             }
@@ -169,7 +169,7 @@ class DepositController extends Controller
 
                             return response()->json([
                                 'status' => 'approved',
-                                'message' => '🎉 SePay Payment Gateway xác nhận đã thanh toán thành công! Đã cộng ' . number_format($deposit->amount) . ' đ vào ví.',
+                                'message' => 'SePay Payment Gateway xác nhận đã thanh toán thành công! Đã cộng ' . number_format($deposit->amount) . ' đ vào ví.',
                                 'balance' => $user->balance
                             ]);
                         }
@@ -214,7 +214,7 @@ class DepositController extends Controller
 
                                 return response()->json([
                                     'status' => 'approved',
-                                    'message' => '🎉 SePay BankHub xác nhận bạn đã chuyển khoản thành công! Đã cộng ' . number_format($deposit->amount) . ' đ vào tài khoản.',
+                                    'message' => 'SePay BankHub xác nhận bạn đã chuyển khoản thành công! Đã cộng ' . number_format($deposit->amount) . ' đ vào tài khoản.',
                                     'balance' => $user->balance
                                 ]);
                             }
@@ -246,9 +246,11 @@ class DepositController extends Controller
     {
         $user = Auth::user();
         $landingPageId = $request->input('landing_page_id');
-        $cost = 50000;
+        $months = (int) $request->input('months', 1);
+        if ($months < 1) $months = 1;
 
         $page = null;
+        $baseCost = 50000;
         if ($landingPageId) {
             $page = LandingPage::with('template')->where('id', $landingPageId)->where('user_id', $user->id)->first();
             if (!$page) {
@@ -256,12 +258,14 @@ class DepositController extends Controller
                     'message' => 'Trang Landing Page cần gia hạn không tồn tại hoặc không thuộc quyền sở hữu của bạn.'
                 ], 404);
             }
-            $cost = ($page->template && !is_null($page->template->renewal_price)) ? (int) $page->template->renewal_price : 50000;
+            $baseCost = ($page->template && !is_null($page->template->renewal_price)) ? (int) $page->template->renewal_price : 50000;
         }
+
+        $cost = $baseCost * $months;
 
         if ($user->balance < $cost) {
             return response()->json([
-                'message' => 'Số dư của bạn (' . number_format($user->balance) . ' đ) không đủ để gia hạn dịch vụ (' . number_format($cost) . ' đ). Vui lòng nạp thêm tiền!'
+                'message' => 'Rất tiếc, số dư hiện tại (' . number_format($user->balance) . ' VNĐ) không đủ để thanh toán ' . number_format($cost) . ' VNĐ. Vui lòng nạp thêm tiền vào tài khoản!'
             ], 400);
         }
 
@@ -271,22 +275,22 @@ class DepositController extends Controller
         if ($page) {
             $curDate = $page->expires_at ? \Carbon\Carbon::parse($page->expires_at) : null;
             $baseDate = ($curDate && $curDate->isFuture()) ? $curDate : now();
-            $page->expires_at = $baseDate->addDays(30);
+            $page->expires_at = $baseDate->addDays(30 * $months);
             $page->save();
         } else {
             // Extend all expired or expiring pages for user
-            foreach ($user->landingPages as $page) {
-                $curDate = $page->expires_at ? \Carbon\Carbon::parse($page->expires_at) : null;
+            foreach ($user->landingPages as $p) {
+                $curDate = $p->expires_at ? \Carbon\Carbon::parse($p->expires_at) : null;
                 $baseDate = ($curDate && $curDate->isFuture()) ? $curDate : now();
-                $page->expires_at = $baseDate->addDays(30);
-                $page->save();
+                $p->expires_at = $baseDate->addDays(30 * $months);
+                $p->save();
             }
         }
 
         // Gói tài khoản (Subscription) có hiệu lực vĩnh viễn không hết hạn, chỉ gia hạn thời gian cho các Landing Page ở trên.
 
         return response()->json([
-            'message' => 'Gia hạn dịch vụ thành công thêm 30 ngày! Số dư mới: ' . number_format($user->balance) . ' đ',
+            'message' => 'Gia hạn trang thành công thêm ' . ($months * 30) . ' ngày! Số dư hiện tại của bạn là ' . number_format($user->balance) . ' VNĐ.',
             'balance' => $user->balance,
         ]);
     }

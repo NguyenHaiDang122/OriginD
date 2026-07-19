@@ -63,7 +63,7 @@ export default function AdminDeposits() {
   });
 
   return (
-    <div className="min-h-screen pt-24 pb-16 px-4 text-white">
+    <div>
       <PageSection
         title="Duyệt đơn thanh toán & Nạp tiền (Admin)"
         subtitle="Kiểm tra và cộng số dư tài khoản cho người dùng sau khi họ chuyển khoản"
@@ -149,7 +149,7 @@ export default function AdminDeposits() {
                       <td className="py-4 px-4">
                         {d.status === "pending" ? (
                           <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-400/30 bg-amber-500/15 px-3 py-1 text-xs font-bold text-amber-300 animate-pulse">
-                            ⏳ Chờ kiểm tra CK
+                            Chờ thanh toán
                           </span>
                         ) : d.status === "approved" ? (
                           <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/30 bg-emerald-500/15 px-3 py-1 text-xs font-bold text-emerald-300">
@@ -164,26 +164,26 @@ export default function AdminDeposits() {
                       <td className="py-4 px-4 text-xs text-white/60">
                         {new Date(d.created_at).toLocaleString("vi-VN")}
                       </td>
-                      <td className="py-4 px-4 text-right space-x-2">
+                      <td className="py-4 px-4 text-right">
                         {d.status === "pending" ? (
-                          <>
+                          <div className="flex items-center justify-end gap-2">
                             <button
                               type="button"
                               onClick={() => handleApprove(d.id, d.code, d.amount)}
                               disabled={actionLoadingId === d.id}
-                              className="rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 px-3 py-1.5 text-xs font-bold text-white shadow-lg shadow-emerald-500/20 hover:scale-105 transition disabled:opacity-50"
+                              className="rounded-xl border border-emerald-500/50 bg-transparent px-3 py-1.5 text-xs font-bold text-emerald-400 hover:bg-emerald-500/10 hover:text-emerald-300 transition disabled:opacity-50 disabled:hover:bg-transparent"
                             >
-                              ✅ Duyệt & Cộng tiền
+                              Duyệt
                             </button>
                             <button
                               type="button"
                               onClick={() => handleReject(d.id, d.code)}
                               disabled={actionLoadingId === d.id}
-                              className="rounded-xl border border-rose-400/40 bg-rose-500/15 px-3 py-1.5 text-xs font-bold text-rose-300 hover:bg-rose-500/30 transition disabled:opacity-50"
+                              className="rounded-xl border border-rose-500/50 bg-transparent px-3 py-1.5 text-xs font-bold text-rose-400 hover:bg-rose-500/10 hover:text-rose-300 transition disabled:opacity-50 disabled:hover:bg-transparent"
                             >
-                              ❌ Từ chối
+                              Từ chối
                             </button>
-                          </>
+                          </div>
                         ) : (
                           <span className="text-xs text-white/40 italic">Đã hoàn tất</span>
                         )}

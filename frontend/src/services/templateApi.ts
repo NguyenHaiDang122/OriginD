@@ -12,7 +12,8 @@ export type UploadTemplatePayload = {
   version?: string | null;
   status?: "draft" | "published" | "archived" | null;
   renewal_price?: number | null;
-  thumbnail?: File | null;
+  is_featured?: boolean | null;
+  thumbnail?: File | string | null;
   zip_file: File;
 };
 
@@ -25,6 +26,7 @@ export type TemplateResource = {
   version?: string;
   status?: string;
   renewal_price?: number;
+  is_featured?: boolean;
   template_path?: string;
 };
 
@@ -37,6 +39,7 @@ export async function uploadTemplate(payload: UploadTemplatePayload, token?: str
   if (payload.version) form.append("version", payload.version);
   if (payload.status) form.append("status", payload.status);
   if (payload.renewal_price != null) form.append("renewal_price", String(payload.renewal_price));
+  if (payload.is_featured != null) form.append("is_featured", String(payload.is_featured));
 
   if (payload.thumbnail) form.append("thumbnail", payload.thumbnail);
   form.append("zip_file", payload.zip_file);

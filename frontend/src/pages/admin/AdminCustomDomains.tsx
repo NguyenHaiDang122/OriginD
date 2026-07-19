@@ -111,33 +111,20 @@ export default function AdminCustomDomains() {
       setError(err?.response?.data?.message || "Không thể hủy kết nối tên miền.");
     }
   };
-
   return (
-    <div className="min-h-screen bg-[#090d16] text-slate-100 pb-16">
+    <div className="space-y-8">
       {/* Header Bar */}
-      <div className="border-b border-white/10 bg-[#0d121f]/80 backdrop-blur-xl sticky top-0 z-30">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => navigate("/admin")}
-              className="rounded-xl border border-white/15 bg-white/5 px-3 py-1.5 text-xs font-semibold text-white/80 hover:bg-white/10 hover:text-white transition"
-            >
-              ← Quay lại Dashboard
-            </button>
-            <h1 className="text-xl font-extrabold text-white">Quản lý Kết Nối Domain Riêng</h1>
-          </div>
-
-          <button
-            onClick={openCreateModal}
-            className="rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 px-4 py-2 text-xs font-bold text-white shadow-lg shadow-cyan-500/20 hover:from-cyan-400 hover:to-blue-500 transition"
-          >
-            + Kết nối Domain
-          </button>
-        </div>
+      <div className="flex items-center justify-between">
+        <h1 className="text-3xl font-extrabold text-white tracking-tight">Quản lý Kết Nối Domain Riêng</h1>
+        <button
+          onClick={openCreateModal}
+          className="rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 px-4 py-2 text-xs font-bold text-white shadow-lg shadow-cyan-500/20 hover:from-cyan-400 hover:to-blue-500 transition"
+        >
+          + Kết nối Domain
+        </button>
       </div>
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 space-y-8">
-        {/* Alerts */}
+    <div className="pt-4 space-y-8">
+      {/* Alerts */}
         {error && (
           <div className="rounded-2xl border border-red-500/30 bg-red-500/10 p-4 text-sm font-medium text-red-300">
             {error}

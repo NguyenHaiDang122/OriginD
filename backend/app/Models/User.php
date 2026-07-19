@@ -29,6 +29,7 @@ class User extends Authenticatable
         'status',
         'balance',
         'landing_page_limit',
+        'total_pages_created',
         'password',
     ];
 

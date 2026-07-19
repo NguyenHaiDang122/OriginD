@@ -22,12 +22,12 @@ export default function LandingPages() {
               {
                 title: "OriginD Promo",
                 desc: "Tối ưu chuyển đổi & tốc độ",
-                url: "originD.com/promo",
+                url: "origind.id.vn/promo",
               },
               {
                 title: "SaaS Landing",
                 desc: "Mẫu landing cho subscription",
-                url: "originD.com/saas",
+                url: "origind.id.vn/saas",
               },
             ].map((p, idx) => (
               <div

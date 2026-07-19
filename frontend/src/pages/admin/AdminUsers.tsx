@@ -286,26 +286,6 @@ export default function AdminUsers() {
 
   return (
     <div className="space-y-8">
-      {/* Breadcrumb & Navigation */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/70">
-          <span
-            onClick={() => navigate("/admin")}
-            className="cursor-pointer font-semibold text-violet-300 hover:underline"
-          >
-            Admin Dashboard
-          </span>
-          <span>/</span>
-          <span className="text-white">Quản lý Tài khoản & Phân quyền</span>
-        </div>
-        <button
-          type="button"
-          onClick={() => navigate("/admin")}
-          className="ghost-btn px-4 py-2 text-xs self-start sm:self-center border-white/15"
-        >
-          ← Quay lại Trang Quản Trị
-        </button>
-      </div>
 
       <PageSection
         title="Admin • Quản lý Tài khoản & Phân quyền"

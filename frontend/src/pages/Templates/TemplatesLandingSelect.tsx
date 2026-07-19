@@ -53,23 +53,22 @@ export default function TemplatesLandingSelect() {
     return templates.slice();
   }, [templates]);
 
-  async function loadTemplates() {
-    const cached = getCachedTemplates();
-    if (cached) {
-      const listCached = Array.isArray((cached as any)?.data)
-        ? (cached as any).data
-        : Array.isArray(cached)
-          ? (cached as any)
-          : (cached as any);
-      if (listCached && listCached.length > 0) {
-        setTemplates(listCached);
-        setLoading(false);
-      } else {
-        setLoading(true);
+  async function loadTemplates(force = false) {
+    if (!force) {
+      const cached = getCachedTemplates();
+      if (cached) {
+        const listCached = Array.isArray((cached as any)?.data)
+          ? (cached as any).data
+          : Array.isArray(cached)
+            ? (cached as any)
+            : (cached as any);
+        if (listCached && listCached.length > 0) {
+          setTemplates(listCached);
+        }
       }
-    } else {
-      setLoading(true);
     }
+    
+    setLoading(true);
     setError(null);
     try {
       const data = await fetchTemplates(token);
@@ -165,14 +164,15 @@ export default function TemplatesLandingSelect() {
             <button
               className="ghost-btn"
               type="button"
-              onClick={loadTemplates}
+              onClick={() => loadTemplates(true)}
               disabled={loading}
             >
               {loading ? "Đang tải..." : "Làm mới"}
             </button>
           </div>
+        </GlassCard>
 
-          <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
           {createdId ? (
             <div className="col-span-full mb-2">
               <div className="rounded-2xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">
@@ -201,8 +201,8 @@ export default function TemplatesLandingSelect() {
               </div>
               <button
                 type="button"
-                onClick={() => navigate("/dashboard")}
-                className="shrink-0 px-4 py-2 rounded-xl border border-amber-400/40 bg-amber-500/20 text-xs font-semibold hover:bg-amber-500/30 transition text-amber-100"
+                onClick={() => navigate("/upgrade")}
+                className="shrink-0 px-4 py-2 rounded-xl bg-transparent border border-amber-500 text-amber-400 text-xs font-semibold hover:bg-amber-500/10 transition"
               >
                 Gia hạn / Nâng cấp ngay
               </button>
@@ -212,96 +212,121 @@ export default function TemplatesLandingSelect() {
           {sortedTemplates.map((tpl: any) => (
               <div
                 key={tpl.id}
-                className="group relative overflow-hidden rounded-3xl border border-white/10 bg-white/5 p-4 backdrop-blur-xl transition hover:border-white/20 hover:bg-white/[0.07]"
+                className="group relative overflow-hidden rounded-3xl border border-white/10 bg-white/5 p-5 backdrop-blur-xl transition duration-300 hover:-translate-y-1 hover:border-white/25 hover:bg-white/[0.08] hover:shadow-2xl hover:shadow-violet-500/10 flex flex-col justify-between"
               >
-                <div className="relative flex flex-col h-full">
-                  {/* Ô hình ảnh phía trên */}
-                  <div className="mb-4 aspect-video w-full overflow-hidden rounded-2xl border border-white/10 bg-black/30 group-hover:border-white/20 transition">
+                <div>
+                  {/* Ô hình ảnh Thumbnail */}
+                  <div className="relative mb-4 aspect-video w-full overflow-hidden rounded-2xl border border-white/10 bg-black/40 group-hover:border-white/20 transition">
                     {tpl.thumbnail ? (
                       <img
                         src={tpl.thumbnail}
                         alt={tpl.name}
-                        className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                        className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
                       />
                     ) : (
-                      <div className="flex h-full w-full flex-col items-center justify-center bg-gradient-to-br from-violet-600/20 via-slate-900/60 to-blue-600/20 p-4 text-center">
-                        <span className="text-2xl mb-1">🖼️</span>
-                        <span className="text-xs font-medium text-white/50">{tpl.name}</span>
-                        <span className="text-[10px] text-white/30 mt-0.5">Chưa có ảnh xem trước</span>
+                      <div className="flex h-full w-full flex-col items-center justify-center bg-gradient-to-br from-violet-600/20 via-slate-900/80 to-indigo-600/20 p-4 text-center">
+                        <span className="text-3xl mb-1.5 transition-transform duration-300 group-hover:scale-110">🖼️</span>
+                        <span className="text-xs font-semibold text-white/70 truncate max-w-full px-2">{tpl.name}</span>
+                        <span className="text-[10px] text-white/40 mt-0.5">Chưa có ảnh xem trước</span>
+                      </div>
+                    )}
+                    {tpl.status === "published" ? (
+                      <div className="absolute top-3 left-3 flex items-center gap-2">
+                        <div className="flex items-center gap-1.5 rounded-full border border-emerald-400/30 bg-slate-900/80 backdrop-blur-md px-2.5 py-0.5 text-[10px] font-bold tracking-wide uppercase text-emerald-300 shadow-sm">
+                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                          <span>Live</span>
+                        </div>
+                        {tpl.is_featured && (
+                          <div className="flex items-center justify-center rounded-full border border-yellow-400/30 bg-slate-900/80 backdrop-blur-md px-2 py-0.5 text-[10px] text-yellow-400 shadow-sm shadow-yellow-500/20" title="Được ghim Nổi bật">
+                            ★ Nổi bật
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="absolute top-3 left-3 flex items-center gap-2">
+                        <div className="rounded-full border border-white/15 bg-slate-900/80 backdrop-blur-md px-2.5 py-0.5 text-[10px] font-bold tracking-wide uppercase text-white/70">
+                          Draft
+                        </div>
+                        {tpl.is_featured && (
+                          <div className="flex items-center justify-center rounded-full border border-yellow-400/30 bg-slate-900/80 backdrop-blur-md px-2 py-0.5 text-[10px] text-yellow-400 shadow-sm shadow-yellow-500/20" title="Được ghim Nổi bật">
+                            ★ Nổi bật
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    {tpl.version && (
+                      <div className="absolute top-3 right-3 rounded-full border border-white/15 bg-black/60 backdrop-blur-md px-2 py-0.5 text-[10px] font-mono text-white/70">
+                        v{tpl.version}
                       </div>
                     )}
                   </div>
 
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="text-white/95 font-semibold text-lg">{tpl.name}</div>
-                      {tpl.version && (
-                        <span className="text-[10px] rounded-full border border-white/15 bg-white/5 px-2 py-0.5 text-white/70">
-                          v{tpl.version}
-                        </span>
-                      )}
-                    </div>
-                    <div className="mt-1 text-xs text-white/60 line-clamp-2">
-                      {tpl.description ?? tpl.slug}
-                    </div>
+                  {/* Thông tin Template */}
+                  <div className="flex items-center justify-between gap-2">
+                    <h3 className="text-base font-bold text-white/95 group-hover:text-violet-300 transition truncate">
+                      {tpl.name}
+                    </h3>
                   </div>
+                  <p className="mt-1.5 text-xs text-white/60 line-clamp-2 leading-relaxed">
+                    {tpl.description ? tpl.description : `Mẫu giao diện chuyên nghiệp cho ${tpl.name}. Tùy chỉnh nội dung chỉ với vài thao tác.`}
+                  </p>
+                </div>
 
-                  <div className="mt-4 flex items-center justify-between gap-3 pt-2 border-t border-white/10">
-                    <div className="text-xs text-white/55">
-                      Fields: <span className="font-semibold text-white/80">{tpl.fields?.length ?? 0}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        className="ghost-btn px-3 py-1.5 text-xs"
-                        onClick={() => {
-                          setActiveTemplate(tpl);
-                          setActiveMode("preview");
-                        }}
-                      >
-                        Xem
-                      </button>
-                      <button
-                        type="button"
-                        className={`px-4 py-1.5 text-xs font-semibold rounded-xl transition ${
-                          isLimitReached
-                            ? "cursor-not-allowed border border-white/10 bg-white/5 text-white/35"
-                            : "primary-btn"
-                        }`}
-                        disabled={isLimitReached}
-                        title={
-                          isLimitReached
-                            ? `Bạn đã hết lượt tạo Landing Page (${user?.landing_pages_count || 1}/${user?.landing_page_limit || 1} trang). Vui lòng nâng cấp dịch vụ!`
-                            : "Tạo trang web với mẫu này"
+                {/* Footer Buttons */}
+                <div className="mt-5 flex items-center justify-between gap-3 pt-3 border-t border-white/10">
+                  <div className="text-xs text-white/50 flex items-center gap-1.5">
+                    <span>⚡ Fields:</span>
+                    <span className="font-semibold text-white/80">{tpl.fields?.length ?? 0}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      className="ghost-btn px-3.5 py-1.5 text-xs border-white/15 hover:bg-white/10"
+                      onClick={() => {
+                        setActiveTemplate(tpl);
+                        setActiveMode("preview");
+                      }}
+                    >
+                      Xem
+                    </button>
+                    <button
+                      type="button"
+                      className={`px-4 py-1.5 text-xs font-semibold rounded-xl transition ${
+                        isLimitReached
+                          ? "cursor-not-allowed border border-white/10 bg-white/5 text-white/35"
+                          : "primary-btn"
+                      }`}
+                      disabled={isLimitReached}
+                      title={
+                        isLimitReached
+                          ? `Bạn đã hết lượt tạo Landing Page (${user?.landing_pages_count || 1}/${user?.landing_page_limit || 1} trang). Vui lòng nâng cấp dịch vụ!`
+                          : "Tạo trang web với mẫu này"
+                      }
+                      onClick={() => {
+                        if (!token) {
+                          navigate("/login");
+                          return;
                         }
-                        onClick={() => {
-                          if (!token) {
-                            navigate("/login");
-                            return;
-                          }
-                          if (isLimitReached) {
-                            alert(`Bạn đã hết lượt tạo Landing Page (${user?.landing_pages_count || 1}/${user?.landing_page_limit || 1} trang). Vui lòng gia hạn hoặc nâng cấp gói để tạo thêm!`);
-                            return;
-                          }
-                          setActiveTemplate(tpl);
-                          setActiveMode("create");
-                        }}
-                      >
-                        {isLimitReached ? "Hết lượt tạo" : "Tạo"}
-                      </button>
-                    </div>
+                        if (isLimitReached) {
+                          alert(`Bạn đã hết lượt tạo Landing Page (${user?.landing_pages_count || 1}/${user?.landing_page_limit || 1} trang). Vui lòng gia hạn hoặc nâng cấp gói để tạo thêm!`);
+                          return;
+                        }
+                        setActiveTemplate(tpl);
+                        setActiveMode("create");
+                      }}
+                    >
+                      {isLimitReached ? "Hết lượt tạo" : "Tạo"}
+                    </button>
                   </div>
                 </div>
               </div>
             ))}
+            {!loading && sortedTemplates.length === 0 ? (
+              <div className="mt-6 text-sm text-white/60 text-center w-full col-span-full">
+                Chưa có template nào.
+              </div>
+            ) : null}
           </div>
-
-          {!loading && sortedTemplates.length === 0 ? (
-            <div className="mt-6 text-sm text-white/60">
-              Chưa có template nào.
-            </div>
-          ) : null}
-        </GlassCard>
       </PageSection>
     </div>
   );

@@ -28,7 +28,7 @@ export default function AdminTemplates() {
   const [editStatus, setEditStatus] = useState<string>("draft");
   const [editVersion, setEditVersion] = useState("");
   const [editRenewalPrice, setEditRenewalPrice] = useState<string>("50000");
-  const [editThumbnail, setEditThumbnail] = useState<File | null>(null);
+  const [editThumbnail, setEditThumbnail] = useState<File | string | null>(null);
   const [editThumbnailPreview, setEditThumbnailPreview] = useState<string | null>(null);
   const [savingEdit, setSavingEdit] = useState(false);
 
@@ -40,7 +40,7 @@ export default function AdminTemplates() {
     "draft"
   );
   const [renewalPrice, setRenewalPrice] = useState<string>("50000");
-  const [thumbnail, setThumbnail] = useState<File | null>(null);
+  const [thumbnail, setThumbnail] = useState<File | string | null>(null);
   const [zipFile, setZipFile] = useState<File | null>(null);
 
   const [uploading, setUploading] = useState(false);
@@ -131,6 +131,19 @@ export default function AdminTemplates() {
     }
   }
 
+  async function handleToggleFeatured(t: TemplateResource) {
+    if (!token) return;
+    const newFeatured = !t.is_featured;
+    try {
+      await updateTemplate(t.id, { is_featured: newFeatured }, token);
+      setTemplates((prev) =>
+        prev.map((item) => (item.id === t.id ? { ...item, is_featured: newFeatured } : item))
+      );
+    } catch (err: any) {
+      alert(err?.response?.data?.message ?? err?.message ?? "Lỗi đổi trạng thái ghim");
+    }
+  }
+
   async function handleDeleteTemplate(t: TemplateResource) {
     if (!token) return;
     if (!confirm(`Bạn có chắc muốn xóa vĩnh viễn template "${t.name}" và toàn bộ file giải nén của nó?`)) return;
@@ -189,23 +202,6 @@ export default function AdminTemplates() {
 
   return (
     <div>
-      <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/70">
-          <span onClick={() => navigate("/admin")} className="cursor-pointer font-semibold text-violet-300 hover:underline">
-            🏠 Admin Dashboard
-          </span>
-          <span>/</span>
-          <span className="text-white">Quản lý Templates</span>
-        </div>
-        <button
-          type="button"
-          onClick={() => navigate("/admin")}
-          className="ghost-btn px-4 py-2 text-xs self-start sm:self-center border-white/15"
-        >
-          ← Quay lại Trang Quản Trị
-        </button>
-      </div>
-
       <PageSection
         title="Admin • Quản lý Templates"
         subtitle="Upload ZIP chứa index.html để auto scan fields"
@@ -284,15 +280,24 @@ export default function AdminTemplates() {
               </div>
 
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <label className="block">
-                  <div className="text-xs text-white/60 mb-1">Thumbnail (optional image)</div>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => setThumbnail(e.target.files?.[0] ?? null)}
-                    className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-white/90"
-                  />
-                </label>
+                <div className="block">
+                  <div className="text-xs text-white/60 mb-1">Thumbnail (File hoặc Link)</div>
+                  <div className="flex flex-col gap-2">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => setThumbnail(e.target.files?.[0] ?? null)}
+                      className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-white/90 text-sm"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Hoặc nhập link ảnh (https://...)"
+                      value={typeof thumbnail === 'string' ? thumbnail : ""}
+                      onChange={(e) => setThumbnail(e.target.value)}
+                      className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-white/90 text-sm"
+                    />
+                  </div>
+                </div>
 
                 <label className="block">
                   <div className="text-xs text-white/60 mb-1">File mẫu (.zip hoặc .html) (bắt buộc)</div>
@@ -372,7 +377,7 @@ export default function AdminTemplates() {
                         v{t.version ?? "1.0.0"}
                       </span>
                       <span className="text-xs font-mono font-bold rounded-full border border-emerald-400/30 bg-emerald-500/15 px-2.5 py-0.5 text-emerald-300 shrink-0 shadow-sm" title="Chi phí khi user gia hạn landing page dùng mẫu này">
-                        💰 {(t.renewal_price != null ? t.renewal_price : 50000).toLocaleString("vi-VN")} đ / 30 ngày
+                         {(t.renewal_price != null ? t.renewal_price : 50000).toLocaleString("vi-VN")} đ / 30 ngày
                       </span>
                     </div>
                     <div className="mt-1 text-xs text-white/60 font-mono truncate max-w-full">/templates/{t.slug}</div>
@@ -383,6 +388,19 @@ export default function AdminTemplates() {
                 <div className="flex items-center gap-2 shrink-0 flex-wrap md:justify-end">
                   <button
                     type="button"
+                    onClick={() => handleToggleFeatured(t)}
+                    title={t.is_featured ? "Đang nổi bật ở Trang chủ" : "Đánh dấu nổi bật lên Trang chủ"}
+                    className={`h-8 w-8 flex items-center justify-center rounded-xl text-lg transition shrink-0 ${
+                      t.is_featured
+                        ? "bg-yellow-500/15 text-yellow-400 hover:bg-yellow-500/25 border border-yellow-500/30"
+                        : "bg-white/5 text-white/30 hover:bg-white/10 hover:text-white/70 border border-transparent"
+                    }`}
+                  >
+                    ★
+                  </button>
+
+                  <button
+                    type="button"
                     onClick={() => handleToggleStatus(t)}
                     className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition shrink-0 ${
                       t.status === "published"
@@ -390,7 +408,7 @@ export default function AdminTemplates() {
                         : "border-emerald-400/30 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20"
                     }`}
                   >
-                    {t.status === "published" ? "👁️‍🗨️ Ẩn (Draft)" : "👁️ Hiện (Publish)"}
+                    {t.status === "published" ? "Ẩn (Draft)" : "Hiện (Publish)"}
                   </button>
 
                   <button
@@ -398,7 +416,7 @@ export default function AdminTemplates() {
                     onClick={() => handleOpenEdit(t)}
                     className="px-3 py-1.5 rounded-xl text-xs font-semibold border border-blue-400/30 bg-blue-500/10 text-blue-300 hover:bg-blue-500/20 transition shrink-0"
                   >
-                    ✏️ Sửa
+                    Sửa
                   </button>
 
                   <button
@@ -406,7 +424,7 @@ export default function AdminTemplates() {
                     onClick={() => handleDeleteTemplate(t)}
                     className="px-3 py-1.5 rounded-xl text-xs font-semibold border border-rose-400/30 bg-rose-500/10 text-rose-300 hover:bg-rose-500/20 transition shrink-0"
                   >
-                    🗑️ Xóa
+                    Xóa
                   </button>
                 </div>
               </div>
@@ -518,18 +536,30 @@ export default function AdminTemplates() {
                     </button>
                   </div>
                 ) : null}
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0] ?? null;
-                    setEditThumbnail(file);
-                    if (file) {
-                      setEditThumbnailPreview(URL.createObjectURL(file));
-                    }
-                  }}
-                  className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-white/90"
-                />
+                <div className="flex flex-col gap-2">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0] ?? null;
+                      setEditThumbnail(file);
+                      if (file) {
+                        setEditThumbnailPreview(URL.createObjectURL(file));
+                      }
+                    }}
+                    className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-white/90"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Hoặc nhập link ảnh (https://...)"
+                    value={typeof editThumbnail === 'string' ? editThumbnail : ""}
+                    onChange={(e) => {
+                      setEditThumbnail(e.target.value);
+                      setEditThumbnailPreview(e.target.value);
+                    }}
+                    className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-white/90"
+                  />
+                </div>
               </div>
 
               <div className="mt-4 flex items-center justify-end gap-3 pt-3 border-t border-white/10 shrink-0">

@@ -86,9 +86,7 @@ export default function Profile() {
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           <GlassCard title="Thông tin cơ bản" subtitle="Tài khoản & Ví tiền">
             <div className="flex items-center gap-4">
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-500 text-xl font-bold text-white shadow-lg">
-                {(user?.name ?? "U")[0].toUpperCase()}
-              </div>
+              <img src="https://i.imgur.com/PIrOjbx.png" alt="Avatar" className="h-14 w-14 rounded-2xl object-cover shadow-lg" />
               <div>
                 <div className="text-white/95 font-bold text-lg">{user?.name ?? "Người dùng"}</div>
                 <div className="text-white/60 text-sm font-mono">{user?.email ?? "user@example.com"}</div>
@@ -99,7 +97,6 @@ export default function Profile() {
             <div className="mt-5 rounded-2xl border border-emerald-400/40 bg-gradient-to-r from-emerald-500/15 via-teal-500/15 to-violet-500/15 p-4 shadow-xl">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 text-sm font-semibold text-emerald-200">
-                  <span className="text-lg">💰</span>
                   <span>Số dư khả dụng:</span>
                 </div>
                 <div className="text-right">
@@ -121,7 +118,7 @@ export default function Profile() {
               <div className="flex justify-between gap-4">
                 <span className="text-white/60">Trạng thái</span>
                 <span className="rounded-full bg-emerald-500/20 px-2.5 py-0.5 text-xs font-semibold text-emerald-300">
-                  ⚡ Hoạt động
+                  Hoạt động
                 </span>
               </div>
               <div className="flex justify-between gap-4">
@@ -136,7 +133,7 @@ export default function Profile() {
                 onClick={() => setIsDepositOpen(true)}
                 className="primary-btn w-full py-3 flex items-center justify-center gap-2 font-bold shadow-lg shadow-violet-500/30"
               >
-                <span>💰 Nạp Thêm Tiền Vào Tài Khoản</span>
+                <span>Nạp Thêm Tiền Vào Tài Khoản</span>
               </button>
             </div>
           </GlassCard>
@@ -171,8 +168,24 @@ export default function Profile() {
                 <span className="font-bold text-violet-300">Kho giao diện</span>
               </div>
               <div className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 p-3.5">
-                <span className="text-white/70">Landing Pages đã tạo</span>
-                <span className="font-bold text-teal-300">{user?.landing_pages_count ?? 0} / {user?.landing_page_limit > 900000 ? "∞" : user?.landing_page_limit ?? 1} trang</span>
+                <span className="text-white/70">Tổng số trang đã tạo</span>
+                <span className="font-bold text-teal-300">{user?.total_pages_created ?? 0} trang</span>
+              </div>
+              <div className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 p-3.5">
+                <span className="text-white/70">Số trang hiện có</span>
+                <span className="font-bold text-sky-300">{user?.landing_pages_count ?? 0} trang</span>
+              </div>
+              <div className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 p-3.5">
+                <span className="text-white/70">Số trang đã xóa</span>
+                <span className="font-bold text-rose-300">{(user?.total_pages_created ?? 0) - (user?.landing_pages_count ?? 0)} trang</span>
+              </div>
+              <div className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 p-3.5">
+                <span className="text-white/70">Lượt tạo trang còn lại</span>
+                <span className="font-bold text-fuchsia-300">
+                  {user?.landing_page_limit && user.landing_page_limit > 900 
+                    ? "Không giới hạn" 
+                    : `${Math.max(0, (user?.landing_page_limit ?? 1) - (user?.total_pages_created ?? 0))} lượt`}
+                </span>
               </div>
               <div className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 p-3.5">
                 <span className="text-white/70">Gói tài khoản hiện tại</span>

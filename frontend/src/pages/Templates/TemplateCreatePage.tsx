@@ -89,6 +89,7 @@ export default function TemplateCreatePage({
   const [previewLoading, setPreviewLoading] = useState<boolean>(false);
   const [previewError, setPreviewError] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<"desktop" | "mobile">("desktop");
+  const [limitModalOpen, setLimitModalOpen] = useState(false);
 
   // Tự động render preview mẫu khi vừa vào / khi values thay đổi
   useEffect(() => {
@@ -245,11 +246,15 @@ export default function TemplateCreatePage({
                       navigate("/login");
                       return;
                     }
+                    if (isLimitReached) {
+                      setLimitModalOpen(true);
+                      return;
+                    }
                     onSwitchMode("create");
                   }}
                   className="primary-btn px-5 py-2 text-xs font-semibold shadow-lg shadow-violet-500/20"
                 >
-                  🚀 Sử dụng mẫu này để tạo website
+                  Sử dụng mẫu này
                 </button>
               ) : null}
             </div>
@@ -283,6 +288,46 @@ export default function TemplateCreatePage({
             </div>
           )}
         </div>
+        
+        {limitModalOpen && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
+            <div className="bg-[#0f172a] border border-white/10 rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl animate-fade-in relative">
+              <button
+                onClick={() => setLimitModalOpen(false)}
+                className="absolute top-4 right-4 text-white/40 hover:text-white transition"
+              >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+              </button>
+              
+              <div className="text-center">
+                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-rose-500/20 text-3xl text-rose-400">
+                  ⚠️
+                </div>
+                <h3 className="text-xl font-bold text-white mb-2">Đã hết lượt tạo</h3>
+                <p className="text-sm text-white/70 leading-relaxed mb-6">
+                  Bạn đã dùng hết số lượt tạo Landing Page ({user?.landing_pages_count || 1}/{user?.landing_page_limit || 1} trang). Vui lòng nâng cấp dịch vụ để tạo thêm!
+                </p>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => setLimitModalOpen(false)}
+                    className="flex-1 px-4 py-2.5 rounded-xl border border-white/10 text-white/70 hover:bg-white/5 font-semibold transition text-sm"
+                  >
+                    Đóng
+                  </button>
+                  <button
+                    onClick={() => {
+                      setLimitModalOpen(false);
+                      navigate("/upgrade");
+                    }}
+                    className="flex-1 px-4 py-2.5 rounded-xl bg-transparent border border-rose-500 text-rose-400 hover:bg-rose-500/10 font-bold transition text-sm"
+                  >
+                    Nâng cấp ngay
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
@@ -401,7 +446,7 @@ export default function TemplateCreatePage({
                     <span className="text-xs text-rose-200 font-medium">
                       Bạn đã dùng hết số lượt tạo Landing Page ({user?.landing_pages_count || 1}/{user?.landing_page_limit || 1} trang). Vui lòng nâng cấp dịch vụ!
                     </span>
-                    <Link to="/dashboard" className="shrink-0 px-4 py-2 rounded-xl border border-rose-400/40 bg-rose-500/20 text-xs font-semibold hover:bg-rose-500/30 transition text-rose-100">
+                    <Link to="/upgrade" className="shrink-0 px-4 py-2 rounded-xl bg-transparent border border-rose-500 text-rose-400 text-xs font-semibold hover:bg-rose-500/10 transition">
                       Gia hạn / Nâng cấp
                     </Link>
                   </div>
@@ -489,6 +534,46 @@ export default function TemplateCreatePage({
           </GlassCard>
         </div>
       </div>
+
+      {limitModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
+          <div className="bg-[#0f172a] border border-white/10 rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl animate-fade-in relative">
+            <button
+              onClick={() => setLimitModalOpen(false)}
+              className="absolute top-4 right-4 text-white/40 hover:text-white transition"
+            >
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+            </button>
+            
+            <div className="text-center">
+              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-rose-500/20 text-3xl text-rose-400">
+                ⚠️
+              </div>
+              <h3 className="text-xl font-bold text-white mb-2">Đã hết lượt tạo</h3>
+              <p className="text-sm text-white/70 leading-relaxed mb-6">
+                Bạn đã dùng hết số lượt tạo Landing Page ({user?.landing_pages_count || 1}/{user?.landing_page_limit || 1} trang). Vui lòng nâng cấp dịch vụ để tạo thêm!
+              </p>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setLimitModalOpen(false)}
+                  className="flex-1 px-4 py-2.5 rounded-xl border border-white/10 text-white/70 hover:bg-white/5 font-semibold transition text-sm"
+                >
+                  Đóng
+                </button>
+                <button
+                  onClick={() => {
+                    setLimitModalOpen(false);
+                    navigate("/upgrade");
+                  }}
+                  className="flex-1 px-4 py-2.5 rounded-xl bg-transparent border border-rose-500 text-rose-400 hover:bg-rose-500/10 font-bold transition text-sm"
+                >
+                  Nâng cấp ngay
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

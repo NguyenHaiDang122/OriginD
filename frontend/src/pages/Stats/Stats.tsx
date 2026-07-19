@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import GlassCard from "../../components/common/GlassCard";
 import PageSection from "../../components/common/PageSection";
 import { useAuthStore } from "../../store/authStore";
@@ -17,18 +18,20 @@ function FakeStatRow({
   value,
 }: {
   label: string;
-  value: string;
+  value: React.ReactNode;
 }) {
   return (
     <div className="flex items-center justify-between gap-4 rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
       <span className="text-sm text-white/70">{label}</span>
-      <span className="text-sm font-bold text-white/90">{value}</span>
+      <span className="text-sm font-bold text-white/90 text-right">{value}</span>
     </div>
   );
 }
 
 export default function Stats() {
   const token = useAuthStore((s) => s.token);
+  const user = useAuthStore((s) => s.user) as any;
+  const isPro = user?.plan?.slug === "pro" || user?.plan?.name?.toLowerCase().includes("pro") || user?.role === "Admin" || (user?.roles && user.roles.some((r: any) => r.name === "Admin"));
 
   const [pages, setPages] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -48,19 +51,33 @@ export default function Stats() {
   const [editViewMode, setEditViewMode] = useState<"desktop" | "mobile">("desktop");
   const [isDepositModalOpen, setIsDepositModalOpen] = useState(false);
   const [renewLoadingId, setRenewLoadingId] = useState<number | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  async function handleRenewPage(p: any) {
-    const cost = p.template?.renewal_price != null ? p.template.renewal_price : 50000;
-    const costStr = cost.toLocaleString("vi-VN");
-    if (!window.confirm(`Gia hạn trang Landing Page "${p.title}" thêm 30 ngày với chi phí ${costStr} VNĐ trừ từ số dư của bạn?`)) return;
+  const [renewTargetPage, setRenewTargetPage] = useState<any | null>(null);
+  const [renewMonths, setRenewMonths] = useState<number>(1);
+
+  function openRenewModal(p: any) {
+    setRenewTargetPage(p);
+    setRenewMonths(1);
+  }
+
+  async function handleConfirmRenew() {
+    if (!renewTargetPage) return;
+    const p = renewTargetPage;
+    const baseCost = p.template?.renewal_price != null ? p.template.renewal_price : 50000;
+    const totalCost = baseCost * renewMonths;
+    const totalCostStr = totalCost.toLocaleString("vi-VN");
+
     setRenewLoadingId(p.id);
     try {
-      const res = await renewService(token, p.id);
-      alert(res.message);
+      const res = await renewService(token, p.id, renewMonths);
+      setSuccessMessage(res.message);
+      setRenewTargetPage(null);
       loadPages();
     } catch (e: any) {
-      alert(e?.response?.data?.message || `Số dư của bạn không đủ (cần ${costStr} đ). Vui lòng nạp tiền vào tài khoản!`);
-      setIsDepositModalOpen(true);
+      setErrorMessage(e?.response?.data?.message || `⚠️ Rất tiếc, số dư hiện tại không đủ để thanh toán ${totalCostStr} VNĐ. Vui lòng nạp thêm tiền!`);
+      setRenewTargetPage(null);
     } finally {
       setRenewLoadingId(null);
     }
@@ -195,21 +212,8 @@ export default function Stats() {
   }
 
   const computedStats = useMemo(() => {
-    const total = pages.length;
-    // Tạo số liệu random / ước tính cho demo dựa trên id
-    let totalViews = 0;
-    let totalLeads = 0;
-    pages.forEach((p) => {
-      const v = (p.id * 142 + 250) % 3500;
-      totalViews += v;
-      totalLeads += Math.floor(v * 0.045);
-    });
-
     return {
-      total,
-      totalViews: totalViews.toLocaleString("en-US"),
-      totalLeads: totalLeads.toLocaleString("en-US"),
-      convRate: totalViews > 0 ? ((totalLeads / totalViews) * 100).toFixed(1) + "%" : "0%",
+      total: pages.length,
     };
   }, [pages]);
 
@@ -483,7 +487,7 @@ export default function Stats() {
 
                         <div className="mt-3.5 flex flex-wrap items-center justify-between gap-3 border-t border-white/10 pt-3">
                           <a
-                            href={`${PAGE_BASE_URL}/${p.slug}${p.status === "draft" && token ? `?token=${token}` : ""}`}
+                            href={`${PAGE_BASE_URL}/${p.slug}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             onClick={(e) => e.stopPropagation()}
@@ -518,11 +522,11 @@ export default function Stats() {
                               type="button"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                handleRenewPage(p);
+                                openRenewModal(p);
                               }}
                               disabled={renewLoadingId === p.id}
                               className="inline-flex items-center justify-center gap-1.5 h-8 px-3 rounded-xl border border-violet-400/40 bg-gradient-to-r from-violet-600/30 to-indigo-600/30 text-xs font-semibold text-violet-200 hover:from-violet-600/50 hover:to-indigo-600/50 shadow-sm transition shrink-0 disabled:opacity-50"
-                              title={`Gia hạn thêm 30 ngày cho trang này (${(p.template?.renewal_price != null ? p.template.renewal_price : 50000).toLocaleString("vi-VN")} đ)`}
+                              title="Gia hạn Landing Page"
                             >
                               <span>Gia hạn {renewLoadingId === p.id ? "..." : ""}</span>
                             </button>
@@ -559,62 +563,58 @@ export default function Stats() {
 
           {/* Cột phải: Thống kê & Chi tiết dữ liệu */}
           <div className="lg:col-span-2">
-            <GlassCard
-              title={selectedPage ? `Thống kê cho: ${selectedPage.title}` : "Tổng quan thống kê"}
-              subtitle={selectedPage ? `URL: ${PAGE_BASE_URL}/${selectedPage.slug}` : "Toàn bộ tài khoản"}
-            >
+            <GlassCard>
+              <div className="mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-4">
+                <div>
+                  <div className="card-title text-white/90 font-bold">Thống kê dữ liệu</div>
+                  <div className="card-subtitle mt-1 text-white/60 text-xs">
+                    {selectedPage ? `URL: ${PAGE_BASE_URL}/${selectedPage.slug}` : "Tổng quan toàn bộ tài khoản"}
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="text-sm text-white/70 whitespace-nowrap">Thống kê cho:</span>
+                  <select
+                    className="w-full sm:w-auto rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white/90 outline-none focus:border-violet-400"
+                    value={selectedPage ? selectedPage.id : ""}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (!val) setSelectedPage(null);
+                      else {
+                        const p = pages.find((p) => String(p.id) === val);
+                        if (p) setSelectedPage(p);
+                      }
+                    }}
+                  >
+                    <option value="" className="bg-slate-800 text-white">Tất cả (Tổng quan)</option>
+                    {pages.map((p) => (
+                      <option key={p.id} value={p.id} className="bg-slate-800 text-white">
+                        {p.title}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <FakeStatRow label="Tổng trang đã tạo" value={`${computedStats.total} trang`} />
-                <FakeStatRow
-                  label="Tổng lượt xem (ước tính)"
-                  value={selectedPage ? `${((selectedPage.id * 142 + 250) % 3500).toLocaleString()} lượt` : computedStats.totalViews}
-                />
-                <FakeStatRow
-                  label="Khách hàng tiềm năng (Leads)"
-                  value={selectedPage ? `${Math.floor(((selectedPage.id * 142 + 250) % 3500) * 0.045).toLocaleString()} leads` : computedStats.totalLeads}
-                />
-                <FakeStatRow label="Tỷ lệ chuyển đổi" value={computedStats.convRate} />
-                {selectedPage ? (
+                {!selectedPage ? (
+                  <>
+                    <FakeStatRow label="Tổng số trang đã tạo" value={`${user?.total_pages_created || 0} trang`} />
+                    <FakeStatRow label="Số trang hiện có" value={`${computedStats.total} trang`} />
+                    <FakeStatRow label="Số trang đã xóa" value={`${(user?.total_pages_created || 0) - computedStats.total} trang`} />
+                    <FakeStatRow 
+                      label="Lượt tạo trang còn lại" 
+                      value={(user?.landing_page_limit || 0) > 900 ? "Không giới hạn" : `${Math.max(0, (user?.landing_page_limit || 0) - (user?.total_pages_created || 0))} lượt`} 
+                    />
+                  </>
+                ) : (
                   <FakeStatRow
                     label="Thời gian hết hạn"
                     value={selectedPage.expires_at ? new Date(selectedPage.expires_at).toLocaleDateString("vi-VN") + (new Date(selectedPage.expires_at).getTime() < Date.now() ? " (Đã hết hạn)" : "") : "Không giới hạn"}
                   />
-                ) : null}
+                )}
               </div>
 
-              {/* Biểu đồ lượt truy cập */}
-              <div className="mt-5 rounded-3xl border border-white/10 bg-[#0b1220] p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="text-sm font-semibold text-white/90">Biểu đồ lượt truy cập 7 ngày qua</div>
-                    <div className="text-xs text-white/60 mt-1">
-                      {selectedPage ? `Số liệu trang "${selectedPage.title}"` : "Số liệu tổng hợp"}
-                    </div>
-                  </div>
-                  <div className={`text-xs rounded-full border px-3 py-1 font-medium ${
-                    selectedPage && selectedPage.expires_at && new Date(selectedPage.expires_at).getTime() < Date.now()
-                      ? "border-rose-400/30 bg-rose-500/10 text-rose-300"
-                      : "border-emerald-400/30 bg-emerald-500/10 text-emerald-300"
-                  }`}>
-                    {selectedPage && selectedPage.expires_at && new Date(selectedPage.expires_at).getTime() < Date.now() ? "Expired" : "Active"}
-                  </div>
-                </div>
 
-                <div className="mt-4 h-40 rounded-2xl bg-gradient-to-b from-white/5 to-transparent p-4 flex items-end gap-2">
-                  {[18, 26, 14, 30, 22, 34, 28].map((v, idx) => {
-                    const barVal = selectedPage ? (v * ((selectedPage.id % 3) + 1)) : v;
-                    return (
-                      <div key={idx} className="flex-1 flex flex-col justify-end items-center">
-                        <div
-                          className="w-full rounded-xl bg-gradient-to-t from-indigo-500/70 via-violet-500/50 to-fuchsia-500/40 hover:opacity-90 transition-all duration-300"
-                          style={{ height: `${Math.min(barVal * 2.5, 120)}px` }}
-                        />
-                        <div className="mt-2 text-[11px] text-white/55">T{idx + 1}</div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
             </GlassCard>
 
             {/* Khung xem trước cấu hình trường dữ liệu (Data Inspector) */}
@@ -638,6 +638,111 @@ export default function Stats() {
         </div>
       </PageSection>
 
+      {renewTargetPage && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="w-full max-w-sm rounded-3xl border border-white/10 bg-[#0f172a] p-6 shadow-2xl animate-fade-in">
+            <h3 className="text-lg font-bold text-white mb-2">Gia hạn Landing Page</h3>
+            <p className="text-sm text-white/70 mb-4">
+              Chọn thời gian gia hạn cho trang "<span className="text-white font-semibold">{renewTargetPage.title}</span>".
+            </p>
+            
+            <div className="mb-4">
+              <label className="block text-xs font-semibold text-white/60 mb-2 uppercase tracking-wider">Thời gian gia hạn</label>
+              <select 
+                value={renewMonths}
+                onChange={(e) => setRenewMonths(Number(e.target.value))}
+                className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none focus:border-violet-400"
+              >
+                <option value={1} className="bg-slate-800 text-white">1 tháng (30 ngày)</option>
+                <option value={2} className="bg-slate-800 text-white">2 tháng (60 ngày)</option>
+                <option value={4} className="bg-slate-800 text-white">4 tháng (120 ngày)</option>
+                <option value={6} className="bg-slate-800 text-white">6 tháng (180 ngày)</option>
+                <option value={12} className="bg-slate-800 text-white">1 năm (360 ngày)</option>
+              </select>
+            </div>
+            
+            <div className="mb-6 rounded-xl bg-violet-500/10 border border-violet-500/20 p-3">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-white/70">Tổng thanh toán:</span>
+                <span className="text-base font-bold text-violet-400">
+                  {((renewTargetPage.template?.renewal_price != null ? renewTargetPage.template.renewal_price : 50000) * renewMonths).toLocaleString("vi-VN")} VNĐ
+                </span>
+              </div>
+            </div>
+            
+            <div className="flex gap-3">
+              <button 
+                onClick={() => setRenewTargetPage(null)}
+                className="flex-1 rounded-xl bg-white/5 px-4 py-2.5 text-sm font-semibold text-white/70 hover:bg-white/10 transition"
+              >
+                Hủy bỏ
+              </button>
+              <button 
+                onClick={handleConfirmRenew}
+                disabled={renewLoadingId === renewTargetPage.id}
+                className="flex-1 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 px-4 py-2.5 text-sm font-bold text-white hover:opacity-90 shadow-lg transition disabled:opacity-50"
+              >
+                {renewLoadingId === renewTargetPage.id ? "Đang xử lý..." : "Xác nhận"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Thông Báo Thành Công */}
+      {successMessage && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="w-full max-w-sm rounded-3xl border border-emerald-500/30 bg-[#0f172a] p-6 shadow-2xl text-center">
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-400">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-bold text-white mb-2">Thành công!</h3>
+            <p className="text-sm text-white/80 mb-6">{successMessage}</p>
+            <button 
+              onClick={() => setSuccessMessage(null)}
+              className="w-full rounded-xl bg-emerald-500/20 px-4 py-2.5 text-sm font-bold text-emerald-400 hover:bg-emerald-500/30 transition"
+            >
+              Hoàn tất
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Thông Báo Lỗi (Thiếu Tiền) */}
+      {errorMessage && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="w-full max-w-sm rounded-3xl border border-rose-500/30 bg-[#0f172a] p-6 shadow-2xl text-center">
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-rose-500/20 text-rose-400">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-bold text-white mb-2">Không đủ số dư!</h3>
+            <p className="text-sm text-white/80 mb-6 leading-relaxed">{errorMessage}</p>
+            <div className="flex gap-3">
+              <button 
+                onClick={() => setErrorMessage(null)}
+                className="flex-1 rounded-xl bg-white/5 px-4 py-2.5 text-sm font-semibold text-white/70 hover:bg-white/10 transition"
+              >
+                Đóng
+              </button>
+              <button 
+                onClick={() => {
+                  setErrorMessage(null);
+                  setIsDepositModalOpen(true);
+                }}
+                className="flex-1 rounded-xl bg-rose-500/20 px-4 py-2.5 text-sm font-bold text-rose-400 hover:bg-rose-500/30 transition"
+              >
+                Nạp tiền ngay
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Nạp Tiền nếu thiếu tiền */}
       <DepositModal
         isOpen={isDepositModalOpen}
         onClose={() => setIsDepositModalOpen(false)}

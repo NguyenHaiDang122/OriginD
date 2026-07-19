@@ -17,8 +17,9 @@ class UserResource extends JsonResource
             : collect();
 
         $limit = $this->getEffectiveLandingPageLimit();
+        $totalPagesCreated = $this->total_pages_created;
         $count = $this->landingPages()->count();
-        $canCreate = $count < $limit;
+        $canCreate = $totalPagesCreated < $limit;
         $sub = $this->subscription ? $this->subscription->load('plan') : null;
 
         return [
@@ -28,6 +29,7 @@ class UserResource extends JsonResource
             'status' => $this->status ?? 'active',
             'balance' => (int) $this->balance,
             'landing_pages_count' => $count,
+            'total_pages_created' => $totalPagesCreated,
             'landing_page_limit' => $limit,
             'custom_landing_page_limit' => $this->landing_page_limit,
             'can_create_landing_page' => $canCreate,

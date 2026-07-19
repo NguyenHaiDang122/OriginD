@@ -23,7 +23,7 @@ class TemplateController extends Controller
             $query->where('status', 'published');
         }
 
-        $templates = $query->orderBy('id', 'desc')->get();
+        $templates = $query->orderBy('is_featured', 'desc')->orderBy('id', 'desc')->get();
 
         return TemplateResource::collection($templates);
     }

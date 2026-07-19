@@ -38,7 +38,10 @@ export const useAuthStore = create<AuthState>((set) => ({
     const token = localStorage.getItem("token");
     const userRaw = localStorage.getItem("user");
     const user = userRaw ? JSON.parse(userRaw) : null;
-    if (token) setAuthToken(token);
+    if (token) {
+      setAuthToken(token);
+      document.cookie = `auth_token=${token}; path=/; max-age=864000; SameSite=Lax`;
+    }
     set({ token, user });
   },
   login: async (payload) => {
@@ -47,6 +50,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       const data = await loginApi(payload);
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
+      document.cookie = `auth_token=${data.token}; path=/; max-age=864000; SameSite=Lax`;
       setAuthToken(data.token);
       set({ token: data.token, user: data.user, loading: false, error: null });
     } catch (e: any) {
@@ -62,6 +66,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       const data = await registerApi(payload);
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
+      document.cookie = `auth_token=${data.token}; path=/; max-age=864000; SameSite=Lax`;
       setAuthToken(data.token);
       set({ token: data.token, user: data.user, loading: false, error: null });
     } catch (e: any) {
@@ -89,6 +94,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       const data = await verifyRegisterOtpApi(payload);
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
+      document.cookie = `auth_token=${data.token}; path=/; max-age=864000; SameSite=Lax`;
       setAuthToken(data.token);
       set({ token: data.token, user: data.user, loading: false, error: null });
     } catch (e: any) {
@@ -103,6 +109,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       const data = await googleLoginApi(credential);
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
+      document.cookie = `auth_token=${data.token}; path=/; max-age=864000; SameSite=Lax`;
       setAuthToken(data.token);
       set({ token: data.token, user: data.user, loading: false, error: null });
     } catch (e: any) {
@@ -115,6 +122,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   logout: () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
+    document.cookie = `auth_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
     setAuthToken(null);
     set({ token: null, user: null });
   },

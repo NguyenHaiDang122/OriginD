@@ -312,7 +312,7 @@ export default function AdminDashboard() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <div className="text-sm font-bold text-white/90">
-              💡 Hướng dẫn luồng quản trị Templates:
+              Hướng dẫn luồng quản trị Templates:
             </div>
             <div className="mt-1 text-xs text-white/60 leading-relaxed">
               Bước 1: Chuẩn bị file <code className="text-white/80">.zip</code> chứa <code className="text-white/80">index.html</code> với các thuộc tính <code className="text-white/80">data-field="..."</code>.<br />

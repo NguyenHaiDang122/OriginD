@@ -27,6 +27,7 @@ Route::post('/templates/{template}/preview', [TemplateController::class, 'previe
 Route::get('/landing-pages/{landingPage}/render', [LandingPageController::class, 'render']);
 Route::post('/sepay-webhook', [DepositController::class, 'sepayWebhook']);
 Route::get('/plans', [PlanController::class, 'index']);
+Route::get('/settings/popup', [App\Http\Controllers\Api\SettingController::class, 'getPopupSettings']);
 
 Route::middleware('auth:sanctum')->group(function () {
 
@@ -42,6 +43,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/landing-pages/{landingPage}', [LandingPageController::class, 'show']);
     Route::put('/landing-pages/{landingPage}', [LandingPageController::class, 'update']);
     Route::delete('/landing-pages/{landingPage}', [LandingPageController::class, 'destroy']);
+
+    Route::get('/settings/support', [App\Http\Controllers\Api\SettingController::class, 'getSupportSettings']);
+    Route::put('/settings/support', [App\Http\Controllers\Api\SettingController::class, 'updateSupportSettings']);
 
     // Deposits and Renewals
     Route::get('/deposits', [DepositController::class, 'index']);
@@ -96,5 +100,10 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::post('/custom-domains', [AdminCustomDomainController::class, 'store']);
             Route::put('/custom-domains/{id}', [AdminCustomDomainController::class, 'update']);
             Route::delete('/custom-domains/{id}', [AdminCustomDomainController::class, 'destroy']);
+            // Admin Statistics
+            Route::get('/statistics', [App\Http\Controllers\Api\AdminStatisticController::class, 'getStatistics']);
+
+            // Admin Settings
+            Route::put('/settings/popup', [App\Http\Controllers\Api\SettingController::class, 'updatePopupSettings']);
         });
 });

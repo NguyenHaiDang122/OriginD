@@ -28,7 +28,9 @@ class LandingPageController extends Controller
         $isFreeOrStarter = !$plan || in_array(strtolower($plan->slug), ['free', 'starter']) || $plan->landing_page_limit <= 1;
 
         $limit = $user->getEffectiveLandingPageLimit();
-        if ($user->landingPages()->count() >= $limit) {
+        // Kiểm tra dựa trên TỔNG SỐ TRANG ĐÃ TẠO (total_pages_created), 
+        // không tính theo số trang hiện có để tránh việc xóa đi tạo lại.
+        if ($user->total_pages_created >= $limit) {
             return response()->json([
                 'message' => 'Bạn đã đạt giới hạn tối đa '.$limit.' Landing Page cho phép của tài khoản. Vui lòng gia hạn hoặc nâng cấp dịch vụ để tạo thêm!'
             ], 403);
@@ -64,6 +66,9 @@ class LandingPageController extends Controller
             'status' => 'draft',
             'expires_at' => $expiresAt,
         ]);
+
+        // Tăng bộ đếm tổng số trang đã tạo của user
+        $user->increment('total_pages_created');
 
         return response()->json([
             'message' => 'Tạo Landing Page thành công',

@@ -62,6 +62,8 @@ class TemplateService
                 $thumbnail = $request
                     ->file('thumbnail')
                     ->store('thumbnails', 'public');
+            } elseif ($request->has('thumbnail') && is_string($request->thumbnail)) {
+                $thumbnail = $request->thumbnail;
             }
 
             /*
@@ -87,6 +89,8 @@ class TemplateService
                 'status' => $request->status ?? 'draft',
 
                 'renewal_price' => $request->has('renewal_price') && $request->renewal_price !== null ? (int) $request->renewal_price : 50000,
+
+                'is_featured' => $request->has('is_featured') ? filter_var($request->is_featured, FILTER_VALIDATE_BOOLEAN) : false,
 
                 'created_by' => Auth::id(),
 
@@ -149,6 +153,7 @@ class TemplateService
         if (isset($data['version'])) $updateData['version'] = $data['version'];
         if (isset($data['status'])) $updateData['status'] = $data['status'];
         if (isset($data['renewal_price'])) $updateData['renewal_price'] = (int) $data['renewal_price'];
+        if (array_key_exists('is_featured', $data)) $updateData['is_featured'] = filter_var($data['is_featured'], FILTER_VALIDATE_BOOLEAN);
 
         if ($input instanceof Request && $input->hasFile('thumbnail')) {
             if ($template->thumbnail && !str_starts_with($template->thumbnail, 'http') && Storage::disk('public')->exists($template->thumbnail)) {
