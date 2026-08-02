@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title data-field="page.title">
+        Landing Page Demo
+    </title>
+
+    <style>
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background: #f8fafc;
+        }
+
+        .hero {
+            max-width: 1200px;
+            margin: auto;
+            padding: 80px 20px;
+            text-align: center;
+        }
+
+        .hero img {
+            width: 180px;
+            height: auto;
+        }
+
+        .hero h1 {
+            font-size: 48px;
+            margin: 30px 0 20px;
+        }
+
+        .hero p {
+            font-size: 20px;
+            color: #64748b;
+            margin-bottom: 30px;
+        }
+
+        .button {
+            display: inline-block;
+            padding: 15px 35px;
+            background: #2563eb;
+            color: white;
+            border-radius: 8px;
+            text-decoration: none;
+        }
+
+
+        .feature {
+            max-width: 1000px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<section class="hero">
+
+
+    <!-- Logo -->
+    <img
+        src="images/logo.png"
+        data-field="hero.logo"
+    >
+
+
+    <!-- Tiêu đề -->
+    <h1
+        data-field="hero.title">
+        Chào mừng đến với Landing Page
+    </h1>
+
+
+    <!-- Mô tả -->
+    <p
+        data-field="hero.description">
+        Đây là nội dung mô tả mặc định.
+    </p>
+
+
+    <!-- Nút -->
+    <a
+        href="#"
+        class="button"
+        data-field="hero.button">
+        Xem ngay
+    </a>
+
+
+</section>
+
+
+
+<section class="feature">
+
+
+    <h2
+        data-field="feature.title">
+        Tính năng nổi bật
+    </h2>
+
+
+    <p
+        data-field="feature.content">
+        Nội dung tính năng.
+    </p>
+
+
+</section>
+
+
+
+</body>
+
+</html>

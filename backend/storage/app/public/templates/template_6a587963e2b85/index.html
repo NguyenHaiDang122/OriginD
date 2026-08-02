@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<!-- Developer: Nguyễn Hải Đăng (DAG) | Zalo: 0866984097 | Cảm ơn bạn đã tôn trọng tác giả -->
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title data-field="site.title" data-label="Tiêu đề trang web" data-type="text" data-required="true">OriginD - Tạo Website Chỉ Trong 5 Phút</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    body { font-family: 'Segoe UI', system-ui, sans-serif; }
+    .hero-bg {
+      background: linear-gradient(rgba(0,0,0,0.65), rgba(0,0,0,0.75)), url('https://img.magnific.com/free-vector/paper-style-dynamic-lines-background_23-2149008629.jpg') center/cover no-repeat;
+    }
+
+    .nav-link {
+      position: relative;
+      transition: all 0.3s ease;
+    }
+    .nav-link:after {
+      content: '';
+      position: absolute;
+      width: 0;
+      height: 2px;
+      bottom: -4px;
+      left: 0;
+      background-color: #4f46e5;
+      transition: width 0.4s ease;
+    }
+    .nav-link:hover:after { width: 100%; }
+    .nav-link:hover { color: #4f46e5; transform: translateY(-2px); }
+
+    .fade-in {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: all 0.8s ease-out;
+    }
+    .fade-in.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+  <!-- Navbar -->
+  <nav class="bg-white shadow-md fixed w-full z-50">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+      <div class="text-3xl font-bold text-indigo-600" 
+           data-field="header.logo_text" 
+           data-label="Tên thương hiệu (Logo)" 
+           data-type="text"
+           data-required="true">OriginD</div>
+      
+      <div class="hidden md:flex space-x-8 text-lg">
+        <a href="#about" class="nav-link text-gray-700 font-medium" 
+           data-field="menu.about" 
+           data-label="Menu - Về chúng tôi" 
+           data-type="text">Về chúng tôi</a>
+        <a href="#features" class="nav-link text-gray-700 font-medium" 
+           data-field="menu.features" 
+           data-label="Menu - Tính năng" 
+           data-type="text">Tính năng</a>
+        <a href="#contact" class="nav-link text-gray-700 font-medium" 
+           data-field="menu.contact" 
+           data-label="Menu - Liên hệ" 
+           data-type="text">Liên hệ</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="hero-bg h-screen flex items-center text-white pt-16">
+    <div class="max-w-7xl mx-auto px-6 text-center">
+      <h1 class="text-5xl md:text-6xl font-bold mb-6 leading-tight fade-in" 
+          data-field="hero.title" 
+          data-label="Tiêu đề Hero"
+          data-type="textarea"
+          data-required="true">
+        Tạo website chuyên nghiệp<br>chỉ trong <span class="text-yellow-400">5 phút</span>
+      </h1>
+      
+      <p class="text-xl md:text-2xl mb-10 max-w-2xl mx-auto fade-in" 
+         data-field="hero.subtitle" 
+         data-label="Mô tả Hero"
+         data-type="textarea"
+         data-required="true">
+        OriginD - Nền tảng tạo website nhanh chóng, đẹp mắt và hoàn toàn <span class="font-semibold text-green-400">miễn phí</span>
+      </p>
+      
+      <a href="https://www.facebook.com/NguyenHaiDang2005.FB" 
+         class="inline-block border-2 border-white hover:bg-white hover:text-gray-900 px-10 py-5 rounded-full text-xl font-semibold transition fade-in"
+         data-field="hero.cta_button"
+         data-label="Nút CTA Hero"
+         data-type="text">Bắt Đầu Ngay</a>
+      
+      <p class="mt-6 text-sm text-gray-300 fade-in" 
+         data-field="hero.note" 
+         data-label="Ghi chú dưới nút Hero"
+         data-type="text">Không cần thẻ tín dụng • Không cần biết code</p>
+    </div>
+  </section>
+
+  <!-- About -->
+  <section id="about" class="py-20 bg-white">
+    <div class="max-w-7xl mx-auto px-6">
+      <div class="grid md:grid-cols-2 gap-12 items-center">
+        <div class="fade-in">
+          <h2 class="text-4xl font-bold mb-6" 
+              data-field="about.title" 
+              data-label="Tiêu đề phần Về chúng tôi"
+              data-type="text"
+              data-required="true">OriginD là gì?</h2>
+          
+          <p class="text-lg text-gray-600 leading-relaxed mb-6" 
+             data-field="about.description" 
+             data-label="Nội dung phần Về chúng tôi"
+             data-type="textarea"
+             data-required="true">
+            OriginD là nền tảng giúp bạn tạo website chuyên nghiệp chỉ trong 5 phút mà không cần biết lập trình. 
+            Với hàng trăm mẫu đẹp hiện đại, bạn chỉ cần chọn và chỉnh sửa theo ý muốn.
+          </p>
+          
+          <div class="space-y-3">
+            <div class="flex items-center gap-4 text-green-600 font-medium fade-in" data-field="about.benefit1" data-label="Lợi ích 1" data-type="text">
+              <i class="fas fa-check-circle text-2xl"></i>
+              <span>Hoàn toàn miễn phí</span>
+            </div>
+            <div class="flex items-center gap-4 text-green-600 font-medium fade-in" data-field="about.benefit2" data-label="Lợi ích 2" data-type="text">
+              <i class="fas fa-check-circle text-2xl"></i>
+              <span>Responsive trên mọi thiết bị</span>
+            </div>
+            <div class="flex items-center gap-4 text-green-600 font-medium fade-in" data-field="about.benefit3" data-label="Lợi ích 3" data-type="text">
+              <i class="fas fa-check-circle text-2xl"></i>
+              <span>Tùy chỉnh dễ dàng</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="rounded-3xl overflow-hidden shadow-2xl fade-in">
+          <img src="https://i.imgur.com/IZ7lAzD.png" 
+               alt="OriginD" 
+               class="w-full"
+               data-field="about.image"
+               data-label="Ảnh minh họa phần Về chúng tôi"
+               data-type="image">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section id="features" class="py-20 bg-gray-100">
+    <div class="max-w-7xl mx-auto px-6">
+      <h2 class="text-4xl font-bold text-center mb-12 fade-in" 
+          data-field="features.title" 
+          data-label="Tiêu đề phần Tính năng"
+          data-type="text"
+          data-required="true">Tại sao nên chọn OriginD?</h2>
+      
+      <div class="grid md:grid-cols-3 gap-8">
+        <div class="bg-white p-8 rounded-3xl shadow hover:shadow-xl transition text-center fade-in">
+          <i class="fas fa-bolt text-5xl text-indigo-600 mb-6"></i>
+          <h3 class="text-2xl font-semibold mb-3" data-field="features.1.title" data-label="Tính năng 1 - Tiêu đề" data-type="text">Siêu nhanh</h3>
+          <p class="text-gray-600" data-field="features.1.desc" data-label="Tính năng 1 - Mô tả" data-type="textarea">Chỉ mất 5 phút để có một website hoàn chỉnh</p>
+        </div>
+        
+        <div class="bg-white p-8 rounded-3xl shadow hover:shadow-xl transition text-center fade-in">
+          <i class="fas fa-palette text-5xl text-indigo-600 mb-6"></i>
+          <h3 class="text-2xl font-semibold mb-3" data-field="features.2.title" data-label="Tính năng 2 - Tiêu đề" data-type="text">Thiết kế đẹp</h3>
+          <p class="text-gray-600" data-field="features.2.desc" data-label="Tính năng 2 - Mô tả" data-type="textarea">Hàng trăm mẫu giao diện hiện đại, chuyên nghiệp</p>
+        </div>
+        
+        <div class="bg-white p-8 rounded-3xl shadow hover:shadow-xl transition text-center fade-in">
+          <i class="fas fa-gift text-5xl text-indigo-600 mb-6"></i>
+          <h3 class="text-2xl font-semibold mb-3" data-field="features.3.title" data-label="Tính năng 3 - Tiêu đề" data-type="text">Miễn phí 100%</h3>
+          <p class="text-gray-600" data-field="features.3.desc" data-label="Tính năng 3 - Mô tả" data-type="textarea">Sử dụng trọn đời mà không mất bất kỳ chi phí nào</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer id="contact" class="bg-gray-900 text-white py-16">
+    <div class="max-w-7xl mx-auto px-6 text-center">
+      <div class="text-3xl font-bold text-indigo-400 mb-4" 
+           data-field="footer.logo_text" 
+           data-label="Logo Footer"
+           data-type="text">OriginD</div>
+      
+      <p class="text-xl mb-6" 
+         data-field="footer.slogan" 
+         data-label="Slogan Footer"
+         data-type="text">Tạo website nhanh - Đẹp - Miễn phí</p>
+      
+      <div class="flex flex-col md:flex-row justify-center items-center gap-6 text-gray-300 mb-8">
+        <div class="flex items-center gap-3">
+          <i class="fas fa-envelope text-indigo-400"></i>
+          <span data-field="footer.email" data-label="Email liên hệ" data-type="link">contact.origind@gmail.com</span>
+        </div>
+        <div class="flex items-center gap-3">
+          <i class="fas fa-phone text-indigo-400"></i>
+          <span data-field="footer.phone" data-label="Số điện thoại" data-type="text">0866 984 097</span>
+        </div>
+      </div>
+
+
+      <p class="text-gray-500">© 2026 OriginD. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <!-- Script hiệu ứng fade-in -->
+  <script>
+    const fadeElements = document.querySelectorAll('.fade-in');
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+        }
+      });
+    }, { threshold: 0.15 });
+
+    fadeElements.forEach(el => observer.observe(el));
+  </script>
+</body>
+</html>

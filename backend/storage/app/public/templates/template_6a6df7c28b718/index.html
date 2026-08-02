@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chiếc Bật Lửa Và Váy Công Chúa - Universe</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #000;
+            overflow: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+            width: 100%;
+            height: 100%;
+        }
+        canvas {
+            display: block;
+        }
+
+        /* --- Lock Screen UI --- */
+        #lock-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(40, 0, 15, 0.8), rgba(0, 0, 0, 0.9));
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            transition: transform 0.8s cubic-bezier(0.8, 0, 0.2, 1), opacity 0.8s ease;
+        }
+
+        #lock-screen.unlocked {
+            transform: scale(1.1) translateY(-100%);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .avatar {
+            width: min(110px, 14vh);
+            height: min(110px, 14vh);
+            border-radius: 50%;
+            object-fit: cover;
+            border: none; /* Removed the pink border */
+            box-shadow: 0 0 20px rgba(255, 20, 147, 0.5); /* Subtle glow */
+            margin-bottom: min(10px, 1.5vh);
+            animation: pulse-avatar 2.5s infinite ease-in-out;
+        }
+
+        @keyframes pulse-avatar {
+            0%, 100% { 
+                box-shadow: 0 0 15px rgba(255, 20, 147, 0.4); 
+                transform: scale(1); 
+            }
+            50% { 
+                box-shadow: 0 0 30px rgba(255, 20, 147, 0.8), 0 0 10px rgba(255, 105, 180, 0.5); 
+                transform: scale(1.02); 
+            }
+        }
+
+        .prompt-text {
+            color: #ffb3c6;
+            font-size: min(1.3rem, 3vh);
+            letter-spacing: 2px;
+            font-weight: 300;
+            font-style: italic;
+            margin-bottom: min(10px, 1.5vh);
+        }
+
+        .hint-text-pass {
+            color: rgba(255, 179, 198, 0.7);
+            font-size: min(0.85rem, 2vh);
+            letter-spacing: 1px;
+            margin-bottom: min(25px, 3vh);
+        }
+
+        .passcode-dots {
+            display: flex;
+            gap: min(20px, 3vw);
+            margin-bottom: min(50px, 6vh);
+        }
+
+        .dot {
+            width: min(16px, 2vh);
+            height: min(16px, 2vh);
+            border-radius: 50%;
+            border: 2px solid #ffb3c6;
+            box-sizing: border-box;
+            transition: background 0.1s, border-color 0.1s;
+        }
+
+        .dot.filled {
+            background: #ff69b4;
+            border-color: #ff69b4;
+        }
+
+        .keypad {
+            display: grid;
+            grid-template-columns: repeat(3, min(80px, 10vh));
+            gap: min(20px, 2.5vh) min(30px, 4vw);
+            justify-content: center;
+        }
+
+        .key {
+            width: min(80px, 10vh);
+            height: min(80px, 10vh);
+            border-radius: 50%;
+            background: rgba(255, 192, 203, 0.1);
+            color: #ffe6ea;
+            font-size: min(32px, 4vh);
+            font-weight: 400;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.15s ease, transform 0.1s;
+            outline: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .key:active {
+            background: rgba(255, 105, 180, 0.4);
+            transform: scale(0.95);
+        }
+
+        .key.empty {
+            visibility: hidden;
+            pointer-events: none;
+        }
+        
+        .key.delete {
+            font-size: min(24px, 3vh);
+            color: #ffb3c6;
+            background: transparent;
+        }
+        
+        .key.delete:active {
+            background: rgba(255, 105, 180, 0.2);
+        }
+
+        .error-shake {
+            animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+        }
+
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-5px, 0, 0); }
+            20%, 80% { transform: translate3d(10px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-15px, 0, 0); }
+            40%, 60% { transform: translate3d(15px, 0, 0); }
+        }
+
+        /* --- Mobile Responsive --- */
+        @media (max-width: 768px) {
+            .avatar {
+                width: clamp(70px, 20vw, 100px);
+                height: clamp(70px, 20vw, 100px);
+                margin-bottom: 1vh;
+            }
+            .prompt-text {
+                font-size: clamp(1.1rem, 4.5vw, 1.3rem);
+                margin-bottom: 1vh;
+            }
+            .hint-text-pass {
+                font-size: clamp(0.75rem, 3.5vw, 0.85rem);
+                margin-bottom: 3vh;
+            }
+            .passcode-dots {
+                margin-bottom: 4vh;
+                gap: 4vw;
+            }
+            .keypad {
+                grid-template-columns: repeat(3, clamp(60px, 18vw, 80px));
+                gap: 2.5vh 6vw;
+            }
+            .key {
+                width: clamp(60px, 18vw, 80px);
+                height: clamp(60px, 18vw, 80px);
+                font-size: clamp(22px, 7vw, 32px);
+            }
+            .key.delete {
+                font-size: clamp(18px, 5vw, 24px);
+            }
+        }
+
+    </style>
+</head>
+<body>
+    <!-- BỘ BIẾN CẤU HÌNH ORIGIND -->
+    <div style="display: none;">
+        <span id="config_passcode" data-field="login.passcode" data-label="Mật khẩu đăng nhập (4 số)" data-type="text">1402</span>
+        <span id="config_music" data-field="general.music_link" data-label="Đường dẫn nhạc nền" data-type="link">https://files.catbox.moe/d3vo06.mp4</span>
+        <div id="config_texts" data-field="heart.flying_texts" data-label="Các câu chữ lơ lửng (mỗi câu 1 dòng)" data-type="textarea">Forever Starts Here.
+Love Never Ends. You & Me, Forever.
+Every Love Story Begins With Us.
+Home Is Wherever You Are.
+My Favorite Person.
+Together Is My Favorite Place.</div>
+    </div>
+
+    <audio id="bgMusic" loop></audio>
+
+    <div id="lock-screen">
+        <img class="avatar" src="https://jbagy.me/wp-content/uploads/2025/03/Hinh-anh-avatar-cap-doi-che-mat-nguoi-that-1-1-576x1024.jpg" alt="Avatar" data-field="login.avatar" data-label="Ảnh đại diện" data-type="image">
+        <div class="prompt-text">Mở khóa trái tim</div>
+        <div class="hint-text-pass" data-field="login.hint_text" data-label="Dòng chữ gợi ý mật khẩu" data-type="text">Pass là ngày chúng mình gặp nhau</div>
+        
+        <div class="passcode-dots" id="dots-container">
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+        </div>
+
+        <div class="keypad" id="keypad">
+            <button class="key" data-num="1">1</button>
+            <button class="key" data-num="2">2</button>
+            <button class="key" data-num="3">3</button>
+            <button class="key" data-num="4">4</button>
+            <button class="key" data-num="5">5</button>
+            <button class="key" data-num="6">6</button>
+            <button class="key" data-num="7">7</button>
+            <button class="key" data-num="8">8</button>
+            <button class="key" data-num="9">9</button>
+            <button class="key empty"></button>
+            <button class="key" data-num="0">0</button>
+            <button class="key delete" id="btn-delete">⌫</button>
+        </div>
+    </div>
+
+    <canvas id="pinkboard"></canvas>
+
+    <script>
+        /*
+         * --- Music Logic ---
+         */
+        const bgMusic = document.getElementById('bgMusic');
+        bgMusic.src = document.getElementById('config_music').textContent.trim() || "https://files.catbox.moe/d3vo06.mp4";
+        let isMusicPlaying = false;
+
+        // Automatically play music on the very first interaction with the screen
+        document.body.addEventListener('click', () => {
+            if (!isMusicPlaying) {
+                bgMusic.play().then(() => {
+                    isMusicPlaying = true;
+                }).catch(e => console.log("Audio play blocked", e));
+            }
+        });
+
+        /*
+         * --- Lock Screen Logic ---
+         */
+        const CORRECT_PASS = document.getElementById('config_passcode').textContent.trim() || "1402";
+        let currentPass = "";
+        
+        const dots = document.querySelectorAll('.dot');
+        const dotsContainer = document.getElementById('dots-container');
+        const keys = document.querySelectorAll('.key[data-num]');
+        const btnDelete = document.getElementById('btn-delete');
+        const lockScreen = document.getElementById('lock-screen');
+
+        window.addEventListener('keydown', (e) => {
+            if (lockScreen.classList.contains('unlocked')) return;
+            if (e.key >= '0' && e.key <= '9') {
+                handleKeyInput(e.key);
+            } else if (e.key === 'Backspace') {
+                handleDelete();
+            }
+        });
+
+        keys.forEach(key => {
+            key.addEventListener('click', () => {
+                handleKeyInput(key.getAttribute('data-num'));
+            });
+        });
+
+        btnDelete.addEventListener('click', handleDelete);
+
+        function handleDelete() {
+            if (currentPass.length > 0) {
+                currentPass = currentPass.slice(0, -1);
+                updateDots();
+            }
+        }
+
+        function handleKeyInput(num) {
+            if (currentPass.length < 4) {
+                currentPass += num;
+                updateDots();
+                
+                if (currentPass.length === 4) {
+                    setTimeout(checkPasscode, 150);
+                }
+            }
+        }
+
+        function updateDots() {
+            dots.forEach((dot, index) => {
+                if (index < currentPass.length) {
+                    dot.classList.add('filled');
+                } else {
+                    dot.classList.remove('filled');
+                }
+            });
+        }
+
+        function checkPasscode() {
+            if (currentPass === CORRECT_PASS) {
+                lockScreen.classList.add('unlocked');
+                
+                // Try playing music automatically when unlocked
+                if (!isMusicPlaying) {
+                    bgMusic.play().then(() => {
+                        isMusicPlaying = true;
+                    }).catch(e => console.log("Autoplay blocked"));
+                }
+
+                if (!isAnimating) {
+                    // Trigger a dramatic 180-degree entry spin on both axes (horizontal and vertical)
+                    currentAngleY = Math.PI;
+                    currentAngleX = Math.PI;
+                    isIntroSpin = true;
+                    isAnimating = true;
+                    render();
+                }
+            } else {
+                dotsContainer.classList.add('error-shake');
+                setTimeout(() => {
+                    dotsContainer.classList.remove('error-shake');
+                    currentPass = "";
+                    updateDots();
+                }, 400);
+            }
+        }
+
+        /*
+         * --- Heart & Universe Engine ---
+         */
+        const canvas = document.getElementById('pinkboard');
+        const ctx = canvas.getContext('2d');
+
+        let width, height, centerX, centerY, scale;
+        let points = [];
+        let edgeDiffusionPoints = [];
+        let centerDiffusionPoints = [];
+        let isAnimating = false;
+        let isIntroSpin = false;
+
+        let isDragging = false;
+        let startMouseX = 0;
+        let startMouseY = 0;
+        let currentAngleX = 0;
+        let currentAngleY = 0;
+        let targetAngleX = 0;
+        let targetAngleY = 0;
+
+        const colors = ["#ff1493", "#ff69b4", "#ff007f", "#ff0055", "#ff3388", "#ffffff"];
+
+        // Universe Data
+        let universeObjects = [];
+        const bgImageSrcs = [
+            "https://nhakhoaquocteaqua.com/wp-content/uploads/hinh-anh-cap-doi-yeu-nhau-59.webp",
+            "https://nhakhoaquocteaqua.com/wp-content/uploads/hinh-anh-cap-doi-yeu-nhau-25.webp",
+            "https://nhakhoaquocteaqua.com/wp-content/uploads/hinh-anh-cap-doi-yeu-nhau-51.webp"
+        ];
+        const loadedImages = [];
+        bgImageSrcs.forEach(src => {
+            let img = new Image();
+            img.src = src;
+            loadedImages.push(img);
+        });
+
+        // Read dynamic flying texts from OriginD config textarea
+        let romanticTexts = document.getElementById('config_texts').textContent.split('\n').map(t => t.trim()).filter(t => t.length > 0);
+        if (romanticTexts.length === 0) romanticTexts = ["Forever Starts Here."];
+
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            centerX = width / 2;
+            centerY = height / 2 - 20;
+            
+            scale = Math.min(width, height) / 600 * 11.27;
+            generatePoints();
+            generateUniverse();
+            
+            if (!isAnimating) {
+                drawStaticFrame();
+            }
+        }
+
+        window.addEventListener('resize', resize);
+
+        function generateUniverse() {
+            universeObjects = [];
+            let numObjects = 45; // Increased amount to distribute text everywhere
+            
+            for (let i = 0; i < numObjects; i++) {
+                // Fibonacci sphere algorithm for perfectly even angular distribution
+                let phi = Math.acos(1 - 2 * (i + 0.5) / numObjects);
+                let theta = Math.PI * (1 + Math.sqrt(5)) * i;
+                
+                // Spread them randomly across a vast 3D volume (radius 350 to 1000)
+                let radius = 350 + Math.random() * 650; 
+
+                let x = radius * Math.sin(phi) * Math.cos(theta);
+                let y = radius * Math.sin(phi) * Math.sin(theta);
+                let z = radius * Math.cos(phi);
+
+                // Only spawn floating romantic texts
+                let type = 'text';
+                let content = romanticTexts[Math.floor(Math.random() * romanticTexts.length)];
+
+                universeObjects.push({
+                    x: x, y: y, z: z,
+                    vx: (Math.random() - 0.5) * 0.4,
+                    vy: (Math.random() - 0.5) * 0.4,
+                    vz: (Math.random() - 0.5) * 0.4,
+                    type: type,
+                    content: content,
+                    phase: Math.random() * Math.PI * 2,
+                    baseSize: 1
+                });
+            }
+        }
+
+        function heartFunction(t, shrinkRatio) {
+            let x = 16 * Math.pow(Math.sin(t), 3);
+            let y = -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t));
+            x *= shrinkRatio;
+            y *= shrinkRatio;
+            return { x: x, y: y, z: 0 };
+        }
+
+        function scatterInside(x, y, z, beta) {
+            let ratioX = -beta * Math.log(Math.random());
+            let ratioY = -beta * Math.log(Math.random());
+            let dx = ratioX * x;
+            let dy = ratioY * y;
+            return { x: x - dx, y: y - dy, z: z };
+        }
+
+        function shrink(x, y, z, ratio) {
+            let distSq = Math.pow(x, 2) + Math.pow(y, 2) + Math.pow(z, 2);
+            if (distSq === 0) return { x, y, z };
+            let force = -1 / Math.pow(distSq, 0.6);
+            let dx = ratio * force * x;
+            let dy = ratio * force * y;
+            let dz = ratio * force * z;
+            return { x: x - dx, y: y - dy, z: z - dz };
+        }
+
+        function curve(p) {
+            let beat = Math.sin(4 * p);
+            let intensity = 0.95 + 0.45 * Math.sin(p * 0.7); 
+            return (2 * (3 * beat) / (2 * Math.PI)) * intensity;
+        }
+
+        function generatePoints() {
+            points = [];
+            edgeDiffusionPoints = [];
+            centerDiffusionPoints = [];
+            
+            for (let i = 0; i < 2000; i++) {
+                let t = Math.random() * 2 * Math.PI;
+                let p = heartFunction(t, scale);
+                p.z = (Math.random() - 0.5) * 3 * scale;
+                points.push(p);
+            }
+            
+            for (let i = 0; i < points.length; i++) {
+                let p = points[i];
+                for (let j = 0; j < 3; j++) {
+                    let s = scatterInside(p.x, p.y, p.z, 0.05);
+                    s.z += (Math.random() - 0.5) * 10 * scale;
+                    edgeDiffusionPoints.push(s);
+                }
+            }
+            
+            for (let i = 0; i < 4000; i++) {
+                let p = points[Math.floor(Math.random() * points.length)];
+                let s = scatterInside(p.x, p.y, p.z, 0.17);
+                let dist = Math.sqrt(s.x * s.x + s.y * s.y);
+                let maxDist = 16 * scale;
+                let thickness = Math.max(0, 1 - (dist / maxDist));
+                s.z += (Math.random() - 0.5) * 35 * scale * thickness;
+                centerDiffusionPoints.push(s);
+            }
+        }
+
+        // --- Drag & Rotate Event Listeners ---
+        canvas.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            startMouseX = e.clientX;
+            startMouseY = e.clientY;
+        });
+        window.addEventListener('mouseup', () => { isDragging = false; });
+        window.addEventListener('mousemove', (e) => {
+            if (isDragging) {
+                let dx = e.clientX - startMouseX;
+                let dy = e.clientY - startMouseY;
+                // Invert rotation direction so it follows the mouse naturally
+                targetAngleY -= dx * 0.008;
+                targetAngleX += dy * 0.008;
+                startMouseX = e.clientX;
+                startMouseY = e.clientY;
+            }
+        });
+
+        canvas.addEventListener('touchstart', (e) => {
+            isDragging = true;
+            startMouseX = e.touches[0].clientX;
+            startMouseY = e.touches[0].clientY;
+        });
+        window.addEventListener('touchend', () => { isDragging = false; });
+        window.addEventListener('touchmove', (e) => {
+            if (isDragging) {
+                let dx = e.touches[0].clientX - startMouseX;
+                let dy = e.touches[0].clientY - startMouseY;
+                // Invert rotation direction so it follows the finger naturally
+                targetAngleY -= dx * 0.008;
+                targetAngleX += dy * 0.008;
+                startMouseX = e.touches[0].clientX;
+                startMouseY = e.touches[0].clientY;
+            }
+        });
+
+        function drawPoint(x, y, z, size, color) {
+            let x1 = x * Math.cos(currentAngleY) - z * Math.sin(currentAngleY);
+            let z1 = z * Math.cos(currentAngleY) + x * Math.sin(currentAngleY);
+            let y1 = y * Math.cos(currentAngleX) - z1 * Math.sin(currentAngleX);
+            let z2 = z1 * Math.cos(currentAngleX) + y * Math.sin(currentAngleX);
+
+            let perspective = 800 / (800 - z2);
+            if (perspective < 0) return; // Behind camera
+
+            let px = centerX + x1 * perspective;
+            let py = centerY + y1 * perspective;
+            let pSize = size * perspective;
+
+            ctx.fillStyle = color;
+            ctx.fillRect(px, py, pSize, pSize);
+        }
+
+        function drawUniverseObjects(objs) {
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            
+            // Define a protective "forcefield" around the heart so objects don't overlap it
+            let heartRadius = 260; // Approximate visual radius of the heart
+            let fadeZone = 120; // Transition distance for smooth fading
+
+            objs.forEach(obj => {
+                let perspective = 800 / (800 - obj.renderedZ);
+                if (perspective < 0) return; 
+                
+                let px = centerX + obj.renderedX * perspective;
+                let py = centerY + obj.renderedY * perspective;
+                
+                // Calculate 2D distance from the center of the screen
+                let distFromCenter = Math.sqrt(Math.pow(px - centerX, 2) + Math.pow(py - centerY, 2));
+                
+                // Base alpha from depth (fades out in deep background)
+                let alpha = Math.min(1, Math.max(0, perspective - 0.1));
+                
+                // Forcefield effect: Fade out completely if overlapping the heart
+                if (distFromCenter < heartRadius) {
+                    alpha = 0; 
+                } else if (distFromCenter < heartRadius + fadeZone) {
+                    alpha *= (distFromCenter - heartRadius) / fadeZone;
+                }
+
+                if (alpha <= 0) return; // Skip drawing if completely transparent
+                
+                ctx.globalAlpha = alpha;
+                
+                if (obj.type === 'text') {
+                    // Cap maximum font size so no text becomes overwhelmingly large when close to camera
+                    let fontSize = Math.min(26, Math.max(12, 16 * perspective));
+                    ctx.font = `italic ${fontSize}px "Segoe UI", sans-serif`;
+                    // Stronger pink glow (viền hồng đậm hơn)
+                    ctx.shadowBlur = 15;
+                    ctx.shadowColor = "#ff1493"; // Deep pink for a more pronounced border/glow effect
+                    ctx.fillStyle = "#ffe6ea"; 
+                    ctx.fillText(obj.content, px, py);
+                    ctx.shadowBlur = 0; // Reset
+                } else if (obj.type === 'image' && obj.content.complete) {
+                    let imgSize = obj.baseSize * perspective;
+                    
+                    ctx.save();
+                    ctx.beginPath();
+                    // Use standard rect for square images
+                    ctx.rect(px - imgSize / 2, py - imgSize / 2, imgSize, imgSize);
+                    ctx.clip();
+                    ctx.drawImage(obj.content, px - imgSize / 2, py - imgSize / 2, imgSize, imgSize);
+                    ctx.restore();
+                    
+                    // Soft pink glowing border (Square)
+                    ctx.beginPath();
+                    ctx.rect(px - imgSize / 2, py - imgSize / 2, imgSize, imgSize);
+                    ctx.strokeStyle = "rgba(255, 179, 198, 0.7)"; // Lighter soft pink
+                    ctx.lineWidth = Math.max(1.5, 2.5 * perspective);
+                    ctx.shadowBlur = 15 * perspective; // Glow effect
+                    ctx.shadowColor = "#ff69b4";
+                    ctx.stroke();
+                    ctx.shadowBlur = 0; // Reset
+                }
+            });
+            ctx.globalAlpha = 1.0;
+        }
+
+        function drawStaticFrame() {
+            ctx.fillStyle = "#000000";
+            ctx.fillRect(0, 0, width, height);
+            let ratio = 15 * curve(0);
+            
+            for (let i = 0; i < centerDiffusionPoints.length; i++) {
+                let p = centerDiffusionPoints[i];
+                let shrinked = shrink(p.x, p.y, p.z, ratio);
+                drawPoint(shrinked.x, shrinked.y, shrinked.z, 1, colors[Math.floor(Math.random() * colors.length)]);
+            }
+        }
+
+        let frame = 0;
+
+        function render() {
+            if (!isAnimating) return;
+
+            let easing = isIntroSpin ? 0.015 : 0.1;
+            currentAngleX += (targetAngleX - currentAngleX) * easing;
+            currentAngleY += (targetAngleY - currentAngleY) * easing;
+
+            if (isIntroSpin && Math.abs(currentAngleX) < 0.05) {
+                isIntroSpin = false;
+            }
+
+            if (!isDragging) {
+                targetAngleX += (0 - targetAngleX) * 0.03; 
+                targetAngleY += (0 - targetAngleY) * 0.03; 
+            }
+
+            ctx.fillStyle = "#000000";
+            ctx.fillRect(0, 0, width, height);
+
+            // --- Update and sort universe objects ---
+            universeObjects.forEach(obj => {
+                obj.x += obj.vx;
+                obj.y += obj.vy;
+                obj.z += obj.vz;
+                obj.phase += 0.02;
+                let floatY = Math.sin(obj.phase) * 15; // Bob up and down gently
+
+                let z0 = obj.z;
+                let x1 = obj.x * Math.cos(currentAngleY) - z0 * Math.sin(currentAngleY);
+                let z1 = z0 * Math.cos(currentAngleY) + obj.x * Math.sin(currentAngleY);
+                
+                let y1 = (obj.y + floatY) * Math.cos(currentAngleX) - z1 * Math.sin(currentAngleX);
+                let z2 = z1 * Math.cos(currentAngleX) + (obj.y + floatY) * Math.sin(currentAngleX);
+
+                obj.renderedX = x1;
+                obj.renderedY = y1;
+                obj.renderedZ = z2;
+            });
+
+            // Sort so further objects are drawn first (Painter's Algorithm)
+            universeObjects.sort((a, b) => b.renderedZ - a.renderedZ);
+
+            // Split into background (behind heart) and foreground (in front of heart)
+            let backObjects = universeObjects.filter(o => o.renderedZ < 0);
+            let frontObjects = universeObjects.filter(o => o.renderedZ >= 0);
+
+            // 1. Draw Background Universe
+            drawUniverseObjects(backObjects);
+
+            // 2. Draw Heart
+            let time = frame / 100 * Math.PI; 
+            let ratio = 15 * curve(time);
+            
+            let haloRadius = Math.floor(4 + 6 * (1 + curve(time)));
+            let haloNumber = Math.floor(500 + 800 * Math.abs(Math.pow(curve(time), 2)));
+
+            for (let i = 0; i < haloNumber; i++) {
+                let t = Math.random() * 2 * Math.PI;
+                let p = heartFunction(t, scale + 0.5); 
+                p.z = (Math.random() - 0.5) * 15 * scale;
+                let shrinked = shrink(p.x, p.y, p.z, haloRadius);
+                
+                let hx = shrinked.x + (Math.random() - 0.5) * 28;
+                let hy = shrinked.y + (Math.random() - 0.5) * 28;
+                let hz = shrinked.z + (Math.random() - 0.5) * 28;
+                
+                let color = colors[Math.floor(Math.random() * colors.length)];
+                let size = Math.random() < 0.5 ? 1 : 2;
+                drawPoint(hx, hy, hz, size, color);
+            }
+
+            for (let i = 0; i < centerDiffusionPoints.length; i++) {
+                let p = centerDiffusionPoints[i];
+                let shrinked = shrink(p.x, p.y, p.z, ratio);
+                let color = colors[Math.floor(Math.random() * colors.length)];
+                let size = Math.random() < 0.5 ? 1 : 2;
+                drawPoint(shrinked.x, shrinked.y, shrinked.z, size, color);
+            }
+
+            for (let i = 0; i < edgeDiffusionPoints.length; i++) {
+                let p = edgeDiffusionPoints[i];
+                let shrinked = shrink(p.x, p.y, p.z, ratio);
+                let color = colors[Math.floor(Math.random() * colors.length)];
+                let size = Math.random() < 0.5 ? 1 : 2;
+                drawPoint(shrinked.x, shrinked.y, shrinked.z, size, color);
+            }
+
+            for (let i = 0; i < points.length; i++) {
+                let p = points[i];
+                let shrinked = shrink(p.x, p.y, p.z, ratio);
+                let color = colors[Math.floor(Math.random() * colors.length)];
+                let size = Math.random() < 0.5 ? 2 : 3;
+                drawPoint(shrinked.x, shrinked.y, shrinked.z, size, color);
+            }
+
+            // 3. Draw Foreground Universe
+            drawUniverseObjects(frontObjects);
+
+            frame++;
+            requestAnimationFrame(render);
+        }
+
+        // Initialize setup
+        resize();
+
+    </script>
+</body>
+</html>

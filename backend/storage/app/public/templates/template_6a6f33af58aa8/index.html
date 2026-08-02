@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hành Trình Tình Yêu | Chú Rể & Cô Dâu</title>
+    
+    <!-- Import thư viện font chữ sang trọng cưới từ Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Alex+Brush&family=Charm:wght@400;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Great+Vibes&family=Montserrat:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,500;0,700;1,400&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-color: #0f1115;
+            --text-main: #ffffff;
+            --text-muted: #d0d0d0;
+            --accent-color: #dfb76c;
+            --accent-glow: rgba(223, 183, 108, 0.4);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'Montserrat', sans-serif;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* ----- Shared Typography ----- */
+        h1, h2, h3, .journal-date-badge {
+            font-family: 'Cormorant Garamond', serif;
+        }
+
+        .cursive, .journal-cursive {
+            font-family: 'Great Vibes', cursive;
+        }
+
+        .hero-content h1, .journal-names {
+            font-family: 'Alex Brush', 'Great Vibes', cursive;
+            font-weight: 400;
+        }
+
+        h1, h2, h3 {
+            font-weight: 600;
+        }
+
+        .cursive {
+            color: var(--accent-color);
+            font-size: 3.5rem;
+            margin-bottom: -10px;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+        }
+
+        /* ----- Hero Slider Section (To & Lên Đầu Page) ----- */
+        .hero-slider-section {
+            position: relative;
+            width: 100%;
+            height: 84vh;
+            min-height: 520px;
+            overflow: hidden;
+            background: #000;
+        }
+
+        .slider-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .slider-wrapper {
+            display: flex;
+            height: 100%;
+            width: 100%;
+            transition: transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+            will-change: transform;
+        }
+
+        .slide {
+            min-width: 100%;
+            height: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .slide img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center 20%; /* Căn lấy ưu tiên phần mặt phía trên của ảnh */
+            display: block;
+            filter: brightness(0.75);
+            transition: transform 6s ease-out;
+            transform: scale(1.03);
+        }
+
+        .slide.active img {
+            transform: scale(1.12);
+        }
+
+        /* Dark overlay gradient for text contrast */
+        .slider-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(
+                to bottom,
+                rgba(15, 17, 21, 0.4) 0%,
+                rgba(15, 17, 21, 0.2) 50%,
+                rgba(15, 17, 21, 0.9) 100%
+            );
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        /* Floating Hero Content Over Slider */
+        .hero-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 5;
+            width: 96%;
+            max-width: 1200px;
+            padding: 10px;
+            pointer-events: none;
+        }
+
+        .hero-content h1 {
+            font-size: clamp(2rem, 5.2vw, 4.4rem);
+            letter-spacing: 1px;
+            margin: 5px 0 15px;
+            color: #ffffff;
+            text-shadow: 0 4px 25px rgba(0,0,0,0.9), 0 0 15px rgba(255, 255, 255, 0.3);
+            line-height: 1.25;
+            white-space: nowrap; /* Đảm bảo tên 2 người nằm trên 1 hàng duy nhất không bị khuất */
+        }
+
+        /* Khung hiển thị Ngày Tháng Năm phong cách tiệc cưới cao cấp */
+        .wedding-date-container {
+            margin-top: 20px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .date-line-decor {
+            width: 50px;
+            height: 1px;
+            background: linear-gradient(to right, transparent, var(--accent-color));
+        }
+
+        .date-line-decor.right {
+            background: linear-gradient(to left, transparent, var(--accent-color));
+        }
+
+        /* ----- Shared Glassmorphism ----- */
+        .wedding-date, .slider-btn {
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+
+        .wedding-date {
+            font-family: 'Cormorant Garamond', 'Playfair Display', serif;
+            font-size: 1.35rem;
+            font-weight: 500;
+            letter-spacing: 4px;
+            color: var(--accent-color);
+            padding: 8px 26px;
+            background: rgba(15, 17, 21, 0.55);
+            border: 1px solid rgba(223, 183, 108, 0.5);
+            border-radius: 30px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5), inset 0 0 12px rgba(223, 183, 108, 0.15);
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .wedding-date .date-sep {
+            font-size: 0.8rem;
+            opacity: 0.7;
+            color: #ffffff;
+        }
+
+        .wedding-date .date-label {
+            font-size: 0.85rem;
+            letter-spacing: 3px;
+            font-weight: 600;
+            color: #ffffff;
+        }
+
+        /* Các nút điều hướng kính mờ (Glassmorphism) */
+        .slider-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            width: 54px;
+            height: 54px;
+            border-radius: 50%;
+            font-size: 1.4rem;
+            color: #ffffff;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            z-index: 10;
+        }
+
+        .slider-btn:hover {
+            background: rgba(223, 183, 108, 0.9);
+            color: #000;
+            border-color: var(--accent-color);
+            transform: translateY(-50%) scale(1.12);
+            box-shadow: 0 0 25px var(--accent-glow);
+        }
+
+        .prev-btn { left: 25px; }
+        .next-btn { right: 25px; }
+
+        /* Chấm chuyển slide (Dots) & Thanh Tiến Trình (Progress Bar) */
+        .slider-dots {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            z-index: 10;
+            background: transparent;
+            padding: 8px 12px;
+        }
+
+        .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.55);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+            cursor: pointer;
+            transition: all 0.4s ease;
+        }
+
+        .dot.active {
+            background: var(--accent-color);
+            width: 28px;
+            border-radius: 10px;
+            box-shadow: 0 0 12px var(--accent-glow), 0 2px 6px rgba(0, 0, 0, 0.7);
+        }
+
+        .progress-bar-container {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.12);
+            z-index: 20;
+            pointer-events: none;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #dfb76c 0%, #ffffff 50%, #dfb76c 100%);
+            box-shadow: 0 0 12px var(--accent-color), 0 0 6px var(--accent-glow);
+            width: 0%;
+            transition: width 0.1s linear;
+        }
+
+        /* ----- Intro Section ----- */
+        .intro {
+            max-width: 850px;
+            margin: 80px auto;
+            text-align: center;
+            padding: 0 25px;
+        }
+
+        .intro h2 {
+            font-size: 2.8rem;
+            margin-bottom: 20px;
+            color: var(--accent-color);
+        }
+
+        .intro p {
+            font-size: 1.15rem;
+            color: var(--text-muted);
+            font-weight: 300;
+            line-height: 1.8;
+        }
+
+        /* ----- Footer ----- */
+        footer {
+            text-align: center;
+            padding: 70px 20px;
+            background-color: #0b0c0f;
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+
+        footer h3 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        footer p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            margin-bottom: 20px;
+        }
+
+        footer .copyright {
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.45);
+            letter-spacing: 1px;
+            border-top: 1px dashed rgba(255, 255, 255, 0.08);
+            padding-top: 20px;
+            max-width: 480px;
+            margin: 20px auto 0;
+        }
+
+        footer .copyright strong {
+            color: var(--accent-color);
+            font-weight: 600;
+        }
+
+        /* ----- Hiệu ứng cuộn trang (Scroll Reveal) ----- */
+        .reveal {
+            opacity: 0;
+            transform: translateY(40px);
+            transition: all 1s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero-slider-section { height: 75vh; min-height: 480px; }
+            .hero-content h1 { font-size: clamp(1.5rem, 6vw, 2.6rem); white-space: nowrap; }
+            .cursive { font-size: 2.3rem; }
+            .wedding-date-container { gap: 8px; }
+            .date-line-decor { width: 25px; }
+            .wedding-date { font-size: 0.9rem; padding: 6px 16px; letter-spacing: 3px; gap: 8px; }
+            .slider-btn { width: 44px; height: 44px; font-size: 1.1rem; }
+            .prev-btn { left: 12px; }
+            .next-btn { right: 12px; }
+        }
+
+        @media (min-width: 1200px) {
+            .hero-slider-section {
+                height: 84vh;
+                min-height: 540px;
+            }
+        }
+
+        /* ----- Hiệu Ứng In & Xuất Hiện Nghệ Thuật (Fade & Print Entrance) ----- */
+
+        @keyframes dotsReveal {
+            0% {
+                opacity: 0;
+                transform: translate(-50%, 25px) scale(0.95);
+                filter: blur(8px);
+            }
+            100% {
+                opacity: 1;
+                transform: translate(-50%, 0) scale(1);
+                filter: blur(0);
+            }
+        }
+
+        /* ----- Khung Trắng Nhỏ Ngăn Cách Slider Với Phần Dưới ----- */
+        .white-spacer-bar {
+            width: 100%;
+            height: 20px;
+            background: linear-gradient(to bottom, #ffffff 0%, #f4f4f6 100%);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+            border-bottom: 1px solid rgba(223, 183, 108, 0.4);
+            position: relative;
+            z-index: 30;
+        }
+
+        /* ----- Hiệu Ứng Trượt (Slide Entrance) khi F5 / Mở Trang ----- */
+        /* Dòng 1: "Lễ Thành Hôn" trượt mượt từ bên trái sang */
+        @keyframes slideFromLeft {
+            0% {
+                opacity: 0;
+                transform: translateX(-160px);
+                filter: blur(10px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateX(0);
+                filter: blur(0);
+            }
+        }
+
+
+        @keyframes slideFromRight {
+            0% {
+                opacity: 0;
+                transform: translateX(160px);
+                filter: blur(10px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateX(0);
+                filter: blur(0);
+            }
+        }
+
+        /* Dòng 3: "Khung Ngày Tháng Năm" trượt mượt từ dưới lên */
+        @keyframes slideFromBottom {
+            0% {
+                opacity: 0;
+                transform: translateY(50px);
+                filter: blur(8px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+                filter: blur(0);
+            }
+        }
+
+        @keyframes goldShimmer {
+            0% { background-position: -200% center; }
+            100% { background-position: 200% center; }
+        }
+
+        /* Hiệu ứng trượt khi kích hoạt (Unlock Passcode / F5) */
+        .hero-content .cursive,
+        .hero-content h1,
+        .hero-content .wedding-date-container {
+            opacity: 0;
+            will-change: transform, opacity, filter;
+        }
+
+        @keyframes heroZoomReveal {
+            0% {
+                transform: scale(1.06);
+                filter: blur(6px);
+            }
+            100% {
+                transform: scale(1);
+                filter: blur(0);
+            }
+        }
+
+        .hero-slider-section.play-entrance {
+            animation: heroZoomReveal 1.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .hero-slider-section.play-entrance .cursive {
+            display: inline-block;
+            animation: slideFromLeft 1.4s cubic-bezier(0.16, 1, 0.3, 1) 0.2s forwards;
+        }
+
+        .hero-slider-section.play-entrance .hero-content h1 {
+            background: linear-gradient(120deg, #ffffff 0%, #ffffff 40%, var(--accent-color) 50%, #ffffff 60%, #ffffff 100%);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: slideFromRight 1.5s cubic-bezier(0.16, 1, 0.3, 1) 0.45s forwards, goldShimmer 4s ease-in-out 1.8s infinite;
+        }
+
+        .hero-slider-section.play-entrance .wedding-date-container {
+            animation: slideFromBottom 1.5s cubic-bezier(0.16, 1, 0.3, 1) 0.75s forwards;
+        }
+
+        .hero-slider-section.play-entrance .slider-dots {
+            animation: dotsReveal 1.3s cubic-bezier(0.16, 1, 0.3, 1) 1.0s forwards;
+        }
+
+        /* ----- 3D Memory Journal Book Overlay ----- */
+        .journal-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 10000;
+            background: radial-gradient(circle at center, rgba(20, 16, 25, 0.96) 0%, rgba(8, 8, 12, 0.99) 100%);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            cursor: pointer;
+            perspective: 1500px;
+            transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1), transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), filter 0.2s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.2s;
+        }
+
+        .journal-overlay.opened {
+            opacity: 0;
+            transform: scale(1.18);
+            filter: blur(14px);
+            pointer-events: none;
+            visibility: hidden;
+        }
+
+        .journal-book-container {
+            width: 100%;
+            max-width: 360px;
+            height: 500px;
+            perspective: 1500px;
+            position: relative;
+        }
+
+        .journal-book {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.25s cubic-bezier(0.25, 1, 0.35, 1);
+        }
+
+        /* Khi click mở sổ -> Bìa lật 3D 160 độ sang bên trái */
+        .journal-book.flipping .book-cover-front {
+            transform: rotateY(-160deg);
+        }
+
+        /* Bìa trước của sổ */
+        .book-cover-front {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(145deg, #1d1e24 0%, #0d0e12 100%);
+            border: 2px solid rgba(223, 183, 108, 0.65);
+            border-radius: 16px 24px 24px 16px;
+            box-shadow: -12px 18px 45px rgba(0, 0, 0, 0.85), 0 0 35px rgba(223, 183, 108, 0.25), inset 15px 0 25px rgba(0,0,0,0.8);
+            transform-origin: left center;
+            transform-style: preserve-3d;
+            transition: transform 0.25s cubic-bezier(0.25, 1, 0.35, 1);
+            z-index: 2;
+            padding: 24px 18px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            backface-visibility: hidden;
+        }
+
+        /* Sống lưng sổ gáy sách sang trọng */
+        .book-cover-front::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 22px;
+            background: linear-gradient(to right, #000 0%, rgba(223, 183, 108, 0.5) 50%, #0d0e12 100%);
+            border-radius: 16px 0 0 16px;
+            border-right: 1px solid rgba(223, 183, 108, 0.6);
+        }
+
+        .book-emboss-border {
+            border: 1px solid rgba(223, 183, 108, 0.4);
+            border-radius: 14px;
+            padding: 28px 16px;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.02);
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+        }
+
+        .journal-cursive {
+            font-size: 2.8rem;
+            color: var(--accent-color);
+            margin-bottom: 5px;
+            text-shadow: 0 0 15px rgba(223, 183, 108, 0.4);
+        }
+
+        .journal-names {
+            font-size: 2.3rem;
+            color: #ffffff;
+            margin-bottom: 20px;
+            white-space: nowrap;
+            text-shadow: 0 4px 15px rgba(0,0,0,0.8);
+        }
+
+        .journal-date-badge {
+            font-size: 0.95rem;
+            letter-spacing: 4px;
+            color: var(--accent-color);
+            padding: 6px 18px;
+            border: 1px solid rgba(223, 183, 108, 0.5);
+            border-radius: 20px;
+            background: rgba(0,0,0,0.45);
+            margin-bottom: 25px;
+        }
+
+        .journal-click-hint {
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.88);
+            letter-spacing: 1px;
+            animation: pulseHint 2s ease-in-out infinite;
+        }
+
+        @keyframes pulseHint {
+            0%, 100% { opacity: 0.65; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.05); }
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- Trang Bìa Sổ Tay Ký Ức 3D (3D Memory Journal Overlay) -->
+    <div class="journal-overlay" id="journalOverlay" onclick="openMemoryBook()">
+        <div class="journal-book-container">
+            <div class="journal-book" id="journalBook">
+                <!-- Trang bìa trước lật 3D -->
+                <div class="book-cover-front">
+                    <div class="book-emboss-border">
+                        <span class="journal-cursive" data-field="journal.title" data-label="Tên cuốn sổ" data-type="text">Cuốn Sổ Ký Ức</span>
+                        <h2 class="journal-names" id="coupleNamesBook" data-field="wedding.couple_names" data-label="Tên Chú Rể & Cô Dâu" data-type="text">Tên Nam & Tên Nữ</h2>
+                        <div class="journal-date-badge" id="dateBook" data-field="wedding.date_full" data-label="Ngày tháng năm cưới (Bìa sổ)" data-type="text">02 ✦ 08 ✦ 2026</div>
+                        <div class="journal-click-hint">
+                            ✦ Chạm vào đây để mở sổ ✦
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Header / Hero Section tích hợp Slider To ở đầu trang -->
+    <header class="hero-slider-section">
+        <div class="slider-container">
+            <div class="slider-wrapper" id="sliderWrapper">
+                <div class="slide active"><img src="https://i.ibb.co/HTVhxvbx/3.jpg" data-field="gallery.image_1" data-label="Ảnh cưới 1" data-type="image" alt="Ảnh Cưới 1"></div>
+                <div class="slide"><img src="https://i.ibb.co/NdZTycXy/2.jpg" data-field="gallery.image_2" data-label="Ảnh cưới 2" data-type="image" alt="Ảnh Cưới 2"></div>
+                <div class="slide"><img src="https://i.ibb.co/HTVhxvbx/3.jpg" data-field="gallery.image_3" data-label="Ảnh cưới 3" data-type="image" alt="Ảnh Cưới 3"></div>
+                <div class="slide"><img src="https://i.ibb.co/tPMY2NrP/4.jpg" data-field="gallery.image_4" data-label="Ảnh cưới 4" data-type="image" alt="Ảnh Cưới 4"></div>
+                <div class="slide"><img src="https://i.ibb.co/xtt9z5Dg/5.webp" data-field="gallery.image_5" data-label="Ảnh cưới 5" data-type="image" alt="Ảnh Cưới 5"></div>
+                <div class="slide"><img src="https://i.ibb.co/zVq04SVn/1.jpg" data-field="gallery.image_6" data-label="Ảnh cưới 6" data-type="image" alt="Ảnh Cưới 6"></div>
+            </div>
+
+            <!-- Dark gradient overlay -->
+            <div class="slider-overlay"></div>
+
+            <!-- Title & Date Overlaid on Slider -->
+            <div class="hero-content">
+                <span class="cursive" data-field="hero.subtitle" data-label="Tiêu đề phụ Hero" data-type="text">Lễ Thành Hôn</span>
+                <h1 id="coupleNamesHero" data-field="wedding.couple_names" data-label="Tên Chú Rể & Cô Dâu" data-type="text">Tên Nam & Tên Nữ</h1>
+                <div class="wedding-date-container">
+                    <div class="date-line-decor"></div>
+                    <div class="wedding-date">
+                        <span id="dateHeroDay" data-field="wedding.date_day" data-label="Ngày cưới" data-type="text">02</span>
+                        <span class="date-sep">✦</span>
+                        <span id="dateHeroMonth" data-field="wedding.date_month" data-label="Tháng cưới" data-type="text">08</span>
+                        <span class="date-sep">✦</span>
+                        <span id="dateHeroYear" data-field="wedding.date_year" data-label="Năm cưới" data-type="text">2026</span>
+                    </div>
+                    <div class="date-line-decor right"></div>
+                </div>
+            </div>
+
+            <!-- Nút điều hướng mờ sang trọng -->
+            <button class="slider-btn prev-btn" onclick="moveSlide(-1)" aria-label="Ảnh trước">&#10094;</button>
+            <button class="slider-btn next-btn" onclick="moveSlide(1)" aria-label="Ảnh tiếp">&#10095;</button>
+
+            <!-- Chấm chỉ số trang (Dots) -->
+            <div class="slider-dots" id="sliderDots"></div>
+
+            <!-- Thanh tiến trình tự động đổi ảnh -->
+            <div class="progress-bar-container">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Khung trắng nhỏ ngăn cách với phần phía dưới -->
+    <div class="white-spacer-bar"></div>
+
+    <!-- Intro Text -->
+    <section class="intro reveal">
+        <h2 data-field="intro.title" data-label="Tiêu đề phần Giới thiệu" data-type="text">Hành Trình Tình Yêu</h2>
+        <p data-field="intro.description" data-label="Mô tả Hành Trình Tình Yêu" data-type="textarea">Lưu giữ hành trình yêu và những khoảnh khắc đáng nhớ của hai bạn. Một chương mới bắt đầu, ngập tràn ánh sáng và niềm hạnh phúc. Cảm ơn vì đã cùng nhau viết nên một câu chuyện thật đẹp.</p>
+    </section>
+
+    <!-- Footer -->
+    <footer class="reveal">
+        <h3 class="cursive">Thank You</h3>
+        <p>Cảm ơn bạn đã luôn đồng hành cùng chúng tôi trên chặng đường này.</p>
+        <div class="copyright">
+            Designed & Created with ♥ by <strong>OriginD</strong> &copy; 2026. All Rights Reserved.
+        </div>
+    </footer>
+
+    <!-- Nhạc nền đám cưới (Background Audio) -->
+    <audio id="bgMusic" loop preload="auto">
+        <source src="https://files.catbox.moe/cqb8fh.mp4" type="audio/mp4">
+        <source src="https://files.catbox.moe/cqb8fh.mp4" type="audio/aac">
+        Trình duyệt của bạn không hỗ trợ phát nhạc.
+    </audio>
+
+    <!-- Script điều khiển slider & hiệu ứng mượt mà -->
+    <script>
+        let currentIndex = 0;
+        const slides = document.querySelectorAll('.slide');
+        const totalSlides = slides.length;
+        const wrapper = document.getElementById('sliderWrapper');
+        const sliderDotsContainer = document.getElementById('sliderDots');
+        const progressBar = document.getElementById('progressBar');
+        const SLIDE_DURATION = 4000; // 4 giây
+        let autoSlideInterval;
+        let progressInterval;
+        let progressPercent = 0;
+
+        // Tạo các chấm chỉ số dots
+        function createDots() {
+            sliderDotsContainer.innerHTML = '';
+            for (let i = 0; i < totalSlides; i++) {
+                const dot = document.createElement('div');
+                dot.classList.add('dot');
+                if (i === 0) dot.classList.add('active');
+                dot.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    goToSlide(i);
+                });
+                sliderDotsContainer.appendChild(dot);
+            }
+        }
+
+        // Cập nhật trạng thái slider & dots
+        function updateSlider() {
+            wrapper.style.transform = `translateX(-${currentIndex * 100}%)`;
+            
+            // Zoom effect cho active slide
+            slides.forEach((slide, index) => {
+                if (index === currentIndex) {
+                    slide.classList.add('active');
+                } else {
+                    slide.classList.remove('active');
+                }
+            });
+
+            // Active dot
+            const dots = document.querySelectorAll('.dot');
+            dots.forEach((dot, index) => {
+                dot.classList.toggle('active', index === currentIndex);
+            });
+        }
+
+        function goToSlide(index) {
+            currentIndex = index;
+            updateSlider();
+            resetAutoSlide();
+        }
+
+        function moveSlide(direction) {
+            currentIndex = (currentIndex + direction + totalSlides) % totalSlides;
+            updateSlider();
+            resetAutoSlide();
+        }
+
+        // Animated Progress Bar
+        function startProgressBar() {
+            progressPercent = 0;
+            progressBar.style.width = '0%';
+            clearInterval(progressInterval);
+            
+            const stepTime = 50;
+            const increment = (stepTime / SLIDE_DURATION) * 100;
+            
+            progressInterval = setInterval(() => {
+                progressPercent += increment;
+                if (progressPercent >= 100) {
+                    progressPercent = 100;
+                    clearInterval(progressInterval);
+                }
+                progressBar.style.width = `${progressPercent}%`;
+            }, stepTime);
+        }
+
+        function startAutoSlide() {
+            startProgressBar();
+            autoSlideInterval = setInterval(() => {
+                moveSlide(1);
+            }, SLIDE_DURATION);
+        }
+
+        function resetAutoSlide() {
+            clearInterval(autoSlideInterval);
+            clearInterval(progressInterval);
+            startAutoSlide();
+        }
+
+        // Click nửa bên trái / nửa bên phải slider để chuyển ảnh
+        const sliderContainer = document.querySelector('.slider-container');
+        let isSwiping = false;
+
+        sliderContainer.addEventListener('click', (e) => {
+            if (isSwiping) {
+                isSwiping = false;
+                return;
+            }
+            // Không kích hoạt nếu bấm trực tiếp vào nút hoặc dots
+            if (e.target.closest('.slider-btn') || e.target.closest('.slider-dots')) {
+                return;
+            }
+            const rect = sliderContainer.getBoundingClientRect();
+            const clickX = e.clientX - rect.left;
+            const halfWidth = rect.width / 2;
+
+            if (clickX > halfWidth) {
+                // Click nửa bên phải -> trượt sang ảnh tiếp theo
+                moveSlide(1);
+            } else {
+                // Click nửa bên trái -> lùi về ảnh trước
+                moveSlide(-1);
+            }
+        });
+
+        // Vuốt cảm ứng cho điện thoại (Touch Swipe)
+        let startX = 0;
+        let endX = 0;
+
+        sliderContainer.addEventListener('touchstart', (e) => {
+            startX = e.touches[0].clientX;
+            isSwiping = false;
+        }, { passive: true });
+
+        sliderContainer.addEventListener('touchend', (e) => {
+            endX = e.changedTouches[0].clientX;
+            handleSwipe();
+        }, { passive: true });
+
+        function handleSwipe() {
+            const diff = startX - endX;
+            if (Math.abs(diff) > 40) {
+                isSwiping = true;
+                if (diff > 0) moveSlide(1); // Swiped left -> next
+                else moveSlide(-1);        // Swiped right -> prev
+            }
+        }
+
+        // Ép trang luôn trượt lên đầu (top) khi vừa mở hoặc reload trang
+        if ('scrollRestoration' in history) {
+            history.scrollRestoration = 'manual';
+        }
+        window.scrollTo(0, 0);
+
+        window.addEventListener('beforeunload', function() {
+            window.scrollTo(0, 0);
+        });
+
+        // JS HIỆU ỨNG CUỘN TRANG & HIỆU ỨNG IN CHỮ (Scroll Reveal & Typewriter Print)
+        document.addEventListener("DOMContentLoaded", function() {
+            // Tự động cuộn ngay lập tức lên đầu trang khi vào
+            window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+            
+            createDots();
+            
+            const reveals = document.querySelectorAll('.reveal');
+            const revealOptions = {
+                threshold: 0.15,
+                rootMargin: "0px 0px -50px 0px"
+            };
+
+            const introParagraph = document.querySelector('.intro p');
+            const originalIntroText = introParagraph ? introParagraph.textContent.trim() : '';
+
+            function typeWriter(element, text, speed = 30) {
+                element.textContent = '';
+                element.style.opacity = '1';
+                let i = 0;
+                function type() {
+                    if (i < text.length) {
+                        element.textContent += text.charAt(i);
+                        i++;
+                        setTimeout(type, speed);
+                    }
+                }
+                type();
+            }
+
+            const revealOnScroll = new IntersectionObserver(function(entries, observer) {
+                entries.forEach(entry => {
+                    if (!entry.isIntersecting) return;
+                    entry.target.classList.add('active');
+                    
+                    // Nếu là phần Intro -> Kích hoạt hiệu ứng in chữ gõ từng ký tự
+                    if (entry.target.classList.contains('intro') && introParagraph) {
+                        typeWriter(introParagraph, originalIntroText, 30);
+                    }
+
+                    observer.unobserve(entry.target);
+                });
+            }, revealOptions);
+
+            reveals.forEach(reveal => revealOnScroll.observe(reveal));
+            setTimeout(() => document.querySelector('.hero-slider-section').classList.add('active'), 100);
+
+            // Bắt đầu tự động chuyển slide và chạy thanh tiến trình
+            startAutoSlide();
+        });
+
+        // XỬ LÝ PHÁT NHẠC NỀN TỰ ĐỘNG KHI CLICK / CHẠM VÀO MÀN HÌNH
+        const bgMusic = document.getElementById('bgMusic');
+        let isMusicPlaying = false;
+
+        function startMusic() {
+            if (!isMusicPlaying) {
+                bgMusic.play().then(() => {
+                    isMusicPlaying = true;
+                }).catch(err => {
+                    console.log("Autoplay waiting for user click:", err);
+                });
+            }
+        }
+
+        // Tự động bật nhạc khi chạm hoặc click bất kỳ vị trí nào trên trang
+        ['click', 'touchstart', 'pointerdown'].forEach(evt => window.addEventListener(evt, startMusic, { once: true }));
+
+        // XỬ LÝ LẬT MỞ 3D CUỐN SỔ TAY KÝ ỨC (3D MEMORY BOOK FLIP)
+        let isBookOpened = false;
+
+        function triggerHeroEntrance() {
+            const heroSection = document.querySelector('.hero-slider-section');
+            if (heroSection) {
+                heroSection.classList.remove('play-entrance');
+                void heroSection.offsetWidth; // Force reflow
+                heroSection.classList.add('play-entrance');
+            }
+        }
+
+        function openMemoryBook() {
+            if (isBookOpened) return;
+            isBookOpened = true;
+
+            const book = document.getElementById('journalBook');
+            const overlay = document.getElementById('journalOverlay');
+
+            // Kích hoạt hiệu ứng lật bìa sổ 3D
+            book.classList.add('flipping');
+            startMusic(); // Tự động phát nhạc khi nhấp mở sổ
+
+            // Mở overlay và kích hoạt hiệu ứng trượt chữ vào thiệp cưới
+            setTimeout(() => {
+                overlay.classList.add('opened');
+                triggerHeroEntrance();
+            }, 200);
+        }
+    </script>
+</body>
+</html>

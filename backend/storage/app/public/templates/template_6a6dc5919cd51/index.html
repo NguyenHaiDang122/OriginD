@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Bio Link • Profile Cá Nhân</title>
+  
+  <!-- Font chữ Inter & Icon FontAwesome -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #09090b;
+      color: #ffffff;
+      min-height: 100dvh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* Hiệu ứng đốm sáng Ambient Glow phía sau (PC) */
+    .bg-glow {
+      position: fixed;
+      width: 350px;
+      height: 350px;
+      border-radius: 50%;
+      filter: blur(120px);
+      opacity: 0.35;
+      z-index: 0;
+      pointer-events: none;
+    }
+    .glow-1 { top: 10%; left: 20%; background: #6366f1; }
+    .glow-2 { bottom: 10%; right: 20%; background: #a855f7; }
+
+    /* CARD CHÍNH - Responsive linh hoạt */
+    .bio-card {
+      width: 100%;
+      max-width: 440px;
+      min-height: 100dvh;
+      position: relative;
+      z-index: 1;
+      background: #121215;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    }
+
+    /* Tối ưu riêng cho PC / Tablet Screen */
+    @media (min-width: 480px) {
+      .bio-card {
+        min-height: 720px;
+        height: auto;
+        border-radius: 28px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        margin: 40px 0;
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+      }
+    }
+
+    /* ===== ẢNH BÌA (COVER IMAGE) ===== */
+    .cover-wrapper {
+      width: 100%;
+      height: 160px;
+      position: relative;
+      overflow: hidden;
+      background: #1f1f23;
+    }
+
+    .cover-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .cover-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(18, 18, 21, 0.8));
+    }
+
+    /* ===== PHẦN NỘI DUNG PROFILE ===== */
+    .profile-header {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 0 24px;
+      margin-top: -50px; /* Đẩy Avatar đè lên Ảnh bìa */
+      position: relative;
+      z-index: 2;
+    }
+
+    /* Avatar viền phát sáng nhẹ */
+    .avatar-wrapper {
+      position: relative;
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      padding: 3px;
+      background: linear-gradient(135deg, #6366f1, #a855f7, #ec4899);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+      margin-bottom: 14px;
+    }
+
+    .avatar-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 50%;
+      border: 3px solid #121215;
+    }
+
+    /* Tên & Bio */
+    .profile-name {
+      font-size: 1.35rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      margin-bottom: 6px;
+      text-align: center;
+    }
+
+    .profile-bio {
+      font-size: 0.92rem;
+      color: #a1a1aa;
+      text-align: center;
+      line-height: 1.5;
+      max-width: 320px;
+      margin-bottom: 24px;
+    }
+
+    /* ===== DANH SÁCH NÚT LIÊN KẾT ===== */
+    .links-container {
+      width: 100%;
+      padding: 0 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      margin-bottom: 30px;
+    }
+
+    /* Style Nút Kính Mờ (Glassmorphism) */
+    .bio-link {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 15px 20px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-radius: 16px;
+      color: #ffffff;
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 0.95rem;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Hiệu ứng Rê chuột (PC) / Chạm (Mobile) */
+    .bio-link:hover, .bio-link:active {
+      transform: translateY(-2px);
+      background: rgba(255, 255, 255, 0.09);
+      border-color: rgba(255, 255, 255, 0.2);
+      box-shadow: 0 10px 25px -10px rgba(99, 102, 241, 0.25);
+    }
+
+    .link-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .link-icon {
+      width: 26px;
+      height: 26px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+    }
+
+    /* Màu sắc thương hiệu Icon */
+    .icon-zalo { color: #0068ff; font-weight: 700; font-size: 0.88rem; }
+    .icon-facebook { color: #1877f2; }
+    .icon-email { color: #ea4335; }
+
+    .link-arrow {
+      font-size: 0.8rem;
+      color: #52525b;
+      transition: all 0.2s;
+    }
+
+    .bio-link:hover .link-arrow {
+      transform: translateX(4px);
+      color: #ffffff;
+    }
+
+    /* FOOTER */
+    .bio-footer {
+      margin-top: auto;
+      font-size: 0.78rem;
+      color: #52525b;
+      text-align: center;
+      padding: 20px 24px;
+    }
+
+    /* Animation load trang mượt mà */
+    .fade-in {
+      animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      opacity: 0;
+    }
+
+    .delay-1 { animation-delay: 0.1s; }
+    .delay-2 { animation-delay: 0.2s; }
+    .delay-3 { animation-delay: 0.3s; }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Đốm sáng tạo chiều sâu hiệu ứng PC -->
+  <div class="bg-glow glow-1"></div>
+  <div class="bg-glow glow-2"></div>
+
+  <div class="bio-card">
+    
+    <!-- 1. ẢNH BÌA -->
+    <div class="cover-wrapper fade-in">
+      <img class="cover-img" 
+           src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1200&q=80" 
+           alt="Cover Image"
+           data-field="profile.cover" 
+           data-label="Ảnh bìa Header" 
+           data-type="image" />
+      <div class="cover-overlay"></div>
+    </div>
+
+    <!-- 2. THÔNG TIN CÁ NHÂN -->
+    <div class="profile-header">
+      
+      <!-- Avatar -->
+      <div class="avatar-wrapper fade-in delay-1">
+        <img class="avatar-img" 
+             src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&q=80" 
+             alt="Avatar"
+             data-field="profile.avatar" 
+             data-label="Ảnh đại diện" 
+             data-type="image" />
+      </div>
+
+      <!-- Tên & Mô tả -->
+      <h1 class="profile-name fade-in delay-1" 
+          data-field="profile.name" 
+          data-label="Họ và Tên" 
+          data-type="text">
+          Nguyễn Văn A
+      </h1>
+      
+      <p class="profile-bio fade-in delay-1" 
+         data-field="profile.bio" 
+         data-label="Mô tả ngắn" 
+         data-type="textarea">
+         UI/UX Designer & Content Creator. Thích sáng tạo và chia sẻ những giá trị mới.
+      </p>
+
+    </div>
+
+    <!-- 3. DANH SÁCH LIÊN KẾT -->
+    <div class="links-container">
+
+      <!-- Nút Zalo -->
+      <a href="https://zalo.me/0901234567" 
+         target="_blank" 
+         class="bio-link fade-in delay-2"
+         data-field="social.zalo_link" 
+         data-label="Link Zalo" 
+         data-type="link">
+        <div class="link-left">
+          <span class="link-icon icon-zalo">Zalo</span>
+          <span data-field="social.zalo_text" data-label="Chữ nút Zalo" data-type="text">Nhắn tin qua Zalo</span>
+        </div>
+        <i class="fa-solid fa-chevron-right link-arrow"></i>
+      </a>
+
+      <!-- Nút Facebook -->
+      <a href="https://facebook.com" 
+         target="_blank" 
+         class="bio-link fade-in delay-2"
+         data-field="social.facebook_link" 
+         data-label="Link Facebook" 
+         data-type="link">
+        <div class="link-left">
+          <span class="link-icon icon-facebook"><i class="fa-brands fa-facebook"></i></span>
+          <span data-field="social.facebook_text" data-label="Chữ nút Facebook" data-type="text">Facebook Cá Nhân</span>
+        </div>
+        <i class="fa-solid fa-chevron-right link-arrow"></i>
+      </a>
+
+      <!-- Nút Gửi Email -->
+      <a href="mailto:contact@example.com" 
+         class="bio-link fade-in delay-3"
+         data-field="social.email_link" 
+         data-label="Link Email (mailto:)" 
+         data-type="link">
+        <div class="link-left">
+          <span class="link-icon icon-email"><i class="fa-solid fa-envelope"></i></span>
+          <span data-field="social.email_text" data-label="Chữ nút Email" data-type="text">Gửi Email Cho Tôi</span>
+        </div>
+        <i class="fa-solid fa-chevron-right link-arrow"></i>
+      </a>
+
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="bio-footer fade-in delay-3" 
+            data-field="footer.copyright" 
+            data-label="Bản quyền Footer" 
+            data-type="text">
+      © 2026 Powered by OriginD
+    </footer>
+
+  </div>
+
+</body>
+</html>

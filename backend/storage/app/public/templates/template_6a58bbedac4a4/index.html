@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-field="hero.page_title" data-label="Tiêu đề trang web" data-type="text">Đếm Ngày Chúng Ta Đã Bên Nhau</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary-pink: #ff7597;
+            --primary-soft: #ffb3c6;
+            --primary-gradient: linear-gradient(135deg, #ffe5ec 0%, #ffb3c6 50%, #ff7597 100%);
+            --btn-gradient: linear-gradient(135deg, #ff7597 0%, #ff4b72 100%);
+            --bg-gradient: linear-gradient(185deg, #fff0f5 0%, #ffe3ec 30%, #ffd0dd 70%, #ffb3c6 100%);
+            --glass-bg: rgba(255, 255, 255, 0.45);
+            --glass-border: rgba(255, 255, 255, 0.6);
+            --glass-shadow: 0 8px 32px 0 rgba(255, 117, 151, 0.12);
+            --text-dark: #4a3e43;
+            --text-muted: #856f77;
+            --font-title: 'Playfair Display', serif;
+            --font-sans: 'Poppins', sans-serif;
+            --transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html { scroll-behavior: smooth; font-size: 16px; }
+
+        body {
+            font-family: var(--font-sans);
+            background: var(--bg-gradient);
+            color: var(--text-dark);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+            line-height: 1.65;
+        }
+
+        #parallax-bg { position: fixed; inset: 0; z-index: -1; pointer-events: none; }
+        #heart-canvas { position: fixed; inset: 0; z-index: 10; pointer-events: none; }
+
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+
+        .scroll-reveal { opacity: 0; transform: translateY(30px); transition: var(--transition); }
+        .scroll-reveal.active { opacity: 1; transform: translateY(0); }
+
+        /* Music Controller */
+        .music-controller {
+            position: fixed; bottom: 20px; left: 20px; z-index: 100;
+            background: var(--glass-bg); border: 1px solid var(--glass-border);
+            backdrop-filter: blur(12px); border-radius: 50px; padding: 8px 16px;
+            display: flex; align-items: center; gap: 12px; box-shadow: var(--glass-shadow);
+        }
+        .music-btn {
+            background: var(--btn-gradient); border: none; color: white;
+            width: 36px; height: 36px; border-radius: 50%; display: flex;
+            align-items: center; justify-content: center; cursor: pointer;
+        }
+        .music-wave { display: flex; align-items: flex-end; gap: 3px; height: 18px; width: 24px; }
+        .music-bar { width: 3px; height: 3px; background-color: var(--primary-pink); border-radius: 3px; }
+        .music-wave.playing .music-bar { animation: playWave 1.2s ease-in-out infinite alternate; }
+        @keyframes playWave { 0% { height: 4px; } 100% { height: 18px; } }
+
+        .volume-slider { width: 0; opacity: 0; transition: var(--transition); height: 6px; background: rgba(255,117,151,0.2); border-radius: 3px; }
+        .music-controller:hover .volume-slider { width: 60px; opacity: 1; }
+
+        /* Hero */
+        .hero { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 80px 20px; text-align: center; }
+        .hero-title { font-family: var(--font-title); font-size: clamp(2.5rem, 6vw, 4.5rem); font-weight: 800; color: #4a2e35; margin-bottom: 12px; }
+        .hero-desc { font-size: clamp(1rem, 2vw, 1.25rem); color: var(--text-muted); margin-bottom: 50px; }
+
+        .couples-wrapper { display: flex; align-items: center; justify-content: center; gap: 30px; margin-bottom: 50px; }
+        .avatar-box {
+            width: clamp(110px, 14vw, 160px); height: clamp(110px, 14vw, 160px);
+            border-radius: 50%; padding: 6px;
+            background: linear-gradient(135deg, #ffffff 0%, #ffb3c6 50%, #ff7597 100%);
+            box-shadow: 0 12px 36px rgba(255, 117, 151, 0.25); position: relative;
+        }
+        .avatar-box img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; border: 4px solid #fff; }
+        .avatar-label {
+            position: absolute; left: 50%; bottom: -14px; transform: translateX(-50%);
+            font-size: 0.95rem; font-weight: 700; color: #4a2e35;
+            background: rgba(255,255,255,0.65); border: 1px solid rgba(255,255,255,0.8);
+            backdrop-filter: blur(10px); padding: 7px 12px; border-radius: 999px;
+        }
+        .heart-center {
+            width: 90px; height: 90px; border-radius: 50%; display: flex;
+            align-items: center; justify-content: center; font-size: clamp(2.8rem, 6vw, 4rem);
+            color: #ff4b72; cursor: pointer;
+            background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.8), rgba(255,255,255,0.25));
+            border: 1px solid rgba(255,255,255,0.65); box-shadow: 0 18px 50px rgba(255, 117, 151, 0.18);
+        }
+
+        /* Counter */
+        .counter-grid { display: flex; justify-content: center; gap: 14px; flex-wrap: nowrap; overflow-x: auto; padding: 10px 0; }
+        .counter-card {
+            background: var(--glass-bg); border: 1px solid var(--glass-border);
+            backdrop-filter: blur(12px); border-radius: 24px; padding: 18px 20px;
+            min-width: 108px; text-align: center;
+        }
+        .counter-val { font-size: clamp(1.7rem, 3.8vw, 2.6rem); font-weight: 700; color: #ff4b72; }
+        .counter-lbl { font-size: 0.82rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); }
+
+        /* Section Title */
+        .section-title {
+            font-family: var(--font-title); font-size: clamp(1.8rem, 3.6vw, 2.6rem);
+            font-weight: 900; color: #4a2e35; text-align: center;
+            margin-bottom: 34px; position: relative;
+        }
+        .section-title::after {
+            content: ''; position: absolute; left: 50%; transform: translateX(-50%);
+            bottom: -14px; width: 120px; height: 8px; border-radius: 999px;
+            background: linear-gradient(90deg, rgba(255,117,151,0), rgba(255,117,151,0.65), rgba(255,117,151,0));
+        }
+
+        /* Quote Bubble */
+        .quote-bubble {
+            background: var(--glass-bg); border: 1px solid var(--glass-border);
+            backdrop-filter: blur(16px); border-radius: 32px; padding: 60px 40px;
+            max-width: 800px; margin: 0 auto; text-align: center;
+            box-shadow: 0 20px 60px rgba(255, 117, 151, 0.10);
+        }
+
+        /* Timeline */
+        .timeline-section { padding: 80px 0; }
+        .timeline-container { position: relative; max-width: 900px; margin: 0 auto; }
+        .timeline-container::after {
+            content: ''; position: absolute; width: 4px; background: linear-gradient(180deg, #ffe5ec, #ff7597, #ffe5ec);
+            top: 0; bottom: 0; left: 50%; margin-left: -2px;
+        }
+        .timeline-item { padding: 10px 20px; position: relative; width: 50%; opacity: 0; transform: translateY(40px); transition: all 1s cubic-bezier(0.16, 1, 0.3, 1); }
+        .timeline-item.active { opacity: 1; transform: translateY(0); }
+        .timeline-item.left { left: 0; text-align: right; }
+        .timeline-item.right { left: 50%; text-align: left; }
+        .timeline-content {
+            padding: 24px 26px; background: var(--glass-bg); border: 1px solid var(--glass-border);
+            backdrop-filter: blur(12px); border-radius: 24px; box-shadow: var(--glass-shadow);
+        }
+
+        /* Gallery */
+        .gallery-section { padding: 80px 0; }
+        .gallery-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px; max-width: 1000px; margin: 0 auto;
+        }
+        .gallery-item {
+            position: relative; border-radius: 24px; overflow: hidden;
+            box-shadow: 0 8px 24px rgba(255, 117, 151, 0.12); cursor: pointer; aspect-ratio: 4 / 5;
+        }
+        .gallery-item img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s ease; }
+        .gallery-overlay {
+            position: absolute; inset: 0; background: rgba(255, 117, 151, 0.35);
+            backdrop-filter: blur(4px); opacity: 0; display: flex;
+            align-items: center; justify-content: center; transition: var(--transition);
+        }
+
+        /* Letter */
+        .letter-section { padding: 80px 0; }
+        .letter-card {
+            background: #fffdf9; background-image: radial-gradient(#f1ebdb 1px, transparent 0), radial-gradient(#f1ebdb 1px, #fffdf9 0);
+            background-size: 20px 20px; border-radius: 32px; padding: 50px 35px;
+            box-shadow: 0 20px 50px rgba(133, 111, 119, 0.12); max-width: 720px; margin: 0 auto; position: relative;
+        }
+        .letter-body { font-size: 1.02rem; line-height: 1.85; color: #5a4b50; text-align: justify; }
+
+        /* Lightbox */
+        .lightbox {
+            position: fixed; inset: 0; background: rgba(42, 33, 36, 0.95);
+            backdrop-filter: blur(12px); z-index: 999; display: none;
+            align-items: center; justify-content: center;
+        }
+        .lightbox.active { display: flex; }
+
+        footer {
+            padding: 60px 0; text-align: center;
+            background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(10px);
+        }
+    </style>
+</head>
+<body>
+    <div id="parallax-bg"></div>
+    <canvas id="heart-canvas"></canvas>
+
+    <!-- Music -->
+    <audio id="bg-music" loop preload="auto">
+        <source src="https://files.catbox.moe/4upafc.mp3" type="audio/mpeg">
+    </audio>
+    <div class="music-controller">
+        <button class="music-btn" id="musicToggleBtn">▶</button>
+        <div class="music-wave" id="musicWave">
+            <div class="music-bar"></div>
+            <div class="music-bar"></div>
+            <div class="music-bar"></div>
+            <div class="music-bar"></div>
+        </div>
+        <input type="range" class="volume-slider" id="volumeSlider" min="0" max="1" step="0.05" value="0.5">
+    </div>
+
+    <!-- Hero -->
+    <section class="hero container scroll-reveal">
+        <h1 class="hero-title" data-field="hero.title" data-label="Tiêu đề Hero" data-type="text" data-required="true">Chúng Ta Đã Bên Nhau</h1>
+        <p class="hero-desc" data-field="hero.subtitle" data-label="Mô tả Hero" data-type="textarea">Mỗi ngày bên nhau đều là món quà đẹp nhất.</p>
+
+        <div class="couples-wrapper">
+            <div class="avatar-box">
+                <img src="https://i.pinimg.com/236x/d7/18/bb/d718bba37a543596f271fa1dafdd3001.jpg" 
+                     data-field="couple.groom_image" data-label="Ảnh chú rể" data-type="image" alt="Avatar Anh">
+                <div class="avatar-label" data-field="couple.groom_name" data-label="Tên chú rể" data-type="text">Groom 👑</div>
+            </div>
+            <div class="heart-center" id="heartInteractive">❤️</div>
+            <div class="avatar-box">
+                <img src="https://i.pinimg.com/1200x/04/4a/78/044a78f85cfd05892a4381f0d7d0a477.jpg" 
+                     data-field="couple.bride_image" data-label="Ảnh cô dâu" data-type="image" alt="Avatar Em">
+                <div class="avatar-label" data-field="couple.bride_name" data-label="Tên cô dâu" data-type="text">Bride 🌸</div>
+            </div>
+        </div>
+
+        <div class="counter-container">
+            <div class="counter-grid">
+                <div class="counter-card"><span class="counter-val" id="cnt-days">000</span><span class="counter-lbl">Ngày</span></div>
+                <div class="counter-card"><span class="counter-val" id="cnt-hours">00</span><span class="counter-lbl">Giờ</span></div>
+                <div class="counter-card"><span class="counter-val" id="cnt-minutes">00</span><span class="counter-lbl">Phút</span></div>
+                <div class="counter-card"><span class="counter-val" id="cnt-seconds">00</span><span class="counter-lbl">Giây</span></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Quote -->
+    <section class="quote-section container scroll-reveal">
+        <div class="quote-bubble">
+            <span style="font-size:2.8rem; color:#ff7597;">💖</span>
+            <p style="font-family:var(--font-title); font-size:1.65rem; line-height:1.6; color:#4a2e35; font-style:italic; margin-top:20px;"
+               data-field="quote.content" data-label="Nội dung Quote" data-type="textarea">
+                "Tình yêu không phải là tìm kiếm một ai đó hoàn hảo, mà là học cách nhìn thấy những điều tuyệt vời từ một người không hoàn hảo."
+            </p>
+        </div>
+    </section>
+
+    <!-- Timeline -->
+    <section class="timeline-section container scroll-reveal">
+        <h2 class="section-title" data-field="timeline.title" data-label="Tiêu đề Timeline" data-type="text">Hành Trình Tình Yêu</h2>
+        <div class="timeline-container">
+            <div class="timeline-item left"><div class="timeline-content">
+                <span class="timeline-date" data-field="timeline.items.0.date" data-label="Ngày sự kiện 1" data-type="text">14.02.2024</span>
+                <h3 data-field="timeline.items.0.title" data-label="Tiêu đề sự kiện 1" data-type="text">❤️ Lần đầu gặp nhau</h3>
+                <p data-field="timeline.items.0.desc" data-label="Mô tả sự kiện 1" data-type="textarea">Giữa dòng đời tấp nập, ánh mắt ta đã vô tình chạm nhau tại một quán cà phê nhỏ thơm mùi ấm cúng.</p>
+            </div></div>
+            <div class="timeline-item right"><div class="timeline-content">
+                <span class="timeline-date" data-field="timeline.items.1.date" data-label="Ngày sự kiện 2" data-type="text">08.03.2024</span>
+                <h3 data-field="timeline.items.1.title" data-label="Tiêu đề sự kiện 2" data-type="text">🌸 Buổi hẹn đầu tiên</h3>
+                <p data-field="timeline.items.1.desc" data-label="Mô tả sự kiện 2" data-type="textarea">Một tối mưa lất phất lãng mạn, chúng ta đã trò chuyện hàng giờ về ước mơ, sở thích và nhận ra tâm hồn đồng điệu.</p>
+            </div></div>
+            <div class="timeline-item left"><div class="timeline-content">
+                <span class="timeline-date" data-field="timeline.items.2.date" data-label="Ngày sự kiện 3" data-type="text">01.05.2024</span>
+                <h3 data-field="timeline.items.2.title" data-label="Tiêu đề sự kiện 3" data-type="text">💕 Chính thức yêu</h3>
+                <p data-field="timeline.items.2.desc" data-label="Mô tả sự kiện 3" data-type="textarea">Lời tỏ tình ngượng ngùng cùng bó hồng thắm. Ngày em khẽ gật đầu đồng ý trở thành mảnh ghép hoàn hảo.</p>
+            </div></div>
+            <div class="timeline-item right"><div class="timeline-content">
+                <span class="timeline-date" data-field="timeline.items.3.date" data-label="Ngày sự kiện 4" data-type="text">15.08.2024</span>
+                <h3 data-field="timeline.items.3.title" data-label="Tiêu đề sự kiện 4" data-type="text">✈️ Chuyến đi đầu tiên</h3>
+                <p data-field="timeline.items.3.desc" data-label="Mô tả sự kiện 4" data-type="textarea">Hành trình khám phá thành phố biển rực rỡ nắng vàng. Cùng ngắm bình minh và hứa sẽ đi khắp thế gian.</p>
+            </div></div>
+            <div class="timeline-item left"><div class="timeline-content">
+                <span class="timeline-date" data-field="timeline.items.4.date" data-label="Ngày sự kiện 5" data-type="text">10.10.2024</span>
+                <h3 data-field="timeline.items.4.title" data-label="Tiêu đề sự kiện 5" data-type="text">🎂 Sinh nhật cùng nhau</h3>
+                <p data-field="timeline.items.4.desc" data-label="Mô tả sự kiện 5" data-type="textarea">Bữa tiệc sinh nhật ấm áp chỉ có hai người. Cùng nguyện cầu dưới ánh nến lung linh.</p>
+            </div></div>
+            <div class="timeline-item right"><div class="timeline-content">
+                <span class="timeline-date" data-field="timeline.items.5.date" data-label="Ngày sự kiện 6" data-type="text">Tương lai</span>
+                <h3 data-field="timeline.items.5.title" data-label="Tiêu đề sự kiện 6" data-type="text">💍 Mãi mãi về sau</h3>
+                <p data-field="timeline.items.5.desc" data-label="Mô tả sự kiện 6" data-type="textarea">Những trang sách cuộc đời vẫn đang tiếp tục được viết nên bởi tình cảm nồng nàn của hai ta.</p>
+            </div></div>
+        </div>
+    </section>
+
+    <!-- Gallery -->
+    <section class="gallery-section container scroll-reveal">
+        <h2 class="section-title" data-field="gallery.title" data-label="Tiêu đề Gallery" data-type="text">Khoảnh Khắc Kỷ Niệm</h2>
+        <div class="gallery-grid">
+            <div class="gallery-item" onclick="openLightbox(0)">
+                <img src="https://images.unsplash.com/photo-1518199266791-5375a83190b7?auto=format&fit=crop&q=80&w=600" 
+                     data-field="gallery.images.0" data-label="Ảnh gallery 1" data-type="image" alt="Kỷ niệm 1">
+                <div class="gallery-overlay"><span>💖</span></div>
+            </div>
+            <div class="gallery-item" onclick="openLightbox(1)">
+                <img src="https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?auto=format&fit=crop&q=80&w=600" 
+                     data-field="gallery.images.1" data-label="Ảnh gallery 2" data-type="image" alt="Kỷ niệm 2">
+                <div class="gallery-overlay"><span>💝</span></div>
+            </div>
+            <div class="gallery-item" onclick="openLightbox(2)">
+                <img src="https://images.unsplash.com/photo-1510154221590-ff63e90a136f?auto=format&fit=crop&q=80&w=600" 
+                     data-field="gallery.images.2" data-label="Ảnh gallery 3" data-type="image" alt="Kỷ niệm 3">
+                <div class="gallery-overlay"><span>💕</span></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Love Letter -->
+    <section class="letter-section container scroll-reveal">
+        <h2 class="section-title" data-field="letter.title" data-label="Tiêu đề Thư Tình" data-type="text">Thư Gửi Người Thương</h2>
+        <div class="letter-card">
+            <div style="position:absolute;top:40px;right:40px;font-size:3rem;opacity:0.8;">💌</div>
+            <div style="font-family:var(--font-title);font-size:1.8rem;color:#4a2e35;margin-bottom:25px;" 
+                 data-field="letter.greeting" data-label="Lời chào thư" data-type="text">Thương gửi Em yêu,</div>
+            <div class="letter-body" data-field="letter.content" data-label="Nội dung thư tình" data-type="textarea">
+                Nhiều lúc ngồi suy ngẫm, anh tự hỏi mình đã làm gì tốt đẹp trong cuộc đời để xứng đáng có được em bên cạnh. Em mang đến cho anh thứ ánh sáng nhẹ nhàng nhưng ngập tràn hơi ấm, xoa dịu mọi giông bão sau những ngày dài mỏi mệt.
+                Từng cái ôm siết chặt, từng nụ cười lấp lánh của em đã trở thành một phần thiết yếu trong hơi thở anh hằng ngày. Cảm ơn em vì đã dịu dàng, đã lắng nghe, đã cùng anh đi qua những cung bậc xúc cảm tuyệt diệu nhất.
+                Yêu em không chỉ là lời nói đầu môi, đó là hành trình nỗ lực để trở thành một điểm tựa vững vàng nhất, mang lại hạnh phúc thực sự cho em mãi mãi về sau.
+            </div>
+            <div style="text-align:right;margin-top:30px;">
+                <div style="color:var(--text-muted);font-size:0.9rem;" data-field="letter.closing" data-label="Lời kết" data-type="text">Yêu em vô điều kiện</div>
+                <div style="font-family:var(--font-title);font-size:1.9rem;color:#ff4b72;" data-field="letter.signature" data-label="Chữ ký" data-type="text">Anh của Em</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Lightbox -->
+    <div class="lightbox" id="lightboxModal">
+        <div style="position:relative;max-width:90%;max-height:85vh;">
+            <button onclick="closeLightbox()" style="position:absolute;top:-50px;right:0;color:white;font-size:2.5rem;background:none;border:none;cursor:pointer;">×</button>
+            <img id="lightboxImg" style="max-width:100%;max-height:80vh;border-radius:16px;border:4px solid white;" src="" alt="">
+            <button onclick="prevImage()" style="position:absolute;left:-70px;top:50%;transform:translateY(-50%);background:rgba(255,255,255,0.2);color:white;border:none;width:50px;height:50px;border-radius:50%;font-size:1.8rem;cursor:pointer;">‹</button>
+            <button onclick="nextImage()" style="position:absolute;right:-70px;top:50%;transform:translateY(-50%);background:rgba(255,255,255,0.2);color:white;border:none;width:50px;height:50px;border-radius:50%;font-size:1.8rem;cursor:pointer;">›</button>
+        </div>
+    </div>
+
+    <!-- Hidden Date -->
+    <span style="display:none;" 
+          data-field="anniversary.start_date" 
+          data-label="Ngày bắt đầu đếm (YYYY-MM-DD)" 
+          data-type="text" 
+          data-placeholder="2024-05-01">
+        2024-05-01
+    </span>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-title">Forever <span style="color:#ff4b72;">Together</span></div>
+            <p class="footer-sub">Made with ❤️ for my love. © 2026. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Counter
+        let anniversaryStartDate;
+        function initAnniversaryDate() {
+            const dateEl = document.querySelector('[data-field="anniversary.start_date"]');
+            const dateStr = dateEl ? dateEl.textContent.trim() : '2024-05-01';
+            anniversaryStartDate = new Date(dateStr + 'T00:00:00');
+        }
+
+        function updateCounter() {
+            if (!anniversaryStartDate) return;
+            const diff = Date.now() - anniversaryStartDate;
+            document.getElementById('cnt-days').textContent = String(Math.floor(diff / 86400000)).padStart(3, '0');
+            document.getElementById('cnt-hours').textContent = String(Math.floor((diff % 86400000) / 3600000)).padStart(2, '0');
+            document.getElementById('cnt-minutes').textContent = String(Math.floor((diff % 3600000) / 60000)).padStart(2, '0');
+            document.getElementById('cnt-seconds').textContent = String(Math.floor((diff % 60000) / 1000)).padStart(2, '0');
+        }
+
+        initAnniversaryDate();
+        setInterval(updateCounter, 1000);
+        updateCounter();
+
+        // Canvas Particles
+        const canvas = document.getElementById('heart-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        const heartChars = ['❤️','💖','💕','💗','💘','💝'];
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        class HeartParticle {
+            constructor(x, y) {
+                this.x = x; this.y = y;
+                this.char = heartChars[Math.floor(Math.random() * heartChars.length)];
+                this.size = Math.random() * 24 + 14;
+                this.opacity = 1;
+                const angle = Math.random() * Math.PI * 2;
+                const speed = Math.random() * 5 + 3;
+                this.vx = Math.cos(angle) * speed;
+                this.vy = Math.sin(angle) * speed - 2;
+                this.spin = Math.random() * 0.08 - 0.04;
+                this.angle = Math.random() * Math.PI * 2;
+                this.life = 48;
+            }
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.vy += 0.08;
+                this.vx *= 0.98;
+                this.opacity -= 0.019;
+                this.angle += this.spin;
+                this.life--;
+            }
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = Math.max(0, this.opacity);
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.angle);
+                ctx.font = `${this.size}px sans-serif`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.shadowColor = '#ff4b72';
+                ctx.shadowBlur = 10;
+                ctx.fillText(this.char, 0, 0);
+                ctx.restore();
+            }
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                p.update();
+                p.draw();
+                if (p.life <= 0 || p.opacity <= 0) particles.splice(i, 1);
+            }
+            requestAnimationFrame(animate);
+        }
+        animate();
+
+        function spawnHeart(x, y) {
+            particles.push(new HeartParticle(x, y));
+        }
+
+        window.addEventListener('click', (e) => {
+            if (!e.target.closest('button') && !e.target.closest('.gallery-item') && !e.target.closest('.music-controller')) {
+                spawnHeart(e.clientX, e.clientY);
+            }
+        });
+
+        document.getElementById('heartInteractive').addEventListener('click', (e) => {
+            spawnHeart(e.clientX, e.clientY);
+        });
+
+        // Music
+        const bgMusic = document.getElementById('bg-music');
+        const musicToggleBtn = document.getElementById('musicToggleBtn');
+        const musicWave = document.getElementById('musicWave');
+
+        musicToggleBtn.addEventListener('click', () => {
+            if (bgMusic.paused) {
+                bgMusic.play();
+                musicToggleBtn.textContent = '⏸';
+                musicWave.classList.add('playing');
+            } else {
+                bgMusic.pause();
+                musicToggleBtn.textContent = '▶';
+                musicWave.classList.remove('playing');
+            }
+        });
+
+        document.getElementById('volumeSlider').addEventListener('input', (e) => {
+            bgMusic.volume = parseFloat(e.target.value);
+        });
+
+        // Lightbox
+        let currentIndex = 0;
+        const lightbox = document.getElementById('lightboxModal');
+        const lightboxImg = document.getElementById('lightboxImg');
+        const galleryImgs = document.querySelectorAll('.gallery-item img');
+
+        window.openLightbox = function(index) {
+            currentIndex = index;
+            lightboxImg.src = galleryImgs[index].src;
+            lightbox.classList.add('active');
+        };
+
+        window.closeLightbox = function() {
+            lightbox.classList.remove('active');
+        };
+
+        window.nextImage = function() {
+            currentIndex = (currentIndex + 1) % galleryImgs.length;
+            lightboxImg.src = galleryImgs[currentIndex].src;
+        };
+
+        window.prevImage = function() {
+            currentIndex = (currentIndex - 1 + galleryImgs.length) % galleryImgs.length;
+            lightboxImg.src = galleryImgs[currentIndex].src;
+        };
+
+        // Scroll Reveal
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('active');
+                }
+            });
+        }, { threshold: 0.1 });
+
+        document.querySelectorAll('.scroll-reveal, .timeline-item').forEach(el => observer.observe(el));
+    </script>
+</body>
+</html>
