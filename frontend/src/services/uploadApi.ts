@@ -1,5 +1,5 @@
 import axios from "axios";
-import { API_BASE_URL , attachMaintenanceInterceptor } from "../config/api";
+import { API_BASE_URL } from "../config/api";
 
 export async function uploadImage(file: File, token: string): Promise<{ success: boolean; url?: string; message?: string }> {
   const formData = new FormData();

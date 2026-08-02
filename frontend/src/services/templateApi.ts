@@ -31,6 +31,7 @@ export type TemplateResource = {
   renewal_price?: number;
   is_featured?: boolean;
   template_path?: string;
+  plans?: { id: number; name: string }[];
 };
 
 export async function uploadTemplate(payload: UploadTemplatePayload, token?: string | null) {

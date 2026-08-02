@@ -3,13 +3,11 @@ import { API_BASE_URL } from "../../config/api";
 import "./Maintenance.css";
 
 export default function Maintenance() {
-  const [message, setMessage] = useState("Hệ thống đang được bảo trì. Vui lòng quay lại sau.");
   const [displayedMessage, setDisplayedMessage] = useState("");
 
   useEffect(() => {
     const storedMessage = sessionStorage.getItem("maintenance_message");
     const fullText = storedMessage || "Hệ thống đang được bảo trì. Vui lòng quay lại sau.";
-    setMessage(fullText);
     
     // Typewriter effect
     let i = 0;
