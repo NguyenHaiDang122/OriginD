@@ -44,45 +44,17 @@ function ContactLink({
 }
 
 export default function Support() {
-  const [settings, setSettings] = useState<SupportSettings | null>(() => {
-    const cached = localStorage.getItem("support_settings_cache");
-    if (cached) {
-      try {
-        const parsed = JSON.parse(cached);
-        if (parsed.timestamp && Date.now() - parsed.timestamp < 24 * 60 * 60 * 1000) {
-          return parsed.data;
-        }
-      } catch (e) {}
-    }
-    return null;
-  });
-  const [loading, setLoading] = useState(settings === null);
+  const [settings, setSettings] = useState<SupportSettings | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    let shouldFetch = true;
-    const cached = localStorage.getItem("support_settings_cache");
-    if (cached) {
-      try {
-        const parsed = JSON.parse(cached);
-        if (parsed.timestamp && Date.now() - parsed.timestamp < 24 * 60 * 60 * 1000) {
-          shouldFetch = false;
-        }
-      } catch (e) {}
-    }
-    
-    if (shouldFetch) {
-      fetchSettings();
-    }
+    fetchSettings();
   }, []);
 
   const fetchSettings = async () => {
     try {
       const data = await getSupportSettings();
       setSettings(data);
-      localStorage.setItem("support_settings_cache", JSON.stringify({
-        data: data,
-        timestamp: Date.now()
-      }));
     } catch (err) {
       console.error(err);
     } finally {
