@@ -50,7 +50,7 @@ export default function TemplatesLandingSelect() {
 
 
   const sortedTemplates = useMemo(() => {
-    return templates.slice();
+    return Array.isArray(templates) ? templates.slice() : [];
   }, [templates]);
 
   async function loadTemplates(force = false) {
@@ -61,8 +61,8 @@ export default function TemplatesLandingSelect() {
           ? (cached as any).data
           : Array.isArray(cached)
             ? (cached as any)
-            : (cached as any);
-        if (listCached && listCached.length > 0) {
+            : [];
+        if (Array.isArray(listCached) && listCached.length > 0) {
           setTemplates(listCached);
         }
       }
@@ -77,9 +77,9 @@ export default function TemplatesLandingSelect() {
         ? (data as any).data
         : Array.isArray(data)
           ? (data as any)
-          : (data as any);
+          : [];
 
-      const safeList = list ?? [];
+      const safeList = Array.isArray(list) ? list : [];
       setTemplates(safeList);
 
       const params = new URLSearchParams(window.location.search);
@@ -270,7 +270,7 @@ export default function TemplatesLandingSelect() {
                   <p className="mt-1.5 text-xs text-white/60 line-clamp-2 leading-relaxed">
                     {tpl.description ? tpl.description : `Mẫu giao diện chuyên nghiệp cho ${tpl.name}. Tùy chỉnh nội dung chỉ với vài thao tác.`}
                   </p>
-                  {tpl.plans && tpl.plans.length > 0 && (
+                  {Array.isArray(tpl.plans) && tpl.plans.length > 0 && (
                     <div className="mt-3 flex items-center gap-1.5 text-[11px] font-medium text-rose-400" title="Chỉ dành cho các gói cước được cấp quyền">
                       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-3.5 h-3.5">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
