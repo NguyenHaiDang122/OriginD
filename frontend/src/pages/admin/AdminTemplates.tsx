@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
 import GlassCard from "../../components/common/GlassCard";
 import PageSection from "../../components/common/PageSection";
@@ -84,7 +84,7 @@ export default function AdminTemplates() {
   }
 
   // Load templates once when token is available
-  useMemo(() => {
+  useEffect(() => {
     async function run() {
       if (!token) return;
       setLoadingList(true);

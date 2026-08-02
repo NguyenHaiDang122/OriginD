@@ -64,17 +64,7 @@ export async function uploadTemplate(payload: UploadTemplatePayload, token?: str
   return res.data as { data: TemplateResource } | TemplateResource;
 }
 
-let cachedTemplates: any = null;
-
 export function getCachedTemplates() {
-  if (cachedTemplates) return cachedTemplates;
-  try {
-    const raw = sessionStorage.getItem("cached_templates_data");
-    if (raw) {
-      cachedTemplates = JSON.parse(raw);
-      return cachedTemplates;
-    }
-  } catch (e) {}
   return null;
 }
 
@@ -85,9 +75,8 @@ export async function fetchTemplates(token?: string | null) {
     },
   });
 
-  cachedTemplates = res.data;
   try {
-    sessionStorage.setItem("cached_templates_data", JSON.stringify(res.data));
+    sessionStorage.removeItem("cached_templates_data");
   } catch (e) {}
 
   return res.data;
