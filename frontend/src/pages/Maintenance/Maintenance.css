@@ -1,0 +1,287 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap');
+
+.maintenance-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background-color: #030712;
+  color: #f8fafc;
+  font-family: 'Outfit', sans-serif;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Animated Glowing Orbs Background */
+.bg-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(100px);
+  z-index: 0;
+  animation: float-orb 15s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+
+.orb-1 {
+  width: 400px;
+  height: 400px;
+  background: rgba(139, 92, 246, 0.25); /* Violet */
+  top: -100px;
+  left: -100px;
+}
+
+.orb-2 {
+  width: 500px;
+  height: 500px;
+  background: rgba(14, 165, 233, 0.2); /* Sky blue */
+  bottom: -200px;
+  right: -100px;
+  animation-delay: -5s;
+}
+
+.orb-3 {
+  width: 300px;
+  height: 300px;
+  background: rgba(236, 72, 153, 0.15); /* Pink */
+  top: 40%;
+  left: 60%;
+  animation-delay: -10s;
+}
+
+@keyframes float-orb {
+  0% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(30px, 50px) scale(1.1); }
+  100% { transform: translate(-30px, 20px) scale(0.9); }
+}
+
+/* Glassmorphism Content Box */
+.maintenance-content {
+  position: relative;
+  z-index: 10;
+  text-align: center;
+  padding: 60px 40px;
+  background: rgba(17, 24, 39, 0.4);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 32px;
+  box-shadow: 
+    0 25px 50px -12px rgba(0, 0, 0, 0.7),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  max-width: 540px;
+  width: 90%;
+  transform: translateY(20px);
+  opacity: 0;
+  animation: slide-up-fade 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes slide-up-fade {
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Glowing Icon Setup */
+.icon-wrapper {
+  position: relative;
+  height: 140px;
+  margin-bottom: 32px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.icon-glow {
+  position: absolute;
+  width: 100px;
+  height: 100px;
+  background: linear-gradient(135deg, #0ea5e9, #8b5cf6);
+  border-radius: 50%;
+  filter: blur(40px);
+  opacity: 0.6;
+  animation: pulse-glow 3s ease-in-out infinite alternate;
+}
+
+@keyframes pulse-glow {
+  0% { opacity: 0.4; transform: scale(0.8); }
+  100% { opacity: 0.8; transform: scale(1.2); }
+}
+
+.gears-container {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+}
+
+.gear {
+  width: 90px;
+  height: 90px;
+  color: #0ea5e9;
+  filter: drop-shadow(0 0 15px rgba(14, 165, 233, 0.4));
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+.gear-main {
+  animation-name: spin-main;
+  animation-duration: 6s;
+}
+
+@keyframes spin-main {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Typography */
+.maintenance-title {
+  font-size: 32px;
+  font-weight: 800;
+  margin-bottom: 24px;
+  letter-spacing: -0.02em;
+  background: linear-gradient(135deg, #fff 0%, #94a3b8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.maintenance-desc-container {
+  margin-bottom: 24px;
+  display: flex;
+  justify-content: center;
+}
+
+.maintenance-desc {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 18px;
+  color: #bae6fd;
+  line-height: 1.6;
+  font-weight: 500;
+  margin: 0;
+  letter-spacing: 0.5px;
+}
+
+.console-prompt {
+  color: #10b981;
+  font-weight: bold;
+}
+
+.cursor-blink {
+  animation: blink 1s step-end infinite;
+  color: #38bdf8;
+  font-weight: bold;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.maintenance-info-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  color: #10b981;
+  padding: 8px 16px;
+  border-radius: 999px;
+  font-size: 14px;
+  margin-bottom: 24px;
+  box-shadow: 0 0 15px rgba(16, 185, 129, 0.1);
+}
+
+.info-icon {
+  flex-shrink: 0;
+}
+
+/* Ghost Button with Micro-interactions */
+.maintenance-actions {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+}
+
+.ghost-btn {
+  position: relative;
+  background: rgba(255, 255, 255, 0.03);
+  color: #f8fafc;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 14px 32px;
+  border-radius: 999px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ghost-btn span {
+  position: relative;
+  z-index: 2;
+}
+
+.ghost-btn .btn-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.6) 0%, transparent 70%);
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  transition: width 0.4s ease, height 0.4s ease;
+  z-index: 1;
+}
+
+.ghost-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(139, 92, 246, 0.5);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px -5px rgba(139, 92, 246, 0.3);
+}
+
+.ghost-btn:hover .btn-glow {
+  width: 250px;
+  height: 250px;
+}
+
+.ghost-btn:active {
+  transform: translateY(0);
+}
+
+.zalo-btn {
+  padding: 10px 24px 10px 14px;
+  border-radius: 999px;
+  border-color: rgba(0, 104, 255, 0.3);
+  background: rgba(0, 104, 255, 0.03);
+}
+
+.zalo-btn:hover {
+  border-color: rgba(0, 104, 255, 0.5);
+  box-shadow: 0 5px 15px -3px rgba(0, 104, 255, 0.15);
+  background: rgba(0, 104, 255, 0.06);
+}
+
+.zalo-icon-wrapper {
+  background: transparent;
+  color: #0068ff;
+  border: 1.5px solid rgba(0, 104, 255, 0.6);
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 10px rgba(0, 104, 255, 0.15), inset 0 0 10px rgba(0, 104, 255, 0.1);
+}
+
+.zalo-glow {
+  background: radial-gradient(circle, rgba(0, 104, 255, 0.2) 0%, transparent 70%) !important;
+}

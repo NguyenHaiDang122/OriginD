@@ -1,5 +1,4 @@
 import { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
 
 import GlassCard from "../../components/common/GlassCard";
 import PageSection from "../../components/common/PageSection";
@@ -12,13 +11,15 @@ import {
   type UploadTemplatePayload,
   type TemplateResource,
 } from "../../services/templateApi";
+import { fetchPlans, type PlanResource } from "../../services/planApi";
+import { uploadImage } from "../../services/uploadApi";
 
 export default function AdminTemplates() {
-  const navigate = useNavigate();
   const token = useAuthStore((s) => s.token);
 
   const [templates, setTemplates] = useState<TemplateResource[]>([]);
   const [loadingList, setLoadingList] = useState(false);
+  const [allPlans, setAllPlans] = useState<PlanResource[]>([]);
 
   // Edit State
   const [editingTemplate, setEditingTemplate] = useState<TemplateResource | null>(null);
@@ -30,6 +31,7 @@ export default function AdminTemplates() {
   const [editRenewalPrice, setEditRenewalPrice] = useState<string>("50000");
   const [editThumbnail, setEditThumbnail] = useState<File | string | null>(null);
   const [editThumbnailPreview, setEditThumbnailPreview] = useState<string | null>(null);
+  const [editPlanIds, setEditPlanIds] = useState<number[]>([]);
   const [savingEdit, setSavingEdit] = useState(false);
 
   const [name, setName] = useState("");
@@ -42,10 +44,44 @@ export default function AdminTemplates() {
   const [renewalPrice, setRenewalPrice] = useState<string>("50000");
   const [thumbnail, setThumbnail] = useState<File | string | null>(null);
   const [zipFile, setZipFile] = useState<File | null>(null);
+  const [planIds, setPlanIds] = useState<number[]>([]);
 
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+
+  const [uploadingThumb, setUploadingThumb] = useState(false);
+  async function handleThumbnailUpload(file: File) {
+    if (!token) return;
+    setUploadingThumb(true);
+    try {
+      const res = await uploadImage(file, token);
+      if (res.success && res.url) {
+        setThumbnail(res.url as string);
+      }
+    } catch (err: any) {
+      alert(err.message || "Lỗi tải ảnh");
+    } finally {
+      setUploadingThumb(false);
+    }
+  }
+
+  const [editUploadingThumb, setEditUploadingThumb] = useState(false);
+  async function handleEditThumbnailUpload(file: File) {
+    if (!token) return;
+    setEditUploadingThumb(true);
+    try {
+      const res = await uploadImage(file, token);
+      if (res.success && res.url) {
+        setEditThumbnail(res.url as string);
+        setEditThumbnailPreview(res.url as string);
+      }
+    } catch (err: any) {
+      alert(err.message || "Lỗi tải ảnh");
+    } finally {
+      setEditUploadingThumb(false);
+    }
+  }
 
   // Load templates once when token is available
   useMemo(() => {
@@ -54,12 +90,17 @@ export default function AdminTemplates() {
       setLoadingList(true);
       setError(null);
       try {
-        const data = await fetchAdminTemplates(token);
-        // backend may return {data: ...} or plain
+        const [data, plansData] = await Promise.all([
+          fetchAdminTemplates(token),
+          fetchPlans(token)
+        ]);
         const normalized = (data as any)?.data ?? data;
         setTemplates(normalized ?? []);
+        
+        const normalizedPlans = (plansData as any)?.data ?? plansData;
+        setAllPlans(normalizedPlans ?? []);
       } catch (e: any) {
-        setError(e?.response?.data?.message ?? e?.message ?? "Lỗi tải templates");
+        setError(e?.response?.data?.message ?? e?.message ?? "Lỗi tải dữ liệu");
       } finally {
         setLoadingList(false);
       }
@@ -77,6 +118,7 @@ export default function AdminTemplates() {
     setEditRenewalPrice(t.renewal_price != null ? String(t.renewal_price) : "50000");
     setEditThumbnail(null);
     setEditThumbnailPreview(t.thumbnail ?? null);
+    setEditPlanIds(t.plans?.map(p => p.id) ?? []);
   }
 
   async function handleSaveEdit(e: React.FormEvent) {
@@ -94,6 +136,7 @@ export default function AdminTemplates() {
         formData.append("version", editVersion.trim() || "1.0.0");
         formData.append("renewal_price", editRenewalPrice.trim() || "50000");
         formData.append("thumbnail", editThumbnail);
+        editPlanIds.forEach(id => formData.append("plan_ids[]", String(id)));
         payload = formData;
       } else {
         payload = {
@@ -103,6 +146,7 @@ export default function AdminTemplates() {
           status: editStatus,
           version: editVersion.trim() || "1.0.0",
           renewal_price: Number(editRenewalPrice) || 50000,
+          plan_ids: editPlanIds,
           ...(editThumbnailPreview === null && editingTemplate.thumbnail ? { thumbnail: null } : {}),
         };
       }
@@ -164,6 +208,7 @@ export default function AdminTemplates() {
     setRenewalPrice("50000");
     setThumbnail(null);
     setZipFile(null);
+    setPlanIds([]);
   }
 
   async function onUpload() {
@@ -186,6 +231,7 @@ export default function AdminTemplates() {
         renewal_price: Number(renewalPrice) || 50000,
         thumbnail,
         zip_file: zipFile,
+        plan_ids: planIds,
       };
 
       const res = await uploadTemplate(payload, token);
@@ -207,8 +253,8 @@ export default function AdminTemplates() {
         subtitle="Upload ZIP chứa index.html để auto scan fields"
       />
 
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-12">
-        <div className="xl:col-span-5">
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-12 min-w-0">
+        <div className="xl:col-span-5 min-w-0">
           <GlassCard title="Upload template (ZIP)" subtitle="Điền thông tin + chọn file .zip">
             <div className="space-y-4">
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -289,13 +335,40 @@ export default function AdminTemplates() {
                       onChange={(e) => setThumbnail(e.target.files?.[0] ?? null)}
                       className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-white/90 text-sm"
                     />
-                    <input
-                      type="text"
-                      placeholder="Hoặc nhập link ảnh (https://...)"
-                      value={typeof thumbnail === 'string' ? thumbnail : ""}
-                      onChange={(e) => setThumbnail(e.target.value)}
-                      className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-white/90 text-sm"
-                    />
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                      <input
+                        type="text"
+                        placeholder="Hoặc nhập link ảnh (https://...)"
+                        value={typeof thumbnail === 'string' ? thumbnail : ""}
+                        onChange={(e) => setThumbnail(e.target.value)}
+                        className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-white/90 text-sm"
+                      />
+                      <div className="relative shrink-0">
+                        <input 
+                          type="file" 
+                          accept="image/jpeg,image/png,image/jpg,image/gif,image/webp"
+                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                          disabled={uploadingThumb}
+                          onChange={(e) => {
+                            if (e.target.files && e.target.files[0]) {
+                              handleThumbnailUpload(e.target.files[0]);
+                            }
+                            e.target.value = '';
+                          }}
+                        />
+                        <button 
+                          type="button" 
+                          disabled={uploadingThumb}
+                          className="h-[38px] px-4 inline-flex items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/5 text-sm font-semibold text-white/90 hover:bg-white/15 hover:border-white/30 transition shadow-sm disabled:opacity-50 relative z-0"
+                        >
+                          {uploadingThumb ? (
+                            <><span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" /> Đang tải...</>
+                          ) : (
+                            <>Upload lấy link</>
+                          )}
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -308,6 +381,27 @@ export default function AdminTemplates() {
                     className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-white/90"
                   />
                 </label>
+              </div>
+
+              <div className="block">
+                <div className="text-xs text-white/60 mb-1">Phân quyền Gói cước (Plans) được phép sử dụng mẫu này</div>
+                <div className="text-[11px] text-white/40 mb-2">Để trống nếu muốn áp dụng cho tất cả các gói (bao gồm gói Free).</div>
+                <div className="flex flex-wrap gap-3">
+                  {allPlans.map(p => (
+                    <label key={p.id} className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 cursor-pointer hover:bg-white/10">
+                      <input
+                        type="checkbox"
+                        checked={planIds.includes(p.id)}
+                        onChange={(e) => {
+                          if (e.target.checked) setPlanIds(prev => [...prev, p.id]);
+                          else setPlanIds(prev => prev.filter(id => id !== p.id));
+                        }}
+                        className="accent-violet-500 w-4 h-4 rounded border-white/20 bg-white/10"
+                      />
+                      <span className="text-sm text-white/90">{p.name}</span>
+                    </label>
+                  ))}
+                </div>
               </div>
 
               {error ? (
@@ -360,8 +454,8 @@ export default function AdminTemplates() {
                     </div>
                   )}
                   <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="text-sm font-semibold text-white/90 truncate max-w-full">
+                    <div className="flex flex-wrap items-center gap-2 min-w-0">
+                      <span className="text-sm font-semibold text-white/90 truncate max-w-full block">
                         {t.name}
                       </span>
                       <span
@@ -380,8 +474,8 @@ export default function AdminTemplates() {
                          {(t.renewal_price != null ? t.renewal_price : 50000).toLocaleString("vi-VN")} đ / 30 ngày
                       </span>
                     </div>
-                    <div className="mt-1 text-xs text-white/60 font-mono truncate max-w-full">/templates/{t.slug}</div>
-                    {t.description ? <div className="mt-1 text-xs text-white/50 line-clamp-1 break-words">{t.description}</div> : null}
+                    <div className="mt-1 text-xs text-white/60 font-mono truncate max-w-full block">/templates/{t.slug}</div>
+                    {t.description ? <div className="mt-1 text-xs text-white/50 line-clamp-1 break-words min-w-0">{t.description}</div> : null}
                   </div>
                 </div>
 
@@ -437,8 +531,8 @@ export default function AdminTemplates() {
       {editingTemplate && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 overflow-y-auto">
           <div className="w-full max-w-lg rounded-3xl border border-white/20 bg-slate-900 p-6 shadow-2xl my-auto max-h-[90vh] flex flex-col">
-            <div className="mb-4 flex items-center justify-between shrink-0">
-              <h3 className="text-lg font-bold text-white truncate pr-4">Chỉnh sửa Template: {editingTemplate.name}</h3>
+            <div className="mb-4 flex items-center justify-between shrink-0 min-w-0 gap-4">
+              <h3 className="text-lg font-bold text-white truncate min-w-0 flex-1">Chỉnh sửa Template: {editingTemplate.name}</h3>
               <button
                 type="button"
                 onClick={() => setEditingTemplate(null)}
@@ -549,16 +643,64 @@ export default function AdminTemplates() {
                     }}
                     className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-white/90"
                   />
-                  <input
-                    type="text"
-                    placeholder="Hoặc nhập link ảnh (https://...)"
-                    value={typeof editThumbnail === 'string' ? editThumbnail : ""}
-                    onChange={(e) => {
-                      setEditThumbnail(e.target.value);
-                      setEditThumbnailPreview(e.target.value);
-                    }}
-                    className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-white/90"
-                  />
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                    <input
+                      type="text"
+                      placeholder="Hoặc nhập link ảnh (https://...)"
+                      value={typeof editThumbnail === 'string' ? editThumbnail : ""}
+                      onChange={(e) => {
+                        setEditThumbnail(e.target.value);
+                        setEditThumbnailPreview(e.target.value);
+                      }}
+                      className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-sm text-white/90"
+                    />
+                    <div className="relative shrink-0">
+                      <input 
+                        type="file" 
+                        accept="image/jpeg,image/png,image/jpg,image/gif,image/webp"
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                        disabled={editUploadingThumb}
+                        onChange={(e) => {
+                          if (e.target.files && e.target.files[0]) {
+                            handleEditThumbnailUpload(e.target.files[0]);
+                          }
+                          e.target.value = '';
+                        }}
+                      />
+                      <button 
+                        type="button" 
+                        disabled={editUploadingThumb}
+                        className="h-[38px] px-4 inline-flex items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/5 text-sm font-semibold text-white/90 hover:bg-white/15 hover:border-white/30 transition shadow-sm disabled:opacity-50 relative z-0"
+                      >
+                        {editUploadingThumb ? (
+                          <><span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" /> Đang tải...</>
+                        ) : (
+                          <>Upload lấy link</>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <div className="text-xs text-white/70 mb-1">Phân quyền Gói cước (Plans) được phép sử dụng mẫu này</div>
+                <div className="text-[11px] text-white/40 mb-2">Để trống nếu muốn áp dụng cho tất cả các gói (bao gồm gói Free).</div>
+                <div className="flex flex-wrap gap-3">
+                  {allPlans.map(p => (
+                    <label key={p.id} className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 cursor-pointer hover:bg-white/10">
+                      <input
+                        type="checkbox"
+                        checked={editPlanIds.includes(p.id)}
+                        onChange={(e) => {
+                          if (e.target.checked) setEditPlanIds(prev => [...prev, p.id]);
+                          else setEditPlanIds(prev => prev.filter(id => id !== p.id));
+                        }}
+                        className="accent-violet-500 w-4 h-4 rounded border-white/20 bg-white/10"
+                      />
+                      <span className="text-sm text-white/90">{p.name}</span>
+                    </label>
+                  ))}
                 </div>
               </div>
 

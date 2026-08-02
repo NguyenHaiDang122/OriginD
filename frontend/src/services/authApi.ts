@@ -1,9 +1,11 @@
 import axios from "axios";
-import { API_BASE_URL } from "../config/api";
+import { API_BASE_URL , attachMaintenanceInterceptor } from "../config/api";
 
 const api = axios.create({
   baseURL: API_BASE_URL,
 });
+
+attachMaintenanceInterceptor(api);
 
 export type LoginPayload = {
   email: string;
@@ -34,6 +36,16 @@ export async function sendRegisterOtpApi(payload: RegisterPayload & { password_c
 export async function verifyRegisterOtpApi(payload: RegisterPayload & { otp: string; password_confirmation?: string }) {
   const res = await api.post("/register-verify-otp", payload);
   return res.data as { token: string; user: unknown };
+}
+
+export async function sendForgotPasswordOtpApi(email: string) {
+  const res = await api.post("/forgot-password-send-otp", { email });
+  return res.data as { message: string };
+}
+
+export async function resetPasswordApi(payload: { email: string; otp: string; password: string; password_confirmation: string }) {
+  const res = await api.post("/reset-password", payload);
+  return res.data as { message: string };
 }
 
 export async function googleLoginApi(credential: string) {

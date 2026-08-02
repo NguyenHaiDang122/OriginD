@@ -1,10 +1,12 @@
 import axios from "axios";
-import { API_BASE_URL } from "../config/api";
+import { API_BASE_URL , attachMaintenanceInterceptor } from "../config/api";
 import { useAuthStore } from "../store/authStore";
 
 const api = axios.create({
   baseURL: API_BASE_URL,
 });
+
+attachMaintenanceInterceptor(api);
 
 api.interceptors.request.use((config) => {
   const token = useAuthStore.getState().token;
@@ -50,5 +52,20 @@ export const getPopupSettings = async () => {
 
 export const updatePopupSettings = async (data: PopupSettings) => {
   const response = await api.put<{ message: string; data: PopupSettings }>("/admin/settings/popup", data);
+  return response.data;
+};
+
+export type MaintenanceSettings = {
+  maintenance_mode: boolean;
+  maintenance_message: string;
+};
+
+export const getMaintenanceSettings = async () => {
+  const response = await api.get<{ data: MaintenanceSettings }>("/admin/settings/maintenance");
+  return response.data.data;
+};
+
+export const updateMaintenanceSettings = async (data: MaintenanceSettings) => {
+  const response = await api.put<{ message: string; data: MaintenanceSettings }>("/admin/settings/maintenance", data);
   return response.data;
 };

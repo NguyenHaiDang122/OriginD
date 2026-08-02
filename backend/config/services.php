@@ -35,4 +35,16 @@ return [
         ],
     ],
 
+    'sepay' => [
+        'merchant_id' => env('SEPAY_MERCHANT_ID'),
+        'secret_key' => env('SEPAY_SECRET_KEY'),
+        'env' => env('SEPAY_ENV', 'sandbox'),
+        'api_token' => env('SEPAY_API_TOKEN'),
+        'webhook_token' => env('SEPAY_WEBHOOK_TOKEN'),
+    ],
+
+    'imgbb' => [
+        'api_key' => env('IMGBB_API_KEY'),
+    ],
+
 ];

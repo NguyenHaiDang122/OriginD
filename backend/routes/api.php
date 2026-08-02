@@ -14,8 +14,13 @@ use App\Http\Controllers\Api\AdminCustomDomainController;
 
 
 Route::post('/register', [AuthController::class, 'register']);
-Route::post('/register-send-otp', [AuthController::class, 'sendRegisterOtp']);
+Route::post('/register-send-otp', [AuthController::class, 'sendRegisterOtp'])->middleware('throttle:6,1');
 Route::post('/register-verify-otp', [AuthController::class, 'verifyRegisterOtpAndRegister']);
+
+// Forgot Password
+Route::post('/forgot-password-send-otp', [AuthController::class, 'forgotPasswordSendOtp'])->middleware('throttle:6,1');
+Route::post('/reset-password', [AuthController::class, 'resetPassword'])->middleware('throttle:10,1');
+
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/google-login', [AuthController::class, 'googleLogin']);
 
@@ -24,15 +29,19 @@ Route::get('/templates', [TemplateController::class, 'index']);
 Route::get('/templates/{template}', [TemplateController::class, 'show']);
 Route::get('/templates/{template}/fields', [TemplateFieldController::class, 'index']);
 Route::post('/templates/{template}/preview', [TemplateController::class, 'preview']);
-Route::get('/landing-pages/{landingPage}/render', [LandingPageController::class, 'render']);
+Route::get('/landing-pages/{landingPage}/render', [LandingPageController::class, 'render'])->name('landing-pages.render');
 Route::post('/sepay-webhook', [DepositController::class, 'sepayWebhook']);
 Route::get('/plans', [PlanController::class, 'index']);
 Route::get('/settings/popup', [App\Http\Controllers\Api\SettingController::class, 'getPopupSettings']);
+
+use App\Http\Controllers\Api\ImageUploadController;
 
 Route::middleware('auth:sanctum')->group(function () {
 
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/me', [AuthController::class, 'me']);
+    
+    Route::post('/upload-image', [ImageUploadController::class, 'upload'])->middleware('throttle:50,1');
 
     Route::get('/subscription', [SubscriptionController::class, 'current']);
     Route::post('/subscription/upgrade', [SubscriptionController::class, 'upgrade']);
@@ -105,5 +114,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
             // Admin Settings
             Route::put('/settings/popup', [App\Http\Controllers\Api\SettingController::class, 'updatePopupSettings']);
+            
+            Route::get('/settings/maintenance', [App\Http\Controllers\Api\SettingController::class, 'getMaintenanceSettings']);
+            Route::put('/settings/maintenance', [App\Http\Controllers\Api\SettingController::class, 'updateMaintenanceSettings']);
         });
 });

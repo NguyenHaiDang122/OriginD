@@ -34,6 +34,17 @@ class TemplateResource extends JsonResource
             'is_featured' => (bool) $this->is_featured,
 
             'fields' => $this->fields,
+            
+            'plans' => $this->whenLoaded('plans', function () {
+                return $this->plans->map(function ($plan) {
+                    return [
+                        'id' => $plan->id,
+                        'name' => $plan->name,
+                        'slug' => $plan->slug,
+                        'price' => $plan->price,
+                    ];
+                });
+            }),
 
         ];
     }

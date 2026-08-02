@@ -10,7 +10,14 @@ class PlanController extends Controller
 {
     public function index()
     {
-        $plans = Plan::orderBy('price', 'asc')->get();
+        $query = Plan::orderBy('price', 'asc');
+        
+        $user = auth('sanctum')->user();
+        if (!$user || !$user->hasRole('Admin')) {
+            $query->where('is_hidden', false);
+        }
+
+        $plans = $query->get();
         return response()->json([
             'data' => $plans
         ]);
@@ -27,6 +34,8 @@ class PlanController extends Controller
             'landing_page_limit' => 'required|integer|min:1',
             'custom_domain' => 'boolean',
             'premium_templates' => 'boolean',
+            'is_popular' => 'boolean',
+            'is_hidden' => 'boolean',
         ]);
 
         $plan = Plan::create($validated);
@@ -48,6 +57,8 @@ class PlanController extends Controller
             'landing_page_limit' => 'sometimes|required|integer|min:1',
             'custom_domain' => 'boolean',
             'premium_templates' => 'boolean',
+            'is_popular' => 'boolean',
+            'is_hidden' => 'boolean',
         ]);
 
         $plan->update($validated);
@@ -60,9 +71,15 @@ class PlanController extends Controller
 
     public function destroy(Plan $plan)
     {
-        if (in_array(strtolower($plan->slug), ['free', 'starter'])) {
+        if (strtolower($plan->slug) === 'free') {
             return response()->json([
                 'message' => 'Không thể xóa gói mặc định hệ thống.'
+            ], 400);
+        }
+
+        if ($plan->subscriptions()->exists()) {
+            return response()->json([
+                'message' => 'Không thể xóa gói cước đã có người dùng đăng ký.'
             ], 400);
         }
 

@@ -10,9 +10,21 @@ export default function AdminStatistics() {
   const [error, setError] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  const [selectedMonth, setSelectedMonth] = useState("");
+  const [chartFilter, setChartFilter] = useState("30_days");
+
+  const months = [];
+  for (let i = 0; i < 12; i++) {
+    const d = new Date();
+    d.setMonth(d.getMonth() - i);
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const y = d.getFullYear();
+    months.push({ value: `${y}-${m}`, label: `Tháng ${m}/${y}` });
+  }
+
   useEffect(() => {
     loadData();
-  }, []);
+  }, [selectedMonth, chartFilter]);
 
   useEffect(() => {
     if (data && scrollRef.current) {
@@ -42,7 +54,7 @@ export default function AdminStatistics() {
   const loadData = async () => {
     try {
       setLoading(true);
-      const res = await fetchAdminStatistics();
+      const res = await fetchAdminStatistics(selectedMonth || undefined, chartFilter);
       setData(res);
     } catch (err: any) {
       setError(err?.response?.data?.message || "Không thể tải dữ liệu thống kê.");
@@ -73,53 +85,94 @@ export default function AdminStatistics() {
 
   return (
     <div className="space-y-6 animate-fade-in max-w-6xl mx-auto pb-10">
-      <PageSection
-        title="Thống kê Hệ thống"
-        subtitle="Tổng quan về doanh thu và lượng người dùng hệ thống."
-      />
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <PageSection
+          title="Thống kê Hệ thống"
+          subtitle="Tổng quan về doanh thu và lượng người dùng hệ thống."
+        />
+        <div className="flex-shrink-0">
+          <select 
+            value={selectedMonth}
+            onChange={(e) => setSelectedMonth(e.target.value)}
+            className="rounded-xl border border-white/20 bg-black/40 px-4 py-2 text-white outline-none focus:border-violet-500 transition shadow-inner backdrop-blur-md"
+          >
+            <option value="">-- Tất cả thời gian --</option>
+            {months.map((m) => (
+              <option key={m.value} value={m.value}>{m.label}</option>
+            ))}
+          </select>
+        </div>
+      </div>
 
       {/* Tóm tắt Tổng quan */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mt-2">
         <div className="rounded-xl border border-white/20 bg-white/5 p-3 backdrop-blur-md">
-          <div className="text-white/50 text-[10px] uppercase font-bold tracking-wider mb-1">DT Hôm nay</div>
+          <div className="text-white/50 text-[10px] uppercase font-bold tracking-wider mb-1">
+            {selectedMonth ? "Doanh thu ngày" : "DT Hôm nay"}
+          </div>
           <div className="text-base font-bold text-white">
             {data.revenue.today.toLocaleString("vi-VN")} đ
           </div>
         </div>
         <div className="rounded-xl border border-white/20 bg-white/5 p-3 backdrop-blur-md">
-          <div className="text-white/50 text-[10px] uppercase font-bold tracking-wider mb-1">DT Tháng này</div>
+          <div className="text-white/50 text-[10px] uppercase font-bold tracking-wider mb-1">
+            {selectedMonth ? "Doanh thu Tháng" : "DT Tháng này"}
+          </div>
           <div className="text-base font-bold text-white">
             {data.revenue.this_month.toLocaleString("vi-VN")} đ
           </div>
         </div>
         <div className="rounded-xl border border-white/20 bg-white/5 p-3 backdrop-blur-md">
-          <div className="text-white/50 text-[10px] uppercase font-bold tracking-wider mb-1">DT Năm nay</div>
+          <div className="text-white/50 text-[10px] uppercase font-bold tracking-wider mb-1">
+            {selectedMonth ? "Doanh thu Năm" : "DT Năm nay"}
+          </div>
           <div className="text-base font-bold text-white">
             {data.revenue.this_year.toLocaleString("vi-VN")} đ
           </div>
         </div>
         <div className="rounded-xl border border-white/20 bg-white/5 p-3 backdrop-blur-md">
-          <div className="text-white/50 text-[10px] uppercase font-bold tracking-wider mb-1">Tổng User</div>
+          <div className="text-white/50 text-[10px] uppercase font-bold tracking-wider mb-1">
+            {selectedMonth ? "KH Mới (Tháng)" : "Tổng số người dùng"}
+          </div>
           <div className="text-base font-bold text-white">
-            {data.stats.total_users.toLocaleString()}
+            {data.stats.total_users.toLocaleString("vi-VN")}
           </div>
         </div>
         <div className="rounded-xl border border-white/20 bg-white/5 p-3 backdrop-blur-md">
-          <div className="text-white/50 text-[10px] uppercase font-bold tracking-wider mb-1">Tổng Admin</div>
+          <div className="text-white/50 text-[10px] uppercase font-bold tracking-wider mb-1">
+            {selectedMonth ? "Admin mới (Tháng)" : "Tổng số Quản trị"}
+          </div>
           <div className="text-base font-bold text-white">
-            {data.stats.total_admins.toLocaleString()}
+            {data.stats.total_admins.toLocaleString("vi-VN")}
           </div>
         </div>
         <div className="rounded-xl border border-white/20 bg-white/5 p-3 backdrop-blur-md">
-          <div className="text-white/50 text-[10px] uppercase font-bold tracking-wider mb-1">Landing Page</div>
+          <div className="text-white/50 text-[10px] uppercase font-bold tracking-wider mb-1">
+            {selectedMonth ? "LP mới (Tháng)" : "LP Đã tạo"}
+          </div>
           <div className="text-base font-bold text-white">
-            {data.stats.total_landing_pages.toLocaleString()}
+            {data.stats.total_landing_pages.toLocaleString("vi-VN")}
           </div>
         </div>
       </div>
 
       {/* Biểu đồ tăng trưởng */}
-      <h3 className="text-lg font-bold text-white mb-2 mt-8">Tăng trưởng (30 ngày qua)</h3>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mt-8 mb-2 gap-4">
+        <h3 className="text-lg font-bold text-white">
+          {chartFilter === 'year' ? (selectedMonth ? `Tăng trưởng (Năm ${selectedMonth.split('-')[0]})` : "Tăng trưởng (Năm nay)") : 
+           chartFilter === 'month' ? (selectedMonth ? `Tăng trưởng (Tháng ${selectedMonth.split('-')[1]}/${selectedMonth.split('-')[0]})` : "Tăng trưởng (Tháng này)") : 
+           "Tăng trưởng (30 ngày qua)"}
+        </h3>
+        <select 
+          value={chartFilter}
+          onChange={(e) => setChartFilter(e.target.value)}
+          className="rounded-xl border border-white/20 bg-black/40 px-3 py-1.5 text-sm text-white outline-none focus:border-violet-500 transition shadow-inner backdrop-blur-md"
+        >
+          <option value="30_days">30 ngày qua</option>
+          <option value="month">Tháng này / Tháng chọn</option>
+          <option value="year">Cả năm</option>
+        </select>
+      </div>
       <div className="rounded-3xl border border-white/10 bg-transparent p-2 sm:p-6 overflow-hidden">
         <div 
           ref={scrollRef}

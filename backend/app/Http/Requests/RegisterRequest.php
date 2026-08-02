@@ -29,7 +29,8 @@ class RegisterRequest extends FormRequest
                 'required',
                 'email',
                 'max:255',
-                'unique:users,email'
+                'unique:users,email',
+                'regex:/^[a-zA-Z0-9._%+-]+@(gmail\.com|outlook\.com|hotmail\.com|yahoo\.com)$/i'
             ],
 
             'password' => [
@@ -38,6 +39,13 @@ class RegisterRequest extends FormRequest
                 'min:8',
                 'confirmed'
             ]
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'email.regex' => 'Hệ thống chỉ hỗ trợ đăng ký bằng các email phổ biến như: Gmail, Outlook, Hotmail, Yahoo.',
         ];
     }
 

@@ -6,7 +6,7 @@ type AuthState = {
   user: unknown | null;
   loading: boolean;
   error: string | null;
-  login: (payload: { email: string; password: string }) => Promise<void>;
+  login: (payload: { email: string; password: string }, rememberMe?: boolean) => Promise<void>;
   register: (payload: { name: string; email: string; password: string }) => Promise<void>;
   sendOtp: (payload: any) => Promise<string>;
   verifyOtpAndRegister: (payload: any) => Promise<void>;
@@ -35,8 +35,8 @@ export const useAuthStore = create<AuthState>((set) => ({
     });
   },
   hydrate: () => {
-    const token = localStorage.getItem("token");
-    const userRaw = localStorage.getItem("user");
+    const token = localStorage.getItem("token") || sessionStorage.getItem("token");
+    const userRaw = localStorage.getItem("user") || sessionStorage.getItem("user");
     const user = userRaw ? JSON.parse(userRaw) : null;
     if (token) {
       setAuthToken(token);
@@ -44,13 +44,19 @@ export const useAuthStore = create<AuthState>((set) => ({
     }
     set({ token, user });
   },
-  login: async (payload) => {
+  login: async (payload, rememberMe = false) => {
     set({ loading: true, error: null });
     try {
       const data = await loginApi(payload);
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("user", JSON.stringify(data.user));
-      document.cookie = `auth_token=${data.token}; path=/; max-age=864000; SameSite=Lax`;
+      const storage = rememberMe ? localStorage : sessionStorage;
+      storage.setItem("token", data.token);
+      storage.setItem("user", JSON.stringify(data.user));
+      
+      if (rememberMe) {
+        document.cookie = `auth_token=${data.token}; path=/; max-age=864000; SameSite=Lax`;
+      } else {
+        document.cookie = `auth_token=${data.token}; path=/; SameSite=Lax`;
+      }
       setAuthToken(data.token);
       set({ token: data.token, user: data.user, loading: false, error: null });
     } catch (e: any) {
@@ -122,6 +128,8 @@ export const useAuthStore = create<AuthState>((set) => ({
   logout: () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
+    sessionStorage.removeItem("token");
+    sessionStorage.removeItem("user");
     document.cookie = `auth_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
     setAuthToken(null);
     set({ token: null, user: null });

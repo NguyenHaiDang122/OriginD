@@ -2,9 +2,11 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuthStore } from "../../store/authStore";
 import GoogleAuthButton from "../../components/common/GoogleAuthButton";
+import SEO from "../../components/common/SEO";
 
 export default function Register() {
   const navigate = useNavigate();
+
   const token = useAuthStore((s) => s.token);
   const sendOtp = useAuthStore((s) => s.sendOtp);
   const verifyOtpAndRegister = useAuthStore((s) => s.verifyOtpAndRegister);
@@ -26,6 +28,26 @@ export default function Register() {
   const [otp, setOtp] = useState("");
   const [infoMessage, setInfoMessage] = useState<string | null>(null);
 
+  const [otpLifespan, setOtpLifespan] = useState(0);
+  const [countdown, setCountdown] = useState(0);
+
+  useEffect(() => {
+    let timer: number;
+    if (otpLifespan > 0) {
+      timer = window.setInterval(() => setOtpLifespan((c) => c - 1), 1000);
+    }
+    return () => window.clearInterval(timer);
+  }, [otpLifespan]);
+
+  useEffect(() => {
+    let timer: number;
+    if (countdown > 0) {
+      timer = window.setInterval(() => setCountdown((c) => c - 1), 1000);
+    }
+    return () => window.clearInterval(timer);
+  }, [countdown]);
+
+
   async function onSubmitStep1(e: React.FormEvent) {
     e.preventDefault();
     setInfoMessage(null);
@@ -38,6 +60,8 @@ export default function Register() {
       });
       setInfoMessage(msg || "Mã OTP đã được gửi đến email của bạn.");
       setStep(2);
+      setOtpLifespan(300);
+      setCountdown(60);
     } catch (err) {
       // Error is handled in store
     }
@@ -70,14 +94,18 @@ export default function Register() {
         password_confirmation: passwordConfirmation,
       });
       setInfoMessage(msg || "Đã gửi lại mã OTP mới đến email của bạn.");
+      setOtpLifespan(300);
+      setCountdown(60);
     } catch (err) {
       // Error handled in store
     }
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-10">
-      <div className="w-full max-w-md glass-panel-strong p-6 sm:p-8 relative overflow-hidden">
+    <>
+      <SEO title="Đăng ký tài khoản mới | OriginD" />
+      <div className="min-h-screen flex items-center justify-center px-4 py-10">
+        <div className="w-full max-w-md glass-panel-strong p-6 sm:p-8 relative overflow-hidden">
         {step === 1 ? (
           <>
             <div className="text-center">
@@ -180,15 +208,19 @@ export default function Register() {
         ) : (
           <>
             <div className="text-center">
-              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-violet-500/20 text-2xl text-violet-300 border border-violet-500/30 shadow-inner">
-                📧
-              </div>
-              <div className="mt-4 text-2xl font-black tracking-tight text-white/95">
+              <div className="text-2xl font-black tracking-tight text-white/95">
                 Xác nhận mã OTP
               </div>
               <div className="mt-2 text-xs text-white/70 leading-relaxed">
                 Chúng tôi đã gửi mã xác thực 6 chữ số đến địa chỉ:
                 <div className="font-semibold text-violet-300 mt-1 text-sm">{email}</div>
+                <div className="mt-2">
+                  {otpLifespan > 0 ? (
+                    <span className="text-violet-300/80 font-medium bg-violet-500/10 px-3 py-1 rounded-full border border-violet-500/20">Mã OTP có hiệu lực trong {Math.floor(otpLifespan / 60)}:{String(otpLifespan % 60).padStart(2, '0')}</span>
+                  ) : (
+                    <span className="text-rose-400 font-medium bg-rose-500/10 px-3 py-1 rounded-full border border-rose-500/20">Mã OTP đã hết hạn</span>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -243,10 +275,10 @@ export default function Register() {
                 <button
                   type="button"
                   onClick={handleResendOtp}
-                  disabled={loading}
-                  className="text-violet-300 hover:text-violet-200 transition-all font-semibold underline disabled:opacity-50"
+                  disabled={loading || countdown > 0}
+                  className="text-violet-300 hover:text-violet-200 transition-all font-semibold underline disabled:opacity-50 disabled:no-underline"
                 >
-                  Gửi lại mã OTP
+                  {countdown > 0 ? `Gửi lại mã OTP sau ${countdown}s` : "Gửi lại mã OTP"}
                 </button>
               </div>
             </form>
@@ -254,6 +286,7 @@ export default function Register() {
         )}
       </div>
     </div>
+    </>
   );
 }
 

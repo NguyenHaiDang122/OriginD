@@ -17,7 +17,7 @@ class TemplateController extends Controller
 
     public function index(\Illuminate\Http\Request $request)
     {
-        $query = Template::query()->with('fields');
+        $query = Template::query()->with(['fields', 'plans']);
 
         if (!$request->is('api/admin/*')) {
             $query->where('status', 'published');

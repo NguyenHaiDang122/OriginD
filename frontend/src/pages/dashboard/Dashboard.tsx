@@ -4,10 +4,14 @@ import GlassCard from "../../components/common/GlassCard";
 import NeuronNetwork from "../../components/ui/NeuronNetwork";
 import { fetchTemplates, getCachedTemplates } from "../../services/templateApi";
 import { useAuthStore } from "../../store/authStore";
+import SEO from "../../components/common/SEO";
 
 export default function Dashboard() {
   const navigate = useNavigate();
   const token = useAuthStore((s) => s.token);
+  // ...
+  // (Assuming we are just injecting it, wait, I need to see where to inject it in the JSX).
+  // Let me view lines 130-150.
   const user = useAuthStore((s) => s.user) as any;
 
   const isLimitReached = Boolean(
@@ -70,6 +74,7 @@ export default function Dashboard() {
 
   return (
     <div>
+      <SEO title="OriginD - Tạo website nhanh chóng, miễn phí & đơn giản" />
       {/* Hero giới thiệu OriginD */}
       <section className="relative overflow-hidden rounded-3xl border border-white/10 bg-white/5 px-5 py-8 sm:px-8 sm:py-10">
         <div className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full bg-gradient-to-br from-indigo-500/40 via-violet-500/30 to-fuchsia-500/20 blur-2xl" />
@@ -138,8 +143,8 @@ export default function Dashboard() {
               <div className="relative rounded-3xl border border-white/10 bg-gradient-to-br from-white/10 to-white/0 p-3 backdrop-blur-xl">
                 <div className="h-full rounded-2xl border border-white/10 bg-[#0b1220] p-5">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <img src="https://i.imgur.com/PIrOjbx.png" alt="OriginD Logo" className="h-10 w-10 rounded-2xl object-cover" />
+                    <div className="flex items-center gap-4">
+                      <img src="/logo.png" alt="OriginD Logo" className="h-10 w-10 rounded-2xl object-cover" />
                       <div>
                         <div className="text-sm font-bold text-white/90">OriginD Studio</div>
                         <div className="text-xs text-white/55">Preview website</div>
@@ -322,6 +327,14 @@ export default function Dashboard() {
                   <p className="mt-1.5 text-xs text-white/60 line-clamp-2 leading-relaxed">
                     {tpl.description ? tpl.description : `Mẫu giao diện chuyên nghiệp cho ${tpl.name}. Tùy chỉnh nội dung chỉ với vài thao tác.`}
                   </p>
+                  {tpl.plans && tpl.plans.length > 0 && (
+                    <div className="mt-3 flex items-center gap-1.5 text-[11px] font-medium text-rose-400" title="Chỉ dành cho các gói cước được cấp quyền">
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-3.5 h-3.5">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                      </svg>
+                      <span>Plan: {tpl.plans.slice().sort((a: any, b: any) => (Number(a.price) || 0) - (Number(b.price) || 0)).map((p: any) => p.name).join(", ")} mới có thể sử dụng</span>
+                    </div>
+                  )}
                 </div>
 
                 {/* Footer Buttons */}
@@ -340,11 +353,13 @@ export default function Dashboard() {
                     </button>
                     <button
                       type="button"
-                      className={`px-4 py-1.5 text-xs font-semibold rounded-xl transition ${
+                      className={
                         isLimitReached
-                          ? "cursor-not-allowed border border-white/10 bg-white/5 text-white/35"
-                          : "primary-btn"
-                      }`}
+                          ? "px-4 py-1.5 text-xs font-semibold rounded-xl transition cursor-not-allowed border border-white/10 bg-white/5 text-white/35"
+                          : tpl.plans && tpl.plans.length > 0 && user && user.role !== 'Admin' && (!user.subscription || !tpl.plans.some((p: any) => p.id === user.subscription.plan_id))
+                            ? "ghost-btn px-3.5 py-1.5 text-xs border-white/15 hover:bg-white/10"
+                            : "px-4 py-1.5 text-xs font-semibold rounded-xl transition primary-btn"
+                      }
                       disabled={isLimitReached}
                       title={
                         isLimitReached
@@ -360,10 +375,14 @@ export default function Dashboard() {
                           alert(`Bạn đã hết lượt tạo Landing Page (${user?.landing_pages_count || 1}/${user?.landing_page_limit || 1} trang). Vui lòng gia hạn hoặc nâng cấp gói để tạo thêm!`);
                           return;
                         }
+                        if (tpl.plans && tpl.plans.length > 0 && user && user.role !== 'Admin' && (!user.subscription || !tpl.plans.some((p: any) => p.id === user.subscription.plan_id))) {
+                          navigate("/upgrade");
+                          return;
+                        }
                         navigate(`/templates?templateId=${tpl.id}&mode=create`);
                       }}
                     >
-                      {isLimitReached ? "Hết lượt tạo" : "Tạo"}
+                      {isLimitReached ? "Hết lượt tạo" : (tpl.plans && tpl.plans.length > 0 && user && user.role !== 'Admin' && (!user.subscription || !tpl.plans.some((p: any) => p.id === user.subscription.plan_id)) ? "Nâng cấp" : "Tạo")}
                     </button>
                   </div>
                 </div>

@@ -2,43 +2,45 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuthStore } from "../../store/authStore";
 import GoogleAuthButton from "../../components/common/GoogleAuthButton";
+import SEO from "../../components/common/SEO";
 
 export default function Login() {
   const navigate = useNavigate();
   const token = useAuthStore((s) => s.token);
   const login = useAuthStore((s) => s.login);
   const googleLogin = useAuthStore((s) => s.googleLogin);
+
   const loading = useAuthStore((s) => s.loading);
   const error = useAuthStore((s) => s.error);
 
-  useEffect(() => {
-    if (token) {
-      navigate("/", { replace: true });
-    }
-  }, [token, navigate]);
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(true);
 
-  async function onSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    await login({ email, password });
-    const token = useAuthStore.getState().token;
+  useEffect(() => {
     if (token) navigate("/");
-  }
+  }, [token, navigate]);
+
+  const onSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await login({ email, password }, rememberMe);
+    const currentToken = useAuthStore.getState().token;
+    if (currentToken) navigate("/");
+  };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4">
-      <div className="w-full max-w-md glass-panel-strong p-6 sm:p-8">
-        <div className="text-center">
-          <div className="text-3xl font-black tracking-tight text-white/95">
-            OriginD
+    <>
+      <SEO title="Đăng nhập" />
+      <div className="min-h-screen flex items-center justify-center px-4">
+        <div className="w-full max-w-md glass-panel-strong p-6 sm:p-8">
+          <div className="text-center">
+            <div className="text-3xl font-black tracking-tight text-white/95">
+              OriginD
+            </div>
+            <div className="mt-2 text-sm text-white/60">
+              Đăng nhập để bắt đầu
+            </div>
           </div>
-          <div className="mt-2 text-sm text-white/60">
-            Đăng nhập để bắt đầu
-          </div>
-        </div>
-
         <form className="mt-6 space-y-4" onSubmit={onSubmit}>
           <div>
             <label className="text-sm text-white/70">Email</label>
@@ -62,6 +64,21 @@ export default function Login() {
               placeholder="••••••••"
               required
             />
+            <div className="mt-3 flex items-center justify-between">
+              <label className="flex items-center space-x-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="w-4 h-4 rounded border-white/20 bg-white/5 text-violet-500 focus:ring-violet-500 focus:ring-offset-gray-900 cursor-pointer"
+                />
+                <span className="text-sm text-white/70 hover:text-white/90 transition-colors">Ghi nhớ đăng nhập</span>
+              </label>
+              
+              <Link to="/forgot-password" className="text-sm text-white/60 hover:text-white transition-colors">
+                Quên mật khẩu?
+              </Link>
+            </div>
           </div>
 
           {error ? (
@@ -104,6 +121,7 @@ export default function Login() {
         </form>
       </div>
     </div>
+    </>
   );
 }
 

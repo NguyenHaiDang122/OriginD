@@ -37,4 +37,9 @@ class Template extends Model
     {
         return $this->hasMany(LandingPage::class);
     }
+
+    public function plans()
+    {
+        return $this->belongsToMany(Plan::class);
+    }
 }

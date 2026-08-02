@@ -35,12 +35,19 @@ class TemplateScannerService
                 continue;
             }
 
-            $fields[] = [
+            $key = $node->getAttribute('data-field');
+            
+            // Deduplicate by key
+            if (isset($fields[$key])) {
+                continue;
+            }
 
-                'key' => $node->getAttribute('data-field'),
+            $fields[$key] = [
+
+                'key' => $key,
 
                 'label' => $node->getAttribute('data-label')
-                    ?: ucfirst(str_replace('.', ' ', $node->getAttribute('data-field'))),
+                    ?: ucfirst(str_replace('.', ' ', $key)),
 
                 'type' => $node->getAttribute('data-type') ?: 'text',
 
@@ -58,7 +65,7 @@ class TemplateScannerService
             ];
         }
 
-        return $fields;
+        return array_values($fields);
     }
 
     private function detectAttribute(DOMElement $node): string

@@ -7,21 +7,80 @@ use App\Models\Template;
 use DOMDocument;
 use DOMXPath;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
+use App\DTOs\RenderResult;
+use App\Support\LandingPageCacheKey;
+use App\Support\Metrics;
 
 class LandingPageRendererService
 {
-
-    public function render(LandingPage $page)
+    /**
+     * Get HTML from cache or build it. Handles fresh, stale, and rebuilds.
+     */
+    public function getOrBuildHtml(LandingPage $page, bool $forceRebuild = false): RenderResult
     {
         if ($page->isExpired()) {
-            return $this->renderExpiredPage($page);
+            return new RenderResult($this->renderExpiredPage($page), false, false, false);
         }
-        return $this->renderPreview($page->template, $page->data ?? []);
+
+        $freshKey = LandingPageCacheKey::fresh($page->id);
+        $staleKey = LandingPageCacheKey::stale($page->id);
+
+        if (!$forceRebuild && ($html = Cache::get($freshKey)) !== null) {
+            Metrics::increment('landing_page.cache_hit');
+            return new RenderResult($html, false, true, false);
+        }
+
+        Metrics::increment('landing_page.cache_miss');
+
+        if (!$forceRebuild && ($staleHtml = Cache::get($staleKey)) !== null) {
+            Metrics::increment('landing_page.cache_stale_hit');
+            return new RenderResult($staleHtml, true, true, false);
+        }
+
+        // Lock to build (Atomic Lock)
+        $lockKey = LandingPageCacheKey::lock($page->id);
+        
+        try {
+            return Cache::lock($lockKey, 5)->block(2, function () use ($page, $freshKey, $staleKey) {
+                // Double check inside lock
+                if (($html = Cache::get($freshKey)) !== null) {
+                    return new RenderResult($html, false, true, false);
+                }
+
+                $startTime = microtime(true);
+                $html = $this->renderPreview($page->template, $page->data ?? []);
+                $buildTime = microtime(true) - $startTime;
+                
+                Metrics::histogram('landing_page.build_time', round($buildTime * 1000, 2));
+
+                $ttl = $page->expires_at ? now()->diffInSeconds($page->expires_at) : (60 * 60 * 24 * 30);
+                $staleTtl = $ttl + 3600; // Stale cache lives 1 hour longer
+
+                if ($ttl > 0) {
+                    Cache::put($freshKey, $html, $ttl);
+                    Cache::put($staleKey, $html, $staleTtl);
+                }
+
+                return new RenderResult($html, false, false, true);
+            });
+        } catch (\Throwable $e) {
+            Log::error("DOM_Build_Error: " . $e->getMessage(), ['id' => $page->id]);
+            
+            // Graceful fallback
+            if (($staleHtml = Cache::get($staleKey)) !== null) {
+                Metrics::increment('landing_page.cache_fallback');
+                return new RenderResult($staleHtml, true, true, false);
+            }
+            
+            throw $e;
+        }
     }
 
     public function renderExpiredPage(?LandingPage $page = null): string
     {
-        $frontendUrl = rtrim(env('FRONTEND_URL', 'http://localhost:5173'), '/');
+        $frontendUrl = rtrim(config('app.frontend_url'), '/');
         $profileUrl = $frontendUrl . '/profile';
 
         return <<<HTML
@@ -243,7 +302,14 @@ HTML;
 
         $outputHtml = $dom->saveHTML();
 
-        return html_entity_decode($outputHtml, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        // Decode các thực thể HTML (ví dụ: tiếng Việt) nhưng KHÔNG decode các ký tự dễ gây lỗi XSS (<, >, ", ', &)
+        return preg_replace_callback('/&#(?:x[a-fA-F0-9]+|[0-9]+);|&[a-zA-Z0-9]+;/', function($matches) {
+            $entity = $matches[0];
+            if (in_array(strtolower($entity), ['&lt;', '&gt;', '&quot;', '&amp;', '&apos;'])) {
+                return $entity;
+            }
+            return html_entity_decode($entity, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        }, $outputHtml);
     }
 
 }

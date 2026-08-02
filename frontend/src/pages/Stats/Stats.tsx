@@ -1,17 +1,19 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+
 import GlassCard from "../../components/common/GlassCard";
 import PageSection from "../../components/common/PageSection";
 import { useAuthStore } from "../../store/authStore";
 import {
   deleteLandingPage,
   fetchMyLandingPages,
+  fetchLandingPage,
   updateLandingPage,
 } from "../../services/landingPageApi";
 import { previewTemplate } from "../../services/landingPageRenderApi";
 import { PAGE_BASE_URL } from "../../config/api";
 import { renewService } from "../../services/depositApi";
 import DepositModal from "../../components/common/DepositModal";
+import { uploadImage } from "../../services/uploadApi";
 
 function FakeStatRow({
   label,
@@ -31,10 +33,16 @@ function FakeStatRow({
 export default function Stats() {
   const token = useAuthStore((s) => s.token);
   const user = useAuthStore((s) => s.user) as any;
-  const isPro = user?.plan?.slug === "pro" || user?.plan?.name?.toLowerCase().includes("pro") || user?.role === "Admin" || (user?.roles && user.roles.some((r: any) => r.name === "Admin"));
 
-  const [pages, setPages] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
+
+  const [pages, setPages] = useState<any[]>(() => {
+    try {
+      const raw = sessionStorage.getItem("cached_user_pages");
+      if (raw) return JSON.parse(raw);
+    } catch(e) {}
+    return [];
+  });
+  const [loading, setLoading] = useState(pages.length === 0);
   const [error, setError] = useState<string | null>(null);
 
   const [selectedPage, setSelectedPage] = useState<any | null>(null);
@@ -53,6 +61,8 @@ export default function Stats() {
   const [renewLoadingId, setRenewLoadingId] = useState<number | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const [uploadingFields, setUploadingFields] = useState<Record<string, boolean>>({});
 
   const [renewTargetPage, setRenewTargetPage] = useState<any | null>(null);
   const [renewMonths, setRenewMonths] = useState<number>(1);
@@ -84,12 +94,15 @@ export default function Stats() {
   }
 
   async function loadPages() {
-    setLoading(true);
+    if (pages.length === 0) setLoading(true);
     setError(null);
     try {
       const res = await fetchMyLandingPages(token);
       const list = Array.isArray((res as any)?.data) ? (res as any).data : Array.isArray(res) ? res : [];
       setPages(list ?? []);
+      try {
+        sessionStorage.setItem("cached_user_pages", JSON.stringify(list ?? []));
+      } catch (e) {}
       if (list?.length > 0 && !selectedPage) {
         setSelectedPage(list[0]);
       }
@@ -154,14 +167,41 @@ export default function Stats() {
     return String(val);
   };
 
+  const handleImageUpload = async (file: File, fieldKey: string) => {
+    if (!token) {
+      alert("Bạn cần đăng nhập để tải ảnh lên");
+      return;
+    }
+    setUploadingFields(s => ({ ...s, [fieldKey]: true }));
+    try {
+      const res = await uploadImage(file, token);
+      if (res.success && res.url) {
+        setEditValues((s) => ({ ...s, [fieldKey]: res.url as string }));
+      }
+    } catch (err: any) {
+      alert(err.message || "Lỗi tải ảnh");
+    } finally {
+      setUploadingFields(s => ({ ...s, [fieldKey]: false }));
+    }
+  };
+
   async function handleOpenEdit(p: any) {
-    setEditingPage(p);
-    setEditTitle(p.title ?? "");
-    setEditSlug(p.slug ?? "");
-    setEditStatus(p.status ?? "draft");
+    let targetPage = p;
+    if (!targetPage.template?.fields || targetPage.template.fields.length === 0) {
+      try {
+        const res = await fetchLandingPage(p.id, token);
+        if (res?.data) {
+          targetPage = res.data;
+        }
+      } catch (err) {}
+    }
+    setEditingPage(targetPage);
+    setEditTitle(targetPage.title ?? "");
+    setEditSlug(targetPage.slug ?? "");
+    setEditStatus(targetPage.status ?? "draft");
     const cleaned: Record<string, any> = {};
-    if (typeof p.data === "object" && p.data !== null) {
-      for (const [k, v] of Object.entries(p.data)) {
+    if (typeof targetPage.data === "object" && targetPage.data !== null) {
+      for (const [k, v] of Object.entries(targetPage.data)) {
         cleaned[k] = getCleanScalar(v);
       }
     }
@@ -278,7 +318,7 @@ export default function Stats() {
                     {editingPage?.status === "published" ? (
                       <div className="mt-1 flex items-center gap-2 rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-3 text-sm font-semibold text-emerald-300">
                         <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-                        <span>🟢 Thành công (Không thể về Draft)</span>
+                        <span>Xuất Bản Thành Công</span>
                       </div>
                     ) : (
                       <select
@@ -286,8 +326,8 @@ export default function Stats() {
                         onChange={(e) => setEditStatus(e.target.value)}
                         className="mt-1 w-full rounded-xl border border-white/15 bg-slate-900 px-4 py-3 text-white outline-none focus:border-white/30"
                       >
-                        <option value="draft">📝 Draft (Bản nháp - Đang chỉnh sửa)</option>
-                        <option value="published">🚀 Xuất bản (Hoạt động chính thức)</option>
+                        <option value="draft">Draft (Bản nháp - Đang chỉnh sửa)</option>
+                        <option value="published">Xuất bản (Hoạt động chính thức)</option>
                       </select>
                     )}
                   </div>
@@ -320,6 +360,43 @@ export default function Stats() {
                               }
                               className="mt-1 w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-white outline-none focus:border-white/30"
                             />
+                          ) : field.type?.toLowerCase() === "image" || (field as any).html_tag?.toLowerCase() === "img" ? (
+                            <div className="mt-1 flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                              <input
+                                type="text"
+                                value={v}
+                                onChange={(e) =>
+                                  setEditValues((s) => ({ ...s, [field.key]: e.target.value }))
+                                }
+                                className="w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-white placeholder:text-white/40 outline-none focus:border-white/30"
+                                placeholder="Nhập link ảnh hoặc tải lên..."
+                              />
+                              <div className="relative shrink-0">
+                                <input 
+                                  type="file" 
+                                  accept="image/jpeg,image/png,image/jpg,image/gif,image/webp"
+                                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                                  disabled={uploadingFields[field.key]}
+                                  onChange={(e) => {
+                                    if (e.target.files && e.target.files[0]) {
+                                      handleImageUpload(e.target.files[0], field.key);
+                                    }
+                                    e.target.value = ''; // reset
+                                  }}
+                                />
+                                <button 
+                                  type="button" 
+                                  disabled={uploadingFields[field.key]}
+                                  className="h-[46px] px-4 inline-flex items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/5 text-sm font-semibold text-white/90 hover:bg-white/15 hover:border-white/30 transition shadow-sm disabled:opacity-50 relative z-0"
+                                >
+                                  {uploadingFields[field.key] ? (
+                                    <><span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" /> Đang tải...</>
+                                  ) : (
+                                    <>Upload ảnh</>
+                                  )}
+                                </button>
+                              </div>
+                            </div>
                           ) : (
                             <input
                               type="text"
@@ -399,11 +476,13 @@ export default function Stats() {
                       <div className="absolute top-0 left-1/2 -translate-x-1/2 h-5 w-28 bg-gray-900 rounded-b-2xl z-10 flex items-center justify-center">
                         <div className="h-1.5 w-12 bg-gray-800 rounded-full" />
                       </div>
-                      <iframe
-                        className="w-full h-[640px] rounded-[36px] bg-white transition-all duration-300 pt-5"
-                        srcDoc={editPreviewHtml}
-                        title="Live Preview Mobile"
-                      />
+                      <div className="w-full h-[640px] rounded-[36px] overflow-hidden bg-white transition-all duration-300" style={{ transform: 'translateZ(0)', WebkitMaskImage: '-webkit-radial-gradient(white, black)' }}>
+                        <iframe
+                          className="w-full h-full border-0"
+                          srcDoc={editPreviewHtml}
+                          title="Live Preview Mobile"
+                        />
+                      </div>
                     </div>
                   </div>
                 )}
@@ -617,23 +696,7 @@ export default function Stats() {
 
             </GlassCard>
 
-            {/* Khung xem trước cấu hình trường dữ liệu (Data Inspector) */}
-            {selectedPage && selectedPage.data ? (
-              <div className="mt-5">
-                <GlassCard title="Dữ liệu đã nhập (Data Fields)" subtitle="Các thông tin được lưu trên Landing Page này">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[220px] overflow-y-auto pr-1">
-                    {Object.entries(selectedPage.data).map(([key, value], idx) => (
-                      <div key={idx} className="rounded-2xl border border-white/10 bg-white/5 p-3">
-                        <div className="text-xs font-semibold text-violet-300 uppercase tracking-wider">{key}</div>
-                        <div className="mt-1 text-xs text-white/80 truncate font-mono">
-                          {typeof value === "object" ? JSON.stringify(value) : String(value)}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </GlassCard>
-              </div>
-            ) : null}
+
           </div>
         </div>
       </PageSection>

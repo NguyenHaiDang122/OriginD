@@ -21,8 +21,17 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\CustomDomainMiddleware::class,
         ]);
 
+        $middleware->api(prepend: [
+            \App\Http\Middleware\CheckMaintenanceMode::class,
+        ]);
+
         $middleware->alias([
             'role' => RoleMiddleware::class,
+        ]);
+
+        $middleware->validateCsrfTokens(except: [
+            'api/upload-image',
+            'api/sepay-webhook',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

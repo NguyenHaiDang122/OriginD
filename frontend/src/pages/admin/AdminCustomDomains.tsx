@@ -7,11 +7,8 @@ import {
   deleteAdminCustomDomain,
   type CustomDomainItem,
 } from "../../services/customDomainApi";
-import { useNavigate } from "react-router-dom";
-
 export default function AdminCustomDomains() {
   const token = useAuthStore((s) => s.token);
-  const navigate = useNavigate();
 
   const [domains, setDomains] = useState<CustomDomainItem[]>([]);
   const [loading, setLoading] = useState(false);

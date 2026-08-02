@@ -8,10 +8,12 @@ export default function Footer() {
       <div className="flex flex-col items-center justify-between gap-6 lg:flex-row text-center lg:text-left">
         {/* Left: Brand, Tagline, Phone & Email */}
         <div className="flex flex-col items-center lg:items-start gap-2.5 shrink-0 max-w-full">
-          <div className="flex items-center gap-1.5 sm:gap-2 cursor-pointer whitespace-nowrap overflow-hidden" onClick={() => navigate("/")}>
-            <img src="https://i.imgur.com/PIrOjbx.png" alt="OriginD Logo" className="h-5 w-5 sm:h-6 sm:w-6 rounded-lg object-cover shadow-md shrink-0" />
-            <span className="font-bold text-white/90 text-sm tracking-wide shrink-0">OriginD</span>
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-2" onClick={() => navigate("/")}>
+            <img src="/logo.png" alt="OriginD Logo" className="h-5 w-5 sm:h-6 sm:w-6 rounded-lg object-cover shadow-md shrink-0 cursor-pointer" />
+            <span className="text-white font-bold text-base sm:text-lg tracking-tight cursor-pointer">OriginD</span>
             <span className="text-white/40 text-[9px] sm:text-xs truncate">| Nền tảng Kiến tạo Website & Landing Page Siêu Tốc</span>
+          </div>
           </div>
 
           <div className="flex flex-wrap items-center justify-center lg:justify-start gap-4 text-[11px] sm:text-xs text-white/80">

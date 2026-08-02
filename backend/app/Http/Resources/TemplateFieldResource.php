@@ -23,6 +23,8 @@ class TemplateFieldResource extends JsonResource
             'required' => $this->required,
 
             'sort_order' => $this->sort_order,
+            
+            'html_tag' => $this->html_tag,
         ];
     }
 }

@@ -49,13 +49,13 @@ class DepositController extends Controller
 
         $sepayFields = null;
         $sepayUrl = null;
-        $merchantId = env('SEPAY_MERCHANT_ID');
-        $secretKey = env('SEPAY_SECRET_KEY');
-        $sepayEnv = env('SEPAY_ENV', 'sandbox');
+        $merchantId = config('services.sepay.merchant_id');
+        $secretKey = config('services.sepay.secret_key');
+        $sepayEnv = config('services.sepay.env');
 
         if (!empty($merchantId) && !empty($secretKey)) {
             try {
-                $frontendUrl = rtrim($request->header('origin') ?? env('FRONTEND_URL', 'http://localhost:5173'), '/');
+                $frontendUrl = rtrim($request->header('origin') ?? config('app.frontend_url'), '/');
                 $sepay = new \SePay\SePayClient($merchantId, $secretKey, $sepayEnv);
                 $checkoutData = \SePay\Builders\CheckoutBuilder::make()
                     ->currency('VND')
@@ -101,8 +101,18 @@ class DepositController extends Controller
     public function sepayWebhook(Request $request)
     {
         try {
+            // 1. Webhook Authorization Check
+            $webhookToken = config('services.sepay.webhook_token') ?: config('services.sepay.api_token');
+            if (!empty($webhookToken)) {
+                $authHeader = $request->header('Authorization', '');
+                $apikeyHeader = $request->header('Apikey', '');
+                if (!str_contains($authHeader, $webhookToken) && $apikeyHeader !== $webhookToken && $request->bearerToken() !== $webhookToken && $request->input('token') !== $webhookToken) {
+                    return response()->json(['success' => false, 'message' => 'Unauthorized Webhook'], 403);
+                }
+            }
+
             $content = $request->input('content') ?? $request->input('description') ?? $request->input('order_invoice_number') ?? $request->input('code') ?? '';
-            $amount = $request->input('transferAmount') ?? $request->input('amount') ?? $request->input('order_amount') ?? 0;
+            $amount = floatval($request->input('transferAmount') ?? $request->input('amount') ?? $request->input('order_amount') ?? 0);
             $status = strtoupper($request->input('order_status') ?? $request->input('status') ?? 'SUCCESS');
 
             if (in_array($status, ['SUCCESS', 'PAID', 'CAPTURED', 'COMPLETED', 'PAID_SUCCESS']) || $request->input('transferType') === 'in' || !empty($content)) {
@@ -111,14 +121,25 @@ class DepositController extends Controller
                 });
 
                 if ($deposit && $deposit->status === 'pending') {
-                    $deposit->status = 'approved';
-                    $deposit->save();
-
-                    $user = $deposit->user;
-                    if ($user) {
-                        $user->balance += $deposit->amount;
-                        $user->save();
+                    // 2. Amount Validation Check
+                    if ($amount < floatval($deposit->amount)) {
+                        return response()->json(['success' => false, 'message' => 'Amount too low']);
                     }
+
+                    // 3. Race Condition Fix: Use DB transaction and pessimistic locking
+                    \Illuminate\Support\Facades\DB::transaction(function () use ($deposit) {
+                        $lockedDeposit = Deposit::where('id', $deposit->id)->lockForUpdate()->first();
+                        if ($lockedDeposit && $lockedDeposit->status === 'pending') {
+                            $lockedDeposit->status = 'approved';
+                            $lockedDeposit->save();
+
+                            $user = $lockedDeposit->user;
+                            if ($user) {
+                                $user->balance += $lockedDeposit->amount;
+                                $user->save();
+                            }
+                        }
+                    });
                 }
             }
 
@@ -142,10 +163,10 @@ class DepositController extends Controller
                 ]);
             }
 
-            $merchantId = env('SEPAY_MERCHANT_ID');
-            $secretKey = env('SEPAY_SECRET_KEY');
-            $apiToken = env('SEPAY_API_TOKEN', $secretKey);
-            $sepayEnv = env('SEPAY_ENV', 'sandbox');
+            $merchantId = config('services.sepay.merchant_id');
+            $secretKey = config('services.sepay.secret_key');
+            $apiToken = config('services.sepay.api_token') ?: $secretKey;
+            $sepayEnv = config('services.sepay.env');
 
             // 1. Check SePay Payment Gateway Orders API
             if (!empty($merchantId) && !empty($secretKey)) {
@@ -158,19 +179,26 @@ class DepositController extends Controller
                         $inv = is_array($o) ? ($o['order_invoice_number'] ?? $o['code'] ?? '') : ($o->order_invoice_number ?? $o->code ?? '');
                         $st = strtoupper(is_array($o) ? ($o['order_status'] ?? $o['status'] ?? '') : ($o->order_status ?? $o->status ?? ''));
                         if (($inv === $deposit->code || str_contains($inv, $deposit->code)) && in_array($st, ['SUCCESS', 'PAID', 'CAPTURED', 'COMPLETED', 'PAID_SUCCESS'])) {
-                            $deposit->status = 'approved';
-                            $deposit->save();
+                            \Illuminate\Support\Facades\DB::transaction(function () use ($deposit) {
+                                $lockedDeposit = Deposit::where('id', $deposit->id)->lockForUpdate()->first();
+                                if ($lockedDeposit && $lockedDeposit->status === 'pending') {
+                                    $lockedDeposit->status = 'approved';
+                                    $lockedDeposit->save();
 
-                            $user = $deposit->user;
-                            if ($user) {
-                                $user->balance += $deposit->amount;
-                                $user->save();
-                            }
+                                    $user = $lockedDeposit->user;
+                                    if ($user) {
+                                        $user->balance += $lockedDeposit->amount;
+                                        $user->save();
+                                    }
+                                }
+                            });
+                            
+                            $deposit->refresh();
 
                             return response()->json([
                                 'status' => 'approved',
                                 'message' => 'SePay Payment Gateway xác nhận đã thanh toán thành công! Đã cộng ' . number_format($deposit->amount) . ' đ vào ví.',
-                                'balance' => $user->balance
+                                'balance' => $deposit->user ? $deposit->user->balance : 0
                             ]);
                         }
                     }
@@ -205,19 +233,26 @@ class DepositController extends Controller
                             \Illuminate\Support\Facades\Log::info("Checking BankHub: Content=[$content] vs Code=[{$deposit->code}], AmountIn=[$amountIn] vs DepositAmount=[" . floatval($deposit->amount) . "]");
 
                             if (stripos($content, $deposit->code) !== false && !empty($content) && $amountIn >= floatval($deposit->amount)) {
-                                $deposit->status = 'approved';
-                                $deposit->save();
+                                \Illuminate\Support\Facades\DB::transaction(function () use ($deposit) {
+                                    $lockedDeposit = Deposit::where('id', $deposit->id)->lockForUpdate()->first();
+                                    if ($lockedDeposit && $lockedDeposit->status === 'pending') {
+                                        $lockedDeposit->status = 'approved';
+                                        $lockedDeposit->save();
 
-                                $user = $deposit->user;
-                                if ($user) {
-                                    $user->balance += $deposit->amount;
-                                    $user->save();
-                                }
+                                        $user = $lockedDeposit->user;
+                                        if ($user) {
+                                            $user->balance += $lockedDeposit->amount;
+                                            $user->save();
+                                        }
+                                    }
+                                });
+                                
+                                $deposit->refresh();
 
                                 return response()->json([
                                     'status' => 'approved',
                                     'message' => 'SePay BankHub xác nhận bạn đã chuyển khoản thành công! Đã cộng ' . number_format($deposit->amount) . ' đ vào tài khoản.',
-                                    'balance' => $user->balance
+                                    'balance' => $deposit->user ? $deposit->user->balance : 0
                                 ]);
                             }
                         }

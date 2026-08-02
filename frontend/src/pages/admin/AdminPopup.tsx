@@ -136,7 +136,7 @@ export default function AdminPopup() {
                 saving ? "opacity-70 cursor-not-allowed" : ""
               }`}
             >
-              {saving ? "Đang lưu..." : "Lưu cài đặt"}
+              {saving ? "Đang lưu..." : "Lưu cài đặt thông báo"}
             </button>
           </div>
         </div>

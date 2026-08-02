@@ -24,6 +24,8 @@ export default function AdminPlans() {
   const [landingPageLimit, setLandingPageLimit] = useState("10");
   const [customDomain, setCustomDomain] = useState(false);
   const [premiumTemplates, setPremiumTemplates] = useState(false);
+  const [isPopular, setIsPopular] = useState(false);
+  const [isHidden, setIsHidden] = useState(false);
   const [creating, setCreating] = useState(false);
 
   // Form Edit States
@@ -36,6 +38,8 @@ export default function AdminPlans() {
   const [editLimit, setEditLimit] = useState("10");
   const [editDomain, setEditDomain] = useState(false);
   const [editPremium, setEditPremium] = useState(false);
+  const [editPopular, setEditPopular] = useState(false);
+  const [editHidden, setEditHidden] = useState(false);
   const [savingEdit, setSavingEdit] = useState(false);
 
   const loadPlans = async () => {
@@ -77,6 +81,8 @@ export default function AdminPlans() {
         landing_page_limit: Number(landingPageLimit) || 1,
         custom_domain: customDomain,
         premium_templates: premiumTemplates,
+        is_popular: isPopular,
+        is_hidden: isHidden,
       };
 
       await createAdminPlan(token, payload);
@@ -89,6 +95,8 @@ export default function AdminPlans() {
       setLandingPageLimit("10");
       setCustomDomain(false);
       setPremiumTemplates(false);
+      setIsPopular(false);
+      setIsHidden(false);
       loadPlans();
     } catch (err: any) {
       setError(err?.response?.data?.message || err?.message || "Tạo gói thất bại");
@@ -107,6 +115,8 @@ export default function AdminPlans() {
     setEditLimit(String(p.landing_page_limit));
     setEditDomain(p.custom_domain);
     setEditPremium(p.premium_templates);
+    setEditPopular(p.is_popular || false);
+    setEditHidden(p.is_hidden || false);
   };
 
   const cancelEdit = () => {
@@ -129,6 +139,8 @@ export default function AdminPlans() {
         landing_page_limit: Number(editLimit) || 1,
         custom_domain: editDomain,
         premium_templates: editPremium,
+        is_popular: editPopular,
+        is_hidden: editHidden,
       };
 
       await updateAdminPlan(token, id, payload);
@@ -144,7 +156,7 @@ export default function AdminPlans() {
 
   const handleDelete = async (p: PlanResource) => {
     if (!token) return;
-    if (["free", "starter"].includes(p.slug.toLowerCase())) {
+    if (p.slug.toLowerCase() === "free") {
       alert("Gói mặc định của hệ thống không thể xóa.");
       return;
     }
@@ -265,6 +277,26 @@ export default function AdminPlans() {
               <span>Cho phép kết nối Tên Miền Riêng (Custom Domain)</span>
             </label>
 
+            <label className="inline-flex items-center gap-2 cursor-pointer text-sm text-white/80 select-none">
+              <input
+                type="checkbox"
+                checked={isPopular}
+                onChange={(e) => setIsPopular(e.target.checked)}
+                className="rounded border-white/20 bg-white/10 text-violet-600 focus:ring-0"
+              />
+              <span className="text-violet-300 font-semibold">Gói Nổi Bật (Viền Tím OriginD)</span>
+            </label>
+
+            <label className="inline-flex items-center gap-2 cursor-pointer text-sm text-white/80 select-none">
+              <input
+                type="checkbox"
+                checked={isHidden}
+                onChange={(e) => setIsHidden(e.target.checked)}
+                className="rounded border-white/20 bg-white/10 text-rose-600 focus:ring-0"
+              />
+              <span className="text-white/60">Ẩn Gói Cước (User không thấy)</span>
+            </label>
+
             <button
               type="submit"
               disabled={creating}
@@ -288,7 +320,7 @@ export default function AdminPlans() {
           <div className="space-y-4">
             {plans.map((p) => {
               const isEditing = editingId === p.id;
-              const isDefault = ["free", "starter"].includes(p.slug.toLowerCase());
+              const isDefault = p.slug.toLowerCase() === "free";
 
               return (
                 <div
@@ -361,6 +393,25 @@ export default function AdminPlans() {
                             <span>Tên miền riêng</span>
                           </label>
 
+                          <label className="inline-flex items-center gap-2 cursor-pointer text-sm text-white/80 select-none">
+                            <input
+                              type="checkbox"
+                              checked={editPopular}
+                              onChange={(e) => setEditPopular(e.target.checked)}
+                              className="rounded border-white/20 bg-white/10 text-violet-600 focus:ring-0"
+                            />
+                            <span className="text-violet-300 font-semibold">Gói Nổi Bật (Viền Tím)</span>
+                          </label>
+
+                          <label className="inline-flex items-center gap-2 cursor-pointer text-sm text-white/80 select-none">
+                            <input
+                              type="checkbox"
+                              checked={editHidden}
+                              onChange={(e) => setEditHidden(e.target.checked)}
+                              className="rounded border-white/20 bg-white/10 text-rose-600 focus:ring-0"
+                            />
+                            <span className="text-white/60">Ẩn Gói Cước</span>
+                          </label>
                         </div>
 
                         <div className="flex items-center gap-2">
@@ -407,6 +458,18 @@ export default function AdminPlans() {
                           <div>
                             Tên miền riêng: <strong className={p.custom_domain ? "text-emerald-300" : "text-white/40"}>{p.custom_domain ? "Cho phép" : "Không"}</strong>
                           </div>
+                          {p.is_popular && (
+                            <>
+                              <div>•</div>
+                              <div className="text-violet-400 font-bold">★ Nổi Bật</div>
+                            </>
+                          )}
+                          {p.is_hidden && (
+                            <>
+                              <div>•</div>
+                              <div className="text-rose-400 font-bold italic">Bị Ẩn</div>
+                            </>
+                          )}
                         </div>
                       </div>
 

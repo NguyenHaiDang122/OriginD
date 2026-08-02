@@ -45,7 +45,15 @@ class CustomDomainMiddleware
                 return response($renderer->renderExpiredPage($page), 403)->header('Content-Type', 'text/html');
             }
 
-            return response($renderer->render($page))->header('Content-Type', 'text/html');
+            $result = $renderer->getOrBuildHtml($page);
+            
+            if ($result->isStale) {
+                if (\Illuminate\Support\Facades\Cache::add(\App\Support\LandingPageCacheKey::rebuilding($page->id), true, 60)) {
+                    dispatch(new \App\Jobs\BuildLandingPageCacheJob($page->id));
+                }
+            }
+
+            return response($result->html)->header('Content-Type', 'text/html');
         }
 
         // Custom domain not connected or not configured

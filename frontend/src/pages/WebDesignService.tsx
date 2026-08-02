@@ -1,6 +1,41 @@
 import { useState, useEffect } from "react";
 import NeuronNetwork from "../components/ui/NeuronNetwork";
 import { ExternalLink, Code2, Paintbrush, Rocket, Search, ChevronRight, ChevronLeft, Sparkles } from "lucide-react";
+import SEO from "../components/common/SEO";
+
+function TypewriterText({ text, startDelay = 0, delay = 40, isActive = false, textClassName = "" }: { text: string, startDelay?: number, delay?: number, isActive?: boolean, textClassName?: string }) {
+  const [displayedText, setDisplayedText] = useState("");
+  
+  useEffect(() => {
+    if (!isActive) {
+      setDisplayedText("");
+      return;
+    }
+    
+    let currentIdx = 0;
+    let intervalId: any;
+    
+    const timeoutId = setTimeout(() => {
+      intervalId = setInterval(() => {
+        setDisplayedText(text.slice(0, currentIdx + 1));
+        currentIdx++;
+        if (currentIdx >= text.length) clearInterval(intervalId);
+      }, delay);
+    }, startDelay);
+    
+    return () => {
+      clearTimeout(timeoutId);
+      clearInterval(intervalId);
+    };
+  }, [text, delay, startDelay, isActive]);
+  
+  return (
+    <span>
+      <span className={textClassName}>{displayedText}</span>
+      <span className="ml-0.5 text-violet-400 font-bold animate-pulse" style={{ animationDuration: '1s' }}>_</span>
+    </span>
+  );
+}
 
 export default function WebDesignService() {
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -36,6 +71,7 @@ export default function WebDesignService() {
       onClick={handlePageClick}
       className={`relative min-h-screen w-full text-white overflow-hidden flex flex-col group bg-[#0b1221] transition-opacity duration-1000 cursor-pointer ${mounted ? 'opacity-100' : 'opacity-0'}`}
     >
+      <SEO title="Thiết Kế Website Theo Yêu Cầu Chuyên Nghiệp" />
       
       {/* Nền Nơ-ron trượt toàn màn hình */}
       <div 
@@ -80,16 +116,22 @@ export default function WebDesignService() {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-violet-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-violet-500"></span>
               </span>
-              Dịch Vụ Thiết Kế Khởi Đầu
+              Dịch Vụ Thiết Kế Theo Yêu Cầu
             </div>
           </div>
           
-          <h1 className={`text-3xl sm:text-5xl md:text-6xl font-black mb-6 tracking-tight bg-clip-text text-transparent bg-gradient-to-b from-white to-white/60 text-center px-4 max-w-5xl leading-tight transition-all duration-700 delay-500 ${mounted && currentSlide === 0 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-            Website & Landing Page Theo Yêu Cầu
+          <h1 className={`text-3xl sm:text-5xl md:text-6xl font-black mb-6 tracking-tight text-center px-4 max-w-5xl leading-tight transition-all duration-700 delay-500 ${mounted && currentSlide === 0 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+            <TypewriterText 
+              text="Website & Landing Page Theo Yêu Cầu" 
+              isActive={mounted && currentSlide === 0} 
+              startDelay={800}
+              delay={50}
+              textClassName="bg-clip-text text-transparent bg-gradient-to-b from-white to-white/60"
+            />
           </h1>
           
           <p className={`text-sm sm:text-lg text-white/70 max-w-3xl mx-auto leading-relaxed mb-10 text-center px-4 transition-all duration-700 delay-700 ${mounted && currentSlide === 0 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-            Biến ý tưởng của bạn thành hiện thực với các giải pháp website tốc độ cao, giao diện độc quyền và tối ưu hóa chuyển đổi. Chúng tôi đồng hành cùng bạn trên mọi chặng đường phát triển trực tuyến.
+            Biến ý tưởng của bạn thành hiện thực với các giải pháp website tốc độ cao, giao diện độc quyền và tối ưu hóa chuyển đổi. Chúng tôi luôn đồng hành cùng bạn trên mọi chặng đường phát triển trực tuyến.
           </p>
           
           <div className={`transition-all duration-700 delay-1000 ${mounted && currentSlide === 0 ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-8 scale-95'}`}>

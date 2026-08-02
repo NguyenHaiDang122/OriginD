@@ -1,10 +1,12 @@
 import axios from "axios";
-import { API_BASE_URL } from "../config/api";
+import { API_BASE_URL , attachMaintenanceInterceptor } from "../config/api";
 import { useAuthStore } from "../store/authStore";
 
 const api = axios.create({
   baseURL: API_BASE_URL,
 });
+
+attachMaintenanceInterceptor(api);
 
 api.interceptors.request.use((config) => {
   const token = useAuthStore.getState().token;
@@ -33,7 +35,12 @@ export type AdminStatistics = {
   }>;
 };
 
-export const fetchAdminStatistics = async () => {
-  const response = await api.get<AdminStatistics>("/admin/statistics");
+export const fetchAdminStatistics = async (month?: string, chartFilter?: string) => {
+  const params = new URLSearchParams();
+  if (month) params.append("month", month);
+  if (chartFilter) params.append("chart_filter", chartFilter);
+  
+  const url = `/admin/statistics?${params.toString()}`;
+  const response = await api.get<AdminStatistics>(url);
   return response.data;
 };

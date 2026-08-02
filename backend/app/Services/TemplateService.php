@@ -133,13 +133,17 @@ class TemplateService
                 ]);
             }
 
-            return $template->load('fields');
+            if ($request->has('plan_ids')) {
+                $template->plans()->sync($request->plan_ids);
+            }
+
+            return $template->load('fields', 'plans');
         });
     }
 
     public function show(Template $template)
     {
-        return $template->load('fields');
+        return $template->load('fields', 'plans');
     }
 
     public function update(Template $template, Request|array $input): Template
@@ -168,7 +172,13 @@ class TemplateService
 
         $template->update($updateData);
 
-        return $template->fresh()->load('fields');
+        if ($input instanceof Request && $input->has('plan_ids')) {
+            $template->plans()->sync($input->input('plan_ids'));
+        } elseif (is_array($input) && array_key_exists('plan_ids', $input)) {
+            $template->plans()->sync($input['plan_ids']);
+        }
+
+        return $template->fresh()->load('fields', 'plans');
     }
 
     public function delete(Template $template): void

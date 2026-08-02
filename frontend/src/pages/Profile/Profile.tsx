@@ -86,7 +86,7 @@ export default function Profile() {
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           <GlassCard title="Thông tin cơ bản" subtitle="Tài khoản & Ví tiền">
             <div className="flex items-center gap-4">
-              <img src="https://i.imgur.com/PIrOjbx.png" alt="Avatar" className="h-14 w-14 rounded-2xl object-cover shadow-lg" />
+              <img src="/logo.png" alt="Avatar" className="h-14 w-14 rounded-2xl object-cover shadow-lg" />
               <div>
                 <div className="text-white/95 font-bold text-lg">{user?.name ?? "Người dùng"}</div>
                 <div className="text-white/60 text-sm font-mono">{user?.email ?? "user@example.com"}</div>

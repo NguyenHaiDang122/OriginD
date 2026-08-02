@@ -8,7 +8,7 @@ export default function GlobalPopup() {
   const hasUserInteracted = useRef(false);
 
   const pathname = typeof window !== "undefined" ? window.location.pathname : "";
-  const isExcluded = pathname.startsWith("/templates") || pathname.startsWith("/dashboard") || pathname.startsWith("/admin") || pathname.startsWith("/profile");
+  const isExcluded = pathname.startsWith("/templates") || pathname.startsWith("/dashboard") || pathname.startsWith("/admin") || pathname.startsWith("/profile") || pathname.startsWith("/login") || pathname.startsWith("/register") || pathname.startsWith("/forgot-password");
 
   const [settings, setSettings] = useState<PopupSettings | null>(() => {
     if (isPreviewMode || isExcluded) return null;
@@ -16,51 +16,53 @@ export default function GlobalPopup() {
       const cached = localStorage.getItem("popup_cache");
       if (cached) return JSON.parse(cached);
     } catch {}
-    return null;
   });
 
-  const [isOpen, setIsOpen] = useState(() => {
-    if (isPreviewMode || isExcluded) return false;
-    try {
-      const cached = localStorage.getItem("popup_cache");
-      if (cached) {
-        const data = JSON.parse(cached);
-        const isActiveVal = data?.isActive as any;
-        const isActive = isActiveVal === true || isActiveVal === "true" || isActiveVal === 1 || isActiveVal === "1";
-        if (isActive) {
-          const hiddenUntil = localStorage.getItem("popup_hidden_until");
-          if (!hiddenUntil || Date.now() > parseInt(hiddenUntil, 10)) {
-            return true;
-          }
-        }
-      }
-    } catch {}
-    return false;
-  });
+  const [isOpen, setIsOpen] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
 
   useEffect(() => {
     if (isPreviewMode || isExcluded) return;
+
+    let timeoutId: ReturnType<typeof setTimeout>;
+
+    const checkAndShowPopup = (data: PopupSettings) => {
+      const isActiveVal = data.isActive as any;
+      const isActive = isActiveVal === true || isActiveVal === "true" || isActiveVal === 1 || isActiveVal === "1";
+      
+      if (isActive) {
+        const hiddenUntil = localStorage.getItem("popup_hidden_until");
+        if (!hiddenUntil || Date.now() > parseInt(hiddenUntil, 10)) {
+          setSettings(data);
+          if (!hasUserInteracted.current) {
+            // Delay 800ms to allow main thread to finish rendering first
+            timeoutId = setTimeout(() => {
+              if (!hasUserInteracted.current) setIsOpen(true);
+            }, 800);
+          }
+        } else {
+          if (!hasUserInteracted.current) setIsOpen(false);
+        }
+      } else {
+        if (!hasUserInteracted.current) setIsOpen(false);
+      }
+    };
+
+    // First try cache for fast appearance (but still delayed)
+    try {
+      const cached = localStorage.getItem("popup_cache");
+      if (cached) {
+        checkAndShowPopup(JSON.parse(cached));
+      }
+    } catch {}
 
     const fetchPopup = async () => {
       try {
         const data = await getPopupSettings();
         if (data) {
           localStorage.setItem("popup_cache", JSON.stringify(data));
-          
-          const isActiveVal = data.isActive as any;
-          const isActive = isActiveVal === true || isActiveVal === "true" || isActiveVal === 1 || isActiveVal === "1";
-          
-          if (isActive) {
-            const hiddenUntil = localStorage.getItem("popup_hidden_until");
-            if (!hiddenUntil || Date.now() > parseInt(hiddenUntil, 10)) {
-              setSettings(data);
-              if (!hasUserInteracted.current) setIsOpen(true);
-            } else {
-              if (!hasUserInteracted.current) setIsOpen(false);
-            }
-          } else {
-            if (!hasUserInteracted.current) setIsOpen(false);
-          }
+          // If we didn't show it from cache, show it now
+          checkAndShowPopup(data);
         }
       } catch (err) {
         console.error("Lỗi lấy thông báo:", err);
@@ -68,11 +70,17 @@ export default function GlobalPopup() {
     };
 
     fetchPopup();
+
+    return () => clearTimeout(timeoutId);
   }, [isPreviewMode]);
 
   const handleClose = () => {
     hasUserInteracted.current = true;
-    setIsOpen(false);
+    setIsClosing(true);
+    setTimeout(() => {
+      setIsOpen(false);
+      setIsClosing(false);
+    }, 200); // Wait for CSS animation
   };
 
   const handleHideForDuration = () => {
@@ -81,14 +89,18 @@ export default function GlobalPopup() {
     const hours = settings.hideDurationHours || 1;
     const hideUntil = Date.now() + hours * 3600 * 1000;
     localStorage.setItem("popup_hidden_until", hideUntil.toString());
-    setIsOpen(false);
+    setIsClosing(true);
+    setTimeout(() => {
+      setIsOpen(false);
+      setIsClosing(false);
+    }, 200); // Wait for CSS animation
   };
 
   if (isPreviewMode || isExcluded || !isOpen || !settings) return null;
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 overflow-y-auto animate-in fade-in duration-300">
-      <div className="relative w-full max-w-md rounded-3xl border border-white/20 bg-gradient-to-b from-slate-900/95 to-slate-950/95 p-6 sm:p-8 shadow-2xl text-white animate-in zoom-in-95 duration-300">
+    <div className={`fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 overflow-y-auto ${isClosing ? 'animate-backdrop-out' : 'animate-backdrop'}`}>
+      <div className={`relative w-full max-w-md rounded-3xl border border-white/20 bg-gradient-to-b from-slate-900/95 to-slate-950/95 p-6 sm:p-8 shadow-2xl text-white ${isClosing ? 'animate-popup-out' : 'animate-popup'}`}>
         
         <button
           onClick={handleClose}
@@ -100,7 +112,7 @@ export default function GlobalPopup() {
 
         <div className="flex flex-col sm:flex-row items-center gap-3 mb-6 border-b border-white/10 pb-6">
           <img 
-            src="https://i.imgur.com/PIrOjbx.png" 
+            src="/logo.png" 
             alt="Logo" 
             className="h-12 w-12 rounded-2xl object-cover shadow-lg shadow-black/20"
           />

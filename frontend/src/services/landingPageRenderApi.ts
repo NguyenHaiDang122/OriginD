@@ -1,9 +1,11 @@
 import axios from "axios";
-import { API_BASE_URL } from "../config/api";
+import { API_BASE_URL , attachMaintenanceInterceptor } from "../config/api";
 
 const api = axios.create({
   baseURL: API_BASE_URL,
 });
+
+attachMaintenanceInterceptor(api);
 
 export async function renderLandingPage(landingPageId: number, token?: string | null) {
   const res = await api.get(`/landing-pages/${landingPageId}/render`, {

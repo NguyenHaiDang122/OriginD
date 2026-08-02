@@ -25,6 +25,23 @@ class LandingPageController extends Controller
         $user = Auth::user();
         $subscription = $user ? $user->subscription : null;
         $plan = $subscription ? $subscription->plan : null;
+        
+        // Kiểm tra phân quyền Template theo Gói Cước
+        $templatePlans = $template->plans;
+        if ($templatePlans->isNotEmpty() && (!$user->roles || !$user->roles->some('name', 'Admin')) && $user->role !== 'Admin') {
+            if (!$plan) {
+                return response()->json([
+                    'message' => 'Mẫu giao diện này yêu cầu nâng cấp gói cước. Vui lòng nâng cấp dịch vụ để sử dụng!'
+                ], 403);
+            }
+            if (!$templatePlans->contains('id', $plan->id)) {
+                $planNames = $templatePlans->pluck('name')->join(', ');
+                return response()->json([
+                    'message' => 'Mẫu giao diện này chỉ dành riêng cho gói: ' . $planNames . '. Vui lòng nâng cấp dịch vụ để sử dụng!'
+                ], 403);
+            }
+        }
+
         $isFreeOrStarter = !$plan || in_array(strtolower($plan->slug), ['free', 'starter']) || $plan->landing_page_limit <= 1;
 
         $limit = $user->getEffectiveLandingPageLimit();
@@ -70,6 +87,14 @@ class LandingPageController extends Controller
         // Tăng bộ đếm tổng số trang đã tạo của user
         $user->increment('total_pages_created');
 
+        // Build Cache for the newly created page if it's published right away (usually draft, but just in case)
+        if ($page->status === 'published') {
+            \Illuminate\Support\Facades\Cache::forget(\App\Support\LandingPageCacheKey::fresh($page->id));
+            if (\Illuminate\Support\Facades\Cache::add(\App\Support\LandingPageCacheKey::rebuilding($page->id), true, 60)) {
+                dispatch(new \App\Jobs\BuildLandingPageCacheJob($page->id));
+            }
+        }
+
         return response()->json([
             'message' => 'Tạo Landing Page thành công',
             'data' => $page
@@ -79,24 +104,22 @@ class LandingPageController extends Controller
         LandingPage $landingPage,
         LandingPageRendererService $renderer
     ){
-        if ($landingPage->isExpired()) {
-            return response($renderer->renderExpiredPage($landingPage), 403)->header('Content-Type', 'text/html');
+        $result = $renderer->getOrBuildHtml($landingPage);
+
+        if ($result->isStale) {
+            // Anti Queue-Storm: Only one job per 60 seconds for rebuilding
+            if (\Illuminate\Support\Facades\Cache::add(\App\Support\LandingPageCacheKey::rebuilding($landingPage->id), true, 60)) {
+                dispatch(new \App\Jobs\BuildLandingPageCacheJob($landingPage->id));
+            }
         }
 
-        return response(
-            $renderer->render($landingPage)
-        )
-        ->header(
-            'Content-Type',
-            'text/html'
-        );
-
+        return response($result->html)->header('Content-Type', 'text/html');
     }
 
     public function index(Request $request)
     {
         $pages = LandingPage::where('user_id', Auth::id())
-            ->with('template.fields')
+            ->with('template')
             ->orderBy('id', 'desc')
             ->get();
 
@@ -157,6 +180,16 @@ class LandingPageController extends Controller
         }
 
         $landingPage->save();
+
+        if ($landingPage->status === 'published') {
+            // Force cache expiration so next request sees new data or triggers build
+            \Illuminate\Support\Facades\Cache::forget(\App\Support\LandingPageCacheKey::fresh($landingPage->id));
+            
+            // Queue rebuild in background to warm cache
+            if (\Illuminate\Support\Facades\Cache::add(\App\Support\LandingPageCacheKey::rebuilding($landingPage->id), true, 60)) {
+                dispatch(new \App\Jobs\BuildLandingPageCacheJob($landingPage->id));
+            }
+        }
 
         return response()->json([
             'message' => 'Cập nhật Landing Page thành công',

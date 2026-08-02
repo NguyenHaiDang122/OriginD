@@ -159,7 +159,7 @@ export default function Upgrade() {
 
         {successMsg ? (
           <div className="mb-8 max-w-3xl mx-auto p-4 rounded-2xl bg-emerald-500/15 border border-emerald-500/40 text-emerald-200 text-sm font-medium text-center shadow-lg shadow-emerald-500/10 animate-fade-in">
-            🎉 {successMsg}
+            ↪︎ {successMsg}
           </div>
         ) : null}
 
@@ -176,7 +176,7 @@ export default function Upgrade() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
             {plans.map((p) => {
               const isFree = Number(p.price) <= 0;
-              const isPopular = p.slug.toLowerCase() === "pro" || p.slug.toLowerCase() === "basic";
+              const isPopular = p.is_popular;
 
               return (
                 <div
@@ -282,8 +282,8 @@ export default function Upgrade() {
 
       {/* Confirmation & Insufficient Balance Modal */}
       {confirmModal.isOpen && confirmModal.plan && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
-          <div className="bg-[#0f172a] border border-white/10 rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl animate-fade-in relative">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4 animate-backdrop">
+          <div className="bg-[#0f172a] border border-white/10 rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl animate-popup relative">
             <button
               onClick={() => setConfirmModal({ isOpen: false, type: "confirm", plan: null })}
               className="absolute top-4 right-4 text-white/40 hover:text-white transition"
@@ -320,9 +320,6 @@ export default function Upgrade() {
               </div>
             ) : (
               <div className="text-center">
-                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-violet-500/20 text-3xl text-violet-400">
-                  🚀
-                </div>
                 <h3 className="text-xl font-bold text-white mb-2">Xác nhận nâng hạng</h3>
                 <p className="text-sm text-white/70 leading-relaxed mb-6">
                   Bạn có chắc chắn muốn sử dụng <strong className="text-emerald-400">{Number(confirmModal.plan.price).toLocaleString("vi-VN")} VNĐ</strong> từ số dư ví để nâng cấp lên gói <strong className="text-violet-300">"{confirmModal.plan.name}"</strong>?
@@ -336,7 +333,7 @@ export default function Upgrade() {
                   </button>
                   <button
                     onClick={executeUpgrade}
-                    className="flex-1 px-4 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-bold transition shadow-lg shadow-violet-500/20 text-sm"
+                    className="flex-1 px-4 py-2.5 rounded-xl bg-transparent border border-violet-500/50 text-violet-400 hover:border-violet-400 hover:bg-violet-500/10 font-bold transition text-sm"
                   >
                     Xác nhận mua
                   </button>

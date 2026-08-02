@@ -1,9 +1,11 @@
 import axios from "axios";
-import { API_BASE_URL } from "../config/api";
+import { API_BASE_URL , attachMaintenanceInterceptor } from "../config/api";
 
 const api = axios.create({
   baseURL: API_BASE_URL,
 });
+
+attachMaintenanceInterceptor(api);
 
 export type UploadTemplatePayload = {
   name: string;
@@ -15,6 +17,7 @@ export type UploadTemplatePayload = {
   is_featured?: boolean | null;
   thumbnail?: File | string | null;
   zip_file: File;
+  plan_ids?: number[];
 };
 
 export type TemplateResource = {
@@ -43,6 +46,12 @@ export async function uploadTemplate(payload: UploadTemplatePayload, token?: str
 
   if (payload.thumbnail) form.append("thumbnail", payload.thumbnail);
   form.append("zip_file", payload.zip_file);
+  
+  if (payload.plan_ids && payload.plan_ids.length > 0) {
+    payload.plan_ids.forEach((id) => {
+      form.append("plan_ids[]", String(id));
+    });
+  }
 
   const res = await api.post("/admin/templates", form, {
     headers: {

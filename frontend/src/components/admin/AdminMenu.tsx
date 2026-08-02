@@ -1,5 +1,5 @@
 import { NavLink } from "react-router-dom";
-import { LayoutDashboard, Users, CreditCard, LayoutTemplate, Link, HelpCircle, Bell } from "lucide-react";
+import { LayoutDashboard, Users, CreditCard, LayoutTemplate, Link, HelpCircle, Bell, Settings } from "lucide-react";
 
 export default function AdminMenu() {
   const menus = [
@@ -12,6 +12,7 @@ export default function AdminMenu() {
     { name: "Deposits", path: "/admin/deposits", icon: CreditCard },
     { name: "Support", path: "/admin/support", icon: HelpCircle },
     { name: "Popup", path: "/admin/popup", icon: Bell },
+    { name: "Bảo trì", path: "/admin/maintenance", icon: Settings },
   ];
 
   return (

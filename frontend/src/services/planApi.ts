@@ -1,9 +1,11 @@
 import axios from "axios";
-import { API_BASE_URL } from "../config/api";
+import { API_BASE_URL , attachMaintenanceInterceptor } from "../config/api";
 
 const api = axios.create({
   baseURL: API_BASE_URL,
 });
+
+attachMaintenanceInterceptor(api);
 
 export type PlanResource = {
   id: number;
@@ -15,6 +17,8 @@ export type PlanResource = {
   landing_page_limit: number;
   custom_domain: boolean;
   premium_templates: boolean;
+  is_popular?: boolean;
+  is_hidden?: boolean;
 };
 
 export type PlanPayload = {
@@ -26,6 +30,8 @@ export type PlanPayload = {
   landing_page_limit: number;
   custom_domain: boolean;
   premium_templates: boolean;
+  is_popular?: boolean;
+  is_hidden?: boolean;
 };
 
 export async function fetchPlans(token?: string | null): Promise<PlanResource[]> {

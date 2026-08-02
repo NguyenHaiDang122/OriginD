@@ -1,17 +1,17 @@
 import { useState, useEffect } from "react";
-import { LogOut, UserCircle2 } from "lucide-react";
+import { LogOut } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useAuthStore } from "../../store/authStore";
 import { fetchDeposits, checkSepayDeposit } from "../../services/depositApi";
 import DepositModal from "../common/DepositModal";
 
 const menus = [
-  { name: "Trang chủ", path: "/" },
-  { name: "Dịch Vụ Miễn Phí", path: "/templates" },
-  { name: "Thống kê", path: "/stats" },
-  { name: "Hỗ trợ", path: "/support" },
+  { name: "Trang Chủ", path: "/" },
+  { name: "Chọn Mẫu", path: "/templates" },
+  { name: "Thống Kê", path: "/stats" },
+  { name: "Hỗ Trợ", path: "/support" },
   { name: "Nâng Hạng", path: "/upgrade" },
-  { name: "Thiết kế Website", path: "/web-design" },
+  { name: "Thiết Kế Website", path: "/web-design" },
 ];
 
 export default function Header() {
@@ -145,7 +145,6 @@ export default function Header() {
                 to="/login"
                 className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-4 py-2.5 font-semibold text-white/90 backdrop-blur-xl hover:bg-white/10"
               >
-                <UserCircle2 size={18} />
                 <span className="hidden lg:inline">Đăng nhập</span>
               </NavLink>
             ) : (
@@ -229,7 +228,7 @@ export default function Header() {
             
             {!token ? (
               <NavLink to="/login" onClick={() => setIsMobileMenuOpen(false)} className="px-4 py-2.5 rounded-xl text-sm font-semibold text-white/90 bg-white/5 border border-white/10 flex items-center gap-2 hover:bg-white/10 transition">
-                <UserCircle2 size={18} /> Đăng nhập
+                Đăng nhập
               </NavLink>
             ) : (
               <div className="flex flex-col gap-3">

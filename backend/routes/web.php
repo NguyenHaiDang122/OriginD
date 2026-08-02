@@ -63,21 +63,20 @@ HTML;
         }
     }
 
-    if ($page->isExpired()) {
-        return response($renderer->renderExpiredPage($page), 403)->header('Content-Type', 'text/html');
+    $result = $renderer->getOrBuildHtml($page);
+    
+    if ($result->isStale) {
+        if (\Illuminate\Support\Facades\Cache::add(\App\Support\LandingPageCacheKey::rebuilding($page->id), true, 60)) {
+            dispatch(new \App\Jobs\BuildLandingPageCacheJob($page->id));
+        }
     }
 
-    return response(
-        $renderer->render($page)
-    )->header(
-        'Content-Type',
-        'text/html'
-    );
+    return response($result->html)->header('Content-Type', 'text/html');
 });
 
 // Fallback redirect for SePay return URLs when redirecting to backend origin instead of frontend SPA
 Route::get('/profile', function (\Illuminate\Http\Request $request) {
-    $frontendUrl = rtrim(env('FRONTEND_URL', 'http://localhost:5173'), '/');
+    $frontendUrl = rtrim(config('app.frontend_url'), '/');
     $query = $request->getQueryString();
     return redirect()->to($frontendUrl . '/profile' . ($query ? '?' . $query : ''));
 });
@@ -109,11 +108,15 @@ Route::any('/{any?}', function (Request $request, LandingPageRendererService $re
             return response('<h1>Trang đã bị xóa</h1>', 404)->header('Content-Type', 'text/html');
         }
         
-        if ($page->isExpired()) {
-            return response($renderer->renderExpiredPage($page), 403)->header('Content-Type', 'text/html');
+        $result = $renderer->getOrBuildHtml($page);
+        
+        if ($result->isStale) {
+            if (\Illuminate\Support\Facades\Cache::add(\App\Support\LandingPageCacheKey::rebuilding($page->id), true, 60)) {
+                dispatch(new \App\Jobs\BuildLandingPageCacheJob($page->id));
+            }
         }
 
-        return response($renderer->render($page))->header('Content-Type', 'text/html');
+        return response($result->html)->header('Content-Type', 'text/html');
     }
 
     $safeHost = htmlspecialchars($host, ENT_QUOTES, 'UTF-8');

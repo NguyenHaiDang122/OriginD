@@ -113,4 +113,47 @@ class SettingController extends Controller
             'data' => $setting->value
         ]);
     }
+    public function getMaintenanceSettings()
+    {
+        $setting = Setting::firstOrCreate(
+            ['key' => 'maintenance_settings'],
+            ['value' => [
+                'maintenance_mode' => false,
+                'maintenance_message' => 'Hệ thống đang được bảo trì. Vui lòng quay lại sau.',
+            ]]
+        );
+
+        return response()->json([
+            'data' => $setting->value
+        ]);
+    }
+
+    public function updateMaintenanceSettings(Request $request)
+    {
+        $user = Auth::user();
+        if (!$user || ($user->role !== 'Admin' && (!$user->roles || !$user->roles->some('name', 'Admin')))) {
+            return response()->json(['message' => 'Không có quyền truy cập.'], 403);
+        }
+
+        $request->validate([
+            'maintenance_mode' => 'required|boolean',
+            'maintenance_message' => 'nullable|string'
+        ]);
+
+        $setting = Setting::firstOrCreate(['key' => 'maintenance_settings']);
+        
+        $setting->value = [
+            'maintenance_mode' => filter_var($request->maintenance_mode, FILTER_VALIDATE_BOOLEAN),
+            'maintenance_message' => $request->maintenance_message ?: 'Hệ thống đang được bảo trì. Vui lòng quay lại sau.'
+        ];
+        
+        $setting->save();
+        
+        \Illuminate\Support\Facades\Cache::forget('maintenance_settings');
+
+        return response()->json([
+            'message' => 'Cập nhật cài đặt bảo trì thành công',
+            'data' => $setting->value
+        ]);
+    }
 }

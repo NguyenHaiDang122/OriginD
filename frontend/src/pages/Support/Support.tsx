@@ -44,17 +44,45 @@ function ContactLink({
 }
 
 export default function Support() {
-  const [settings, setSettings] = useState<SupportSettings | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [settings, setSettings] = useState<SupportSettings | null>(() => {
+    const cached = localStorage.getItem("support_settings_cache");
+    if (cached) {
+      try {
+        const parsed = JSON.parse(cached);
+        if (parsed.timestamp && Date.now() - parsed.timestamp < 24 * 60 * 60 * 1000) {
+          return parsed.data;
+        }
+      } catch (e) {}
+    }
+    return null;
+  });
+  const [loading, setLoading] = useState(settings === null);
 
   useEffect(() => {
-    fetchSettings();
+    let shouldFetch = true;
+    const cached = localStorage.getItem("support_settings_cache");
+    if (cached) {
+      try {
+        const parsed = JSON.parse(cached);
+        if (parsed.timestamp && Date.now() - parsed.timestamp < 24 * 60 * 60 * 1000) {
+          shouldFetch = false;
+        }
+      } catch (e) {}
+    }
+    
+    if (shouldFetch) {
+      fetchSettings();
+    }
   }, []);
 
   const fetchSettings = async () => {
     try {
       const data = await getSupportSettings();
       setSettings(data);
+      localStorage.setItem("support_settings_cache", JSON.stringify({
+        data: data,
+        timestamp: Date.now()
+      }));
     } catch (err) {
       console.error(err);
     } finally {
@@ -128,7 +156,7 @@ export default function Support() {
                 <Video size={20} />
               </div>
               <div>
-                <h2 className="text-lg font-bold text-white">Video Hướng Dẫn</h2>
+                <h2 className="text-lg font-bold text-white">Hướng Dẫn Sử Dụng</h2>
                 <p className="text-xs text-white/60">Tự học cách dùng hệ thống</p>
               </div>
             </div>
@@ -147,7 +175,7 @@ export default function Support() {
                         </div>
                       </div>
                       <a href={vid.link} target="_blank" rel="noreferrer" className="inline-flex shrink-0 items-center gap-2 rounded-xl border border-white/20 bg-transparent px-4 py-2 text-xs font-semibold text-white hover:border-emerald-500/50 hover:bg-emerald-500/10 hover:text-emerald-300 transition-all">
-                        Xem Video
+                        Xem Chi Tiết
                         <ArrowRight size={14} />
                       </a>
                     </div>

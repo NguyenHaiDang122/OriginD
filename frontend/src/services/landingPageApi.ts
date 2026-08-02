@@ -1,9 +1,11 @@
 import axios from "axios";
-import { API_BASE_URL } from "../config/api";
+import { API_BASE_URL , attachMaintenanceInterceptor } from "../config/api";
 
 const api = axios.create({
   baseURL: API_BASE_URL,
 });
+
+attachMaintenanceInterceptor(api);
 
 export type CreateLandingPagePayload = {
   title: string;
@@ -34,6 +36,15 @@ export async function fetchMyLandingPages(token: string | null) {
   return res.data;
 }
 
+export async function fetchLandingPage(id: number, token: string | null) {
+  const res = await api.get(`/landing-pages/${id}`, {
+    headers: {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  });
+  return res.data;
+}
+
 export async function updateLandingPage(
   id: number,
   payload: { title?: string; slug?: string; data?: Record<string, any>; status?: string },
@@ -55,4 +66,3 @@ export async function deleteLandingPage(id: number, token: string | null) {
   });
   return res.data;
 }
-

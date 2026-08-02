@@ -1,7 +1,8 @@
-import { useEffect } from "react";
+import { useEffect, Suspense } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import Header from "../components/layout/Header";
 import Footer from "../components/common/Footer";
+import PageLoader from "../components/common/PageLoader";
 import { useAuthStore } from "../store/authStore";
 import { fetchMe } from "../services/meApi";
 
@@ -33,14 +34,18 @@ export default function DashboardLayout() {
       {isFullScreen ? (
         <>
           <main className="flex-1 w-full h-full relative">
-            <Outlet />
+            <Suspense fallback={<PageLoader />}>
+              <Outlet />
+            </Suspense>
           </main>
           <Footer />
         </>
       ) : (
         <>
           <main className="flex-1 pt-24 pb-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
-            <Outlet />
+            <Suspense fallback={<PageLoader />}>
+              <Outlet />
+            </Suspense>
           </main>
           <Footer />
         </>

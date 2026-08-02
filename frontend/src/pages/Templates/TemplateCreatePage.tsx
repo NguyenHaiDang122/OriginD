@@ -4,6 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { createLandingPage } from "../../services/landingPageApi";
 import { previewTemplate, renderLandingPage } from "../../services/landingPageRenderApi";
 import { PAGE_BASE_URL } from "../../config/api";
+import { uploadImage } from "../../services/uploadApi";
 
 import GlassCard from "../../components/common/GlassCard";
 
@@ -90,8 +91,8 @@ export default function TemplateCreatePage({
   const [previewError, setPreviewError] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<"desktop" | "mobile">("desktop");
   const [limitModalOpen, setLimitModalOpen] = useState(false);
-
-  // Tự động render preview mẫu khi vừa vào / khi values thay đổi
+  
+  const [uploadingFields, setUploadingFields] = useState<Record<string, boolean>>({});
   useEffect(() => {
     let active = true;
 
@@ -159,6 +160,27 @@ export default function TemplateCreatePage({
       clearTimeout(timer);
     };
   }, [template.id, values]);
+
+  const handleImageUpload = async (file: File, fieldKey: string) => {
+    if (!token) {
+      setError("Bạn cần đăng nhập để tải ảnh lên");
+      return;
+    }
+    setUploadingFields(s => ({ ...s, [fieldKey]: true }));
+    setError(null);
+    try {
+      const res = await uploadImage(file, token);
+      if (res.success && res.url) {
+        setValues((s) => ({ ...s, [fieldKey]: res.url as string }));
+        setSuccess("Tải ảnh lên thành công!");
+        setTimeout(() => setSuccess(null), 3000);
+      }
+    } catch (err: any) {
+      alert(err.message || "Lỗi tải ảnh");
+    } finally {
+      setUploadingFields(s => ({ ...s, [fieldKey]: false }));
+    }
+  };
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -314,11 +336,13 @@ export default function TemplateCreatePage({
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 h-6 w-32 bg-gray-900 rounded-b-2xl z-10 flex items-center justify-center">
                   <div className="h-1.5 w-14 bg-gray-800 rounded-full" />
                 </div>
-                <iframe
-                  className="w-full h-full bg-white border-0"
-                  srcDoc={previewHtml}
-                  title={`Preview Mobile: ${template.name}`}
-                />
+                <div className="w-full h-full rounded-[38px] overflow-hidden bg-white shrink-0" style={{ transform: 'translateZ(0)', WebkitMaskImage: '-webkit-radial-gradient(white, black)' }}>
+                  <iframe
+                    className="w-full h-full border-0"
+                    srcDoc={previewHtml}
+                    title={`Preview Mobile: ${template.name}`}
+                  />
+                </div>
               </div>
             </div>
           )}
@@ -445,6 +469,41 @@ export default function TemplateCreatePage({
                             onChange={(e) => setValues((s) => ({ ...s, [field.key]: e.target.value }))}
                             className="mt-1 w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-white placeholder:text-white/40 outline-none focus:border-white/30"
                           />
+                        ) : field.type?.toLowerCase() === "image" || (field as any).html_tag?.toLowerCase() === "img" ? (
+                          <div className="mt-1 flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                            <input
+                              type="text"
+                              value={v}
+                              onChange={(e) => setValues((s) => ({ ...s, [field.key]: e.target.value }))}
+                              className="w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-white placeholder:text-white/40 outline-none focus:border-white/30"
+                              placeholder={getCleanScalar(field.default_value) || "Nhập link ảnh hoặc tải lên..."}
+                            />
+                            <div className="relative shrink-0">
+                              <input 
+                                type="file" 
+                                accept="image/jpeg,image/png,image/jpg,image/gif,image/webp"
+                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                                disabled={uploadingFields[field.key]}
+                                onChange={(e) => {
+                                  if (e.target.files && e.target.files[0]) {
+                                    handleImageUpload(e.target.files[0], field.key);
+                                  }
+                                  e.target.value = ''; // reset
+                                }}
+                              />
+                              <button 
+                                type="button" 
+                                disabled={uploadingFields[field.key]}
+                                className="h-[46px] px-4 inline-flex items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/5 text-sm font-semibold text-white/90 hover:bg-white/15 hover:border-white/30 transition shadow-sm disabled:opacity-50 relative z-0"
+                              >
+                                {uploadingFields[field.key] ? (
+                                  <><span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" /> Đang tải...</>
+                                ) : (
+                                  <>Upload ảnh</>
+                                )}
+                              </button>
+                            </div>
+                          </div>
                         ) : (
                           <input
                             type="text"
@@ -557,11 +616,13 @@ export default function TemplateCreatePage({
                     <div className="absolute top-0 left-1/2 -translate-x-1/2 h-5 w-28 bg-gray-900 rounded-b-2xl z-10 flex items-center justify-center">
                       <div className="h-1.5 w-12 bg-gray-800 rounded-full" />
                     </div>
-                    <iframe
-                      className="w-full h-[640px] rounded-[36px] bg-white transition-all duration-300 pt-5"
-                      srcDoc={previewHtml}
-                      title="Live Preview Mobile"
-                    />
+                    <div className="w-full h-[640px] rounded-[36px] overflow-hidden bg-white transition-all duration-300" style={{ transform: 'translateZ(0)', WebkitMaskImage: '-webkit-radial-gradient(white, black)' }}>
+                      <iframe
+                        className="w-full h-full border-0"
+                        srcDoc={previewHtml}
+                        title="Live Preview Mobile"
+                      />
+                    </div>
                   </div>
                 </div>
               )}

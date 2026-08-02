@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import GlassCard from "../../components/common/GlassCard";
 import PageSection from "../../components/common/PageSection";
 import { useAuthStore } from "../../store/authStore";
@@ -15,7 +14,6 @@ import {
 } from "../../services/adminUserApi";
 
 export default function AdminUsers() {
-  const navigate = useNavigate();
   const token = useAuthStore((s) => s.token);
   const currentUser = useAuthStore((s) => s.user) as any;
 

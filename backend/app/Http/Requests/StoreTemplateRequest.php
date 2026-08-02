@@ -13,6 +13,14 @@ class StoreTemplateRequest extends FormRequest
 
     public function rules(): array
     {
+        $thumbnailRule = ['nullable'];
+        if ($this->hasFile('thumbnail')) {
+            $thumbnailRule[] = 'image';
+            $thumbnailRule[] = 'max:4096';
+        } else {
+            $thumbnailRule[] = 'string';
+        }
+
         return [
             'name' => [
                 'required',
@@ -32,11 +40,7 @@ class StoreTemplateRequest extends FormRequest
                 'string',
             ],
 
-            'thumbnail' => [
-                'nullable',
-                'image',
-                'max:4096',
-            ],
+            'thumbnail' => $thumbnailRule,
 
             'version' => [
                 'nullable',
@@ -52,6 +56,15 @@ class StoreTemplateRequest extends FormRequest
                 'nullable',
                 'numeric',
                 'min:0',
+            ],
+
+            'plan_ids' => [
+                'nullable',
+                'array',
+            ],
+            'plan_ids.*' => [
+                'integer',
+                'exists:plans,id',
             ],
 
             'zip_file' => [

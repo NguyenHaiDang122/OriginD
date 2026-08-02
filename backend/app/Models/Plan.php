@@ -15,6 +15,8 @@ class Plan extends Model
         'landing_page_limit',
         'custom_domain',
         'premium_templates',
+        'is_popular',
+        'is_hidden',
     ];
 
     protected function casts(): array
@@ -25,11 +27,18 @@ class Plan extends Model
             'landing_page_limit' => 'integer',
             'custom_domain' => 'boolean',
             'premium_templates' => 'boolean',
+            'is_popular' => 'boolean',
+            'is_hidden' => 'boolean',
         ];
     }
 
     public function subscriptions()
     {
         return $this->hasMany(Subscription::class);
+    }
+
+    public function templates()
+    {
+        return $this->belongsToMany(Template::class);
     }
 }
