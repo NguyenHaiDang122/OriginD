@@ -33,6 +33,7 @@ Route::get('/landing-pages/{landingPage}/render', [LandingPageController::class,
 Route::post('/sepay-webhook', [DepositController::class, 'sepayWebhook']);
 Route::get('/plans', [PlanController::class, 'index']);
 Route::get('/settings/popup', [App\Http\Controllers\Api\SettingController::class, 'getPopupSettings']);
+Route::get('/settings/support', [App\Http\Controllers\Api\SettingController::class, 'getSupportSettings']);
 
 use App\Http\Controllers\Api\ImageUploadController;
 
@@ -53,7 +54,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/landing-pages/{landingPage}', [LandingPageController::class, 'update']);
     Route::delete('/landing-pages/{landingPage}', [LandingPageController::class, 'destroy']);
 
-    Route::get('/settings/support', [App\Http\Controllers\Api\SettingController::class, 'getSupportSettings']);
     Route::put('/settings/support', [App\Http\Controllers\Api\SettingController::class, 'updateSupportSettings']);
 
     // Deposits and Renewals
