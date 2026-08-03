@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import GlassCard from "../../components/common/GlassCard";
 import PageSection from "../../components/common/PageSection";
 import { useAuthStore } from "../../store/authStore";
@@ -372,7 +372,7 @@ export default function AdminUsers() {
         ) : error ? (
           <div className="rounded-2xl border border-rose-400/30 bg-rose-500/10 p-6 text-center">
             <div className="text-rose-200 font-semibold mb-2">{error}</div>
-            <button onClick={loadUsers} className="primary-btn px-4 py-2 text-xs mt-2">
+            <button onClick={() => loadUsers(1)} className="primary-btn px-4 py-2 text-xs mt-2">
               Thử lại
             </button>
           </div>
