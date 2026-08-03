@@ -13,10 +13,38 @@ class AdminUserController extends Controller
     /**
      * Display a listing of all users.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $users = User::with(['subscription', 'landingPages'])->orderBy('id', 'desc')->get();
-        return UserResource::collection($users);
+        $query = User::with(['subscription', 'landingPages'])->orderBy('id', 'desc');
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->filled('role') && $request->role !== 'ALL') {
+            $query->role($request->role);
+        }
+
+        if ($request->filled('status') && $request->status !== 'ALL') {
+            $query->where('status', $request->status);
+        }
+
+        $users = $query->paginate($request->get('per_page', 20));
+        
+        $stats = [
+            'total' => User::count(),
+            'admins' => User::role('Admin')->count(),
+            'active' => User::where('status', 'active')->count(),
+            'locked' => User::where('status', 'locked')->count(),
+        ];
+
+        return UserResource::collection($users)->additional([
+            'stats' => $stats
+        ]);
     }
 
     /**

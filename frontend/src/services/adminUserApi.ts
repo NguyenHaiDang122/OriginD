@@ -31,11 +31,15 @@ export type UserResource = {
   landing_pages?: UserLandingPageInfo[];
 };
 
-export async function fetchAdminUsers(token?: string | null) {
+export async function fetchAdminUsers(
+  token?: string | null,
+  params?: { page?: number; per_page?: number; search?: string; role?: string; status?: string }
+) {
   const res = await api.get("/admin/users", {
     headers: {
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
+    params,
   });
   return res.data;
 }

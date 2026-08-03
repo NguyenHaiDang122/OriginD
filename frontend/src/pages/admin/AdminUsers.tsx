@@ -21,10 +21,24 @@ export default function AdminUsers() {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Pagination & Stats
+  const [currentPage, setCurrentPage] = useState(1);
+  const [lastPage, setLastPage] = useState(1);
+  const [totalUsers, setTotalUsers] = useState(0);
+  const [stats, setStats] = useState({ total: 0, admins: 0, active: 0, locked: 0 });
+
   // Search & Filter
   const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState<"ALL" | "Admin" | "User">("ALL");
   const [statusFilter, setStatusFilter] = useState<"ALL" | "active" | "locked">("ALL");
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 500);
+    return () => clearTimeout(handler);
+  }, [searchTerm]);
 
   // Action states
   const [actionLoadingId, setActionLoadingId] = useState<number | null>(null);
@@ -56,7 +70,7 @@ export default function AdminUsers() {
     try {
       await updateUserBalance(editingBalanceUser.id, numericBalance, token);
       setEditingBalanceUser(null);
-      await loadUsers();
+      await loadUsers(currentPage);
       alert(`Đã cập nhật số dư cho tài khoản ${editingBalanceUser.email} thành công!`);
     } catch (err: any) {
       alert(err?.response?.data?.message || "Lỗi khi cập nhật số dư!");
@@ -90,7 +104,7 @@ export default function AdminUsers() {
     try {
       await updateUserLandingPageLimit(editingLimitUser.id, numericLimit, token);
       setEditingLimitUser(null);
-      await loadUsers();
+      await loadUsers(currentPage);
       alert(`Đã cập nhật giới hạn tạo Landing Page cho tài khoản ${editingLimitUser.email} thành công!`);
     } catch (err: any) {
       alert(err?.response?.data?.message || "Lỗi khi cập nhật giới hạn!");
@@ -153,14 +167,29 @@ export default function AdminUsers() {
     }
   }
 
-  async function loadUsers() {
+  async function loadUsers(page = 1) {
     if (!token) return;
     setLoading(true);
     setError(null);
     try {
-      const data = await fetchAdminUsers(token);
+      const data = await fetchAdminUsers(token, {
+        page,
+        search: debouncedSearchTerm,
+        role: roleFilter,
+        status: statusFilter,
+      });
       const list = Array.isArray(data?.data) ? data.data : Array.isArray(data) ? data : [];
       setUsers(list);
+      
+      if (data?.meta) {
+        setCurrentPage(data.meta.current_page);
+        setLastPage(data.meta.last_page);
+        setTotalUsers(data.meta.total);
+      }
+      
+      if (data?.stats) {
+        setStats(data.stats);
+      }
     } catch (err: any) {
       setError(err?.response?.data?.message ?? err?.message ?? "Lỗi tải danh sách người dùng.");
     } finally {
@@ -169,8 +198,8 @@ export default function AdminUsers() {
   }
 
   useEffect(() => {
-    loadUsers();
-  }, [token]);
+    loadUsers(1);
+  }, [token, roleFilter, statusFilter, debouncedSearchTerm]);
 
   // Handle changing role
   async function onToggleRole(user: UserResource) {
@@ -190,7 +219,7 @@ export default function AdminUsers() {
     setActionLoadingId(user.id);
     try {
       await updateUserRole(user.id, newRole, token);
-      await loadUsers();
+      await loadUsers(currentPage);
     } catch (err: any) {
       alert(err?.response?.data?.message ?? "Lỗi cập nhật quyền.");
     } finally {
@@ -220,7 +249,7 @@ export default function AdminUsers() {
     setActionLoadingId(user.id);
     try {
       await updateUserStatus(user.id, newStatus, token);
-      await loadUsers();
+      await loadUsers(currentPage);
     } catch (err: any) {
       alert(err?.response?.data?.message ?? "Lỗi cập nhật trạng thái.");
     } finally {
@@ -247,7 +276,7 @@ export default function AdminUsers() {
     setActionLoadingId(user.id);
     try {
       await deleteUser(user.id, token);
-      await loadUsers();
+      await loadUsers(currentPage);
     } catch (err: any) {
       alert(err?.response?.data?.message ?? "Lỗi xóa tài khoản.");
     } finally {
@@ -255,32 +284,7 @@ export default function AdminUsers() {
     }
   }
 
-  // Filtered users
-  const filteredUsers = useMemo(() => {
-    return users.filter((u) => {
-      const nameOrEmail = `${u.name ?? ""} ${u.email ?? ""}`.toLowerCase();
-      if (searchTerm && !nameOrEmail.includes(searchTerm.toLowerCase())) {
-        return false;
-      }
-      const role = u.role ?? u.roles?.[0]?.name ?? "User";
-      if (roleFilter !== "ALL" && role !== roleFilter) {
-        return false;
-      }
-      if (statusFilter !== "ALL" && (u.status ?? "active") !== statusFilter) {
-        return false;
-      }
-      return true;
-    });
-  }, [users, searchTerm, roleFilter, statusFilter]);
 
-  // Stats
-  const stats = useMemo(() => {
-    const total = users.length;
-    const admins = users.filter((u) => (u.role ?? u.roles?.[0]?.name) === "Admin").length;
-    const active = users.filter((u) => (u.status ?? "active") === "active").length;
-    const locked = total - active;
-    return { total, admins, active, locked };
-  }, [users]);
 
   return (
     <div className="space-y-8">
@@ -358,7 +362,7 @@ export default function AdminUsers() {
 
       {/* Users List Table */}
       <GlassCard
-        title={`Danh sách Tài khoản (${filteredUsers.length})`}
+        title={`Danh sách Tài khoản (${totalUsers})`}
         subtitle="Bấm các nút thao tác để chuyển quyền, khóa tài khoản hoặc xóa"
       >
         {loading ? (
@@ -372,7 +376,7 @@ export default function AdminUsers() {
               Thử lại
             </button>
           </div>
-        ) : filteredUsers.length === 0 ? (
+        ) : users.length === 0 ? (
           <div className="py-12 text-center text-sm text-white/50">
             Không tìm thấy tài khoản nào phù hợp với bộ lọc.
           </div>
@@ -391,7 +395,7 @@ export default function AdminUsers() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5">
-                {filteredUsers.map((u) => {
+                {users.map((u) => {
                   const role = u.role ?? u.roles?.[0]?.name ?? "User";
                   const isAdmin = role === "Admin";
                   const isLocked = u.status === "locked";
@@ -599,6 +603,63 @@ export default function AdminUsers() {
                 })}
               </tbody>
             </table>
+          </div>
+        )}
+
+        {/* Pagination Controls */}
+        {!loading && !error && totalUsers > 0 && lastPage > 1 && (
+          <div className="mt-6 flex items-center justify-between border-t border-white/10 pt-4">
+            <div className="text-xs text-white/50">
+              Trang <strong className="text-white">{currentPage}</strong> / <strong className="text-white">{lastPage}</strong>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                disabled={currentPage === 1}
+                onClick={() => loadUsers(currentPage - 1)}
+                className="inline-flex h-8 items-center justify-center rounded-xl border border-white/10 bg-white/5 px-3 text-xs font-semibold text-white transition hover:bg-white/10 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                Trước
+              </button>
+              
+              <div className="flex items-center gap-1">
+                {[...Array(lastPage)].map((_, i) => {
+                  const p = i + 1;
+                  if (
+                    p === 1 || 
+                    p === lastPage || 
+                    (p >= currentPage - 1 && p <= currentPage + 1)
+                  ) {
+                    return (
+                      <button
+                        key={p}
+                        onClick={() => loadUsers(p)}
+                        className={`inline-flex h-8 w-8 items-center justify-center rounded-xl text-xs font-semibold transition ${
+                          currentPage === p
+                            ? "bg-violet-600 text-white shadow-lg"
+                            : "border border-white/10 bg-white/5 text-white/70 hover:bg-white/15"
+                        }`}
+                      >
+                        {p}
+                      </button>
+                    );
+                  }
+                  
+                  if (p === currentPage - 2 || p === currentPage + 2) {
+                    return <span key={p} className="px-1 text-white/30">...</span>;
+                  }
+                  
+                  return null;
+                })}
+              </div>
+
+              <button
+                disabled={currentPage === lastPage}
+                onClick={() => loadUsers(currentPage + 1)}
+                className="inline-flex h-8 items-center justify-center rounded-xl border border-white/10 bg-white/5 px-3 text-xs font-semibold text-white transition hover:bg-white/10 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                Tiếp
+              </button>
+            </div>
           </div>
         )}
       </GlassCard>
