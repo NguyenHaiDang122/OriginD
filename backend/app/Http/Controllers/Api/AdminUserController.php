@@ -45,6 +45,14 @@ class AdminUserController extends Controller
             ], 403);
         }
 
+        if ($user->hasRole('Admin') && $request->role !== 'Admin') {
+            if (User::role('Admin')->count() <= 1) {
+                return response()->json([
+                    'message' => 'Không thể hạ quyền vì đây là tài khoản Admin duy nhất còn lại trong hệ thống.'
+                ], 403);
+            }
+        }
+
         $user->syncRoles([$request->role]);
 
         return response()->json([
@@ -68,6 +76,14 @@ class AdminUserController extends Controller
             return response()->json([
                 'message' => 'Không thể tự khóa tài khoản Admin đang đăng nhập.'
             ], 403);
+        }
+
+        if ($user->hasRole('Admin') && $request->status === 'locked') {
+            if (User::role('Admin')->where('status', 'active')->count() <= 1) {
+                return response()->json([
+                    'message' => 'Không thể khóa tài khoản này vì đây là Admin duy nhất đang hoạt động.'
+                ], 403);
+            }
         }
 
         $user->status = $request->status;
@@ -95,6 +111,14 @@ class AdminUserController extends Controller
             return response()->json([
                 'message' => 'Không thể tự xóa chính tài khoản Admin đang đăng nhập.'
             ], 403);
+        }
+
+        if ($user->hasRole('Admin')) {
+            if (User::role('Admin')->count() <= 1) {
+                return response()->json([
+                    'message' => 'Không thể xóa tài khoản này vì đây là Admin duy nhất còn lại trong hệ thống.'
+                ], 403);
+            }
         }
 
         $user->tokens()->delete();
