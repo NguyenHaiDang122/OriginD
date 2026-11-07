@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+﻿import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import GlassCard from "../../components/common/GlassCard";
 import NeuronNetwork from "../../components/ui/NeuronNetwork";
@@ -118,9 +118,9 @@ export default function Dashboard() {
                 <button
                   type="button"
                   onClick={() => navigate("/builder")}
-                  className="px-5 py-3 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 hover:from-indigo-600 hover:to-violet-700 text-white font-bold text-sm shadow-lg shadow-indigo-500/25 transition flex items-center justify-center gap-2 hover:scale-105"
+                  className="primary-btn hover:scale-105 justify-center sm:w-auto"
                 >
-                  <span>✨ Tự Kéo Thả Website</span>
+                  Tự kéo thả website
                 </button>
                 <button
                   type="button"
