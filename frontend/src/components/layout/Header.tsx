@@ -11,7 +11,8 @@ const menus = [
   { name: "Thống Kê", path: "/stats" },
   { name: "Hỗ Trợ", path: "/support" },
   { name: "Nâng Hạng", path: "/upgrade" },
-  { name: "Thiết Kế Website", path: "/web-design" },
+  { name: "Website Builder", path: "/builder" },
+  { name: "Dịch Vụ Thiết Kế", path: "/web-design" },
 ];
 
 export default function Header() {

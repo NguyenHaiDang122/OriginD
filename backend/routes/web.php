@@ -81,6 +81,12 @@ Route::get('/profile', function (\Illuminate\Http\Request $request) {
     return redirect()->to($frontendUrl . '/profile' . ($query ? '?' . $query : ''));
 });
 
+// Redirect for Website Builder published sites to frontend SPA
+Route::get('/site/{slug}', function ($slug) {
+    $frontendUrl = rtrim(config('app.frontend_url') ?: 'http://localhost:5173', '/');
+    return redirect()->to($frontendUrl . '/site/' . $slug);
+});
+
 // Catch-all route for Custom Domain routing
 Route::any('/{any?}', function (Request $request, LandingPageRendererService $renderer, $any = null) {
     $host = preg_replace('/^www\./i', '', preg_replace('/:\d+$/', '', $request->getHost()));

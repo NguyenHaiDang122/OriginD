@@ -117,6 +117,13 @@ export default function Dashboard() {
                 </button>
                 <button
                   type="button"
+                  onClick={() => navigate("/builder")}
+                  className="px-5 py-3 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 hover:from-indigo-600 hover:to-violet-700 text-white font-bold text-sm shadow-lg shadow-indigo-500/25 transition flex items-center justify-center gap-2 hover:scale-105"
+                >
+                  <span>✨ Tự Kéo Thả Website</span>
+                </button>
+                <button
+                  type="button"
                   onClick={() => navigate("/templates")}
                   className="ghost-btn justify-center sm:w-auto"
                 >

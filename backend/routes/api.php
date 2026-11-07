@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\DepositController;
 use App\Http\Controllers\Api\AdminDepositController;
 use App\Http\Controllers\Api\PlanController;
 use App\Http\Controllers\Api\AdminCustomDomainController;
+use App\Http\Controllers\Api\BuilderSiteController;
 
 
 Route::post('/register', [AuthController::class, 'register']);
@@ -34,6 +35,7 @@ Route::post('/sepay-webhook', [DepositController::class, 'sepayWebhook']);
 Route::get('/plans', [PlanController::class, 'index']);
 Route::get('/settings/popup', [App\Http\Controllers\Api\SettingController::class, 'getPopupSettings']);
 Route::get('/settings/support', [App\Http\Controllers\Api\SettingController::class, 'getSupportSettings']);
+Route::get('/builder-sites/public/{slug}', [BuilderSiteController::class, 'publicShow']);
 
 use App\Http\Controllers\Api\ImageUploadController;
 
@@ -53,6 +55,16 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/landing-pages/{landingPage}', [LandingPageController::class, 'show']);
     Route::put('/landing-pages/{landingPage}', [LandingPageController::class, 'update']);
     Route::delete('/landing-pages/{landingPage}', [LandingPageController::class, 'destroy']);
+
+    // Website Builder
+    Route::get('/builder-sites', [BuilderSiteController::class, 'index']);
+    Route::post('/builder-sites', [BuilderSiteController::class, 'store']);
+    Route::get('/builder-sites/{id}', [BuilderSiteController::class, 'show']);
+    Route::put('/builder-sites/{id}', [BuilderSiteController::class, 'update']);
+    Route::delete('/builder-sites/{id}', [BuilderSiteController::class, 'destroy']);
+    Route::post('/builder-sites/{id}/publish', [BuilderSiteController::class, 'publish']);
+    Route::post('/builder-sites/{id}/unpublish', [BuilderSiteController::class, 'unpublish']);
+    Route::post('/builder-sites/{id}/duplicate', [BuilderSiteController::class, 'duplicate']);
 
     Route::put('/settings/support', [App\Http\Controllers\Api\SettingController::class, 'updateSupportSettings']);
 

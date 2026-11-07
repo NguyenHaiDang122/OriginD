@@ -22,6 +22,10 @@ export default function DepositModal({ isOpen, onClose, onSuccess, initialAmount
   const [sessionExpired, setSessionExpired] = useState<boolean>(false);
   const [timeLeft, setTimeLeft] = useState<number>(10 * 60);
 
+  const bankName = import.meta.env.VITE_BANK_NAME || "ACB";
+  const bankAccount = import.meta.env.VITE_BANK_ACCOUNT || "19599691";
+  const bankOwner = import.meta.env.VITE_BANK_OWNER || "NGUYEN HAI DANG";
+
   useEffect(() => {
     if (isOpen && token) {
       setAmount(initialAmount || 50000);
@@ -309,7 +313,7 @@ export default function DepositModal({ isOpen, onClose, onSuccess, initialAmount
                 <div className="flex flex-col sm:flex-row gap-5 items-center sm:items-stretch">
                   <div className="flex-shrink-0 flex items-center justify-center bg-white p-3 rounded-2xl shadow-xl w-fit">
                     <img
-                      src={`https://qr.sepay.vn/img?acc=19599691&bank=ACB&amount=${deposit.amount}&des=${deposit.code}`}
+                      src={`https://qr.sepay.vn/img?acc=${bankAccount}&bank=${bankName}&amount=${deposit.amount}&des=${deposit.code}`}
                       alt="VietQR"
                       className="h-32 w-32 sm:h-36 sm:w-36 object-contain rounded-xl"
                     />
@@ -318,15 +322,15 @@ export default function DepositModal({ isOpen, onClose, onSuccess, initialAmount
                   <div className="w-full flex-1 rounded-2xl bg-white/5 p-4 border border-white/10 flex flex-col justify-center space-y-2 relative overflow-hidden">
                     <div className="flex flex-col border-b border-white/10 pb-2 gap-0.5">
                       <span className="text-white/60 text-[11px] uppercase tracking-wider">Chủ tài khoản:</span>
-                      <span className="font-bold text-white tracking-wider text-sm">NGUYEN HAI DANG</span>
+                      <span className="font-bold text-white tracking-wider text-sm">{bankOwner}</span>
                     </div>
                     <div className="flex flex-col border-b border-white/10 pb-2 gap-0.5">
                       <span className="text-white/60 text-[11px] uppercase tracking-wider">Số tài khoản:</span>
                       <div className="flex items-center gap-2">
-                        <span className="font-bold text-white tracking-wider text-sm">19599691</span>
+                        <span className="font-bold text-white tracking-wider text-sm">{bankAccount}</span>
                         <button
                           type="button"
-                          onClick={() => handleCopy("account", "19599691")}
+                          onClick={() => handleCopy("account", bankAccount)}
                           className="rounded bg-white/10 px-2 py-0.5 text-[10px] font-bold hover:bg-white/20 transition-all text-white flex-shrink-0"
                         >
                           {copiedType === "account" ? "Đã chép!" : "Copy"}

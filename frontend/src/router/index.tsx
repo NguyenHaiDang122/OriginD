@@ -32,6 +32,11 @@ const AdminMaintenance = React.lazy(() => import("../pages/admin/AdminMaintenanc
 const WebDesignService = React.lazy(() => import("../pages/WebDesignService"));
 const Maintenance = React.lazy(() => import("../pages/Maintenance/Maintenance"));
 
+// Website Builder Pages
+const BuilderSitesListPage = React.lazy(() => import("../pages/builder/BuilderSitesListPage"));
+const BuilderEditorPage = React.lazy(() => import("../pages/builder/BuilderEditorPage"));
+const PublicSiteViewPage = React.lazy(() => import("../pages/builder/PublicSiteViewPage"));
+
 export const router = createBrowserRouter([
   {
     path: "/",
@@ -44,6 +49,10 @@ export const router = createBrowserRouter([
       {
         path: "templates",
         element: <Templates />,
+      },
+      {
+        path: "builder",
+        element: <BuilderSitesListPage />,
       },
       {
         path: "upgrade",
@@ -124,6 +133,33 @@ export const router = createBrowserRouter([
         element: <Profile />,
       },
     ],
+  },
+
+  {
+    path: "/builder/:id",
+    element: (
+      <Suspense fallback={<PageLoader />}>
+        <BuilderEditorPage />
+      </Suspense>
+    ),
+  },
+
+  {
+    path: "/site/:slug",
+    element: (
+      <Suspense fallback={<PageLoader />}>
+        <PublicSiteViewPage />
+      </Suspense>
+    ),
+  },
+
+  {
+    path: "/sites/:slug",
+    element: (
+      <Suspense fallback={<PageLoader />}>
+        <PublicSiteViewPage />
+      </Suspense>
+    ),
   },
 
   {
