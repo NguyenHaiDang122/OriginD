@@ -10,7 +10,55 @@ export type ElementType =
   | 'divider'
   | 'header'
   | 'footer'
-  | 'banner';
+  | 'banner'
+  | 'features'
+  | 'pricing'
+  | 'testimonials'
+  | 'faq'
+  | 'form'
+  | 'countdown'
+  | 'stats'
+  | 'cta';
+
+export type DesignThemeId =
+  | 'cyber-indigo'
+  | 'emerald-fintech'
+  | 'sunset-amber'
+  | 'neon-purple'
+  | 'ocean-corporate'
+  | 'minimal-dark';
+
+export interface DesignTheme {
+  id: DesignThemeId;
+  name: string;
+  tagline: string;
+  primary: string;
+  secondary: string;
+  accent: string;
+  bgDark: string;
+  bgCard: string;
+  textHeading: string;
+  textMuted: string;
+  borderColor: string;
+  fontFamily: string;
+  previewColors: string[];
+}
+
+export interface OptimizeOptions {
+  themeId: DesignThemeId;
+  harmonizeColors: boolean;
+  normalizeTypography: boolean;
+  normalizeSpacing: boolean;
+  optimizeMobile: boolean;
+  unifyBordersAndShadows: boolean;
+}
+
+export interface OptimizeReport {
+  modifiedCount: number;
+  fixedMobileCount: number;
+  typographyAdjustedCount: number;
+  themeApplied: string;
+}
 
 export interface ElementStyles {
   // Typography

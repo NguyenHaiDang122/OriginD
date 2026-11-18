@@ -12,6 +12,8 @@ import {
 import { useAuthStore } from "../../store/authStore";
 import GlassCard from "../../components/common/GlassCard";
 import SEO from "../../components/common/SEO";
+import BuilderTemplatePickerModal from "../../components/builder/BuilderTemplatePickerModal";
+import type { PrebuiltSiteTemplate } from "../../utils/builderTemplates";
 import {
   Plus,
   Edit,
@@ -36,9 +38,6 @@ export default function BuilderSitesListPage() {
 
   // Create modal state
   const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [newTitle, setNewTitle] = useState("");
-  const [starterType, setStarterType] = useState<'starter' | 'blank'>('starter');
-  const [creating, setCreating] = useState(false);
   const [copiedId, setCopiedId] = useState<number | null>(null);
 
   const loadSites = async () => {
@@ -62,26 +61,20 @@ export default function BuilderSitesListPage() {
     loadSites();
   }, [token]);
 
-  const handleCreate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newTitle.trim()) return;
-
-    setCreating(true);
+  const handleSelectTemplate = async (template: PrebuiltSiteTemplate, customTitle: string) => {
     try {
       const newSite = await createBuilderSite(
         {
-          title: newTitle.trim(),
-          data: starterType === 'blank' ? [] : undefined,
+          title: customTitle,
+          data: template.createElements(),
+          settings: template.settings,
         },
         token
       );
       setIsCreateOpen(false);
-      setNewTitle("");
       navigate(`/builder/${newSite.id}`);
     } catch (err: any) {
       alert("Tạo website thất bại: " + (err?.response?.data?.message || err.message));
-    } finally {
-      setCreating(false);
     }
   };
 
@@ -333,87 +326,12 @@ export default function BuilderSitesListPage() {
         </div>
       )}
 
-      {/* Create Website Modal */}
-      {isCreateOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in">
-          <div className="w-full max-w-md bg-slate-900 border border-white/15 rounded-3xl p-6 shadow-2xl relative">
-            <h3 className="text-lg font-bold text-white mb-1">Khởi Tạo Website Mới</h3>
-            <p className="text-xs text-white/60 mb-5">
-              Đặt tên và chọn mẫu giao diện để bắt đầu thiết kế kéo thả
-            </p>
-
-            <form onSubmit={handleCreate} className="space-y-4">
-              <div>
-                <label className="block text-xs font-semibold text-white/80 mb-1.5">
-                  Tên website
-                </label>
-                <input
-                  type="text"
-                  required
-                  autoFocus
-                  placeholder="VD: Website Bán Hàng, Portfolio Cá Nhân..."
-                  value={newTitle}
-                  onChange={(e) => setNewTitle(e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 transition"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-white/80 mb-1.5">
-                  Chọn mẫu khởi tạo
-                </label>
-                <div className="grid grid-cols-2 gap-3">
-                  <div
-                    onClick={() => setStarterType('starter')}
-                    className={`p-3.5 rounded-2xl border cursor-pointer transition ${
-                      starterType === 'starter'
-                        ? 'border-indigo-500 bg-indigo-600/20 text-indigo-300'
-                        : 'border-white/10 bg-white/5 text-white/60 hover:bg-white/10'
-                    }`}
-                  >
-                    <div className="font-bold text-xs text-white mb-1">Mẫu Đầy Đủ</div>
-                    <p className="text-[11px] leading-relaxed">
-                      Bao gồm Header, Banner, Section, Tính Năng & Footer
-                    </p>
-                  </div>
-
-                  <div
-                    onClick={() => setStarterType('blank')}
-                    className={`p-3.5 rounded-2xl border cursor-pointer transition ${
-                      starterType === 'blank'
-                        ? 'border-indigo-500 bg-indigo-600/20 text-indigo-300'
-                        : 'border-white/10 bg-white/5 text-white/60 hover:bg-white/10'
-                    }`}
-                  >
-                    <div className="font-bold text-xs text-white mb-1">Trang Trắng</div>
-                    <p className="text-[11px] leading-relaxed">
-                      Bắt đầu từ con số 0, tự do sáng tạo mọi chi tiết
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="pt-4 border-t border-white/10 flex items-center justify-end gap-3">
-                <button
-                  type="button"
-                  onClick={() => setIsCreateOpen(false)}
-                  className="px-4 py-2 rounded-xl text-xs font-semibold text-white/70 hover:text-white hover:bg-white/5 transition"
-                >
-                  Hủy
-                </button>
-
-                <button
-                  type="submit"
-                  disabled={creating || !newTitle.trim()}
-                  className="px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition disabled:opacity-50"
-                >
-                  {creating ? 'Đang tạo...' : 'Bắt Đầu Thiết Kế'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      {/* Create Website Modal with Template Picker */}
+      <BuilderTemplatePickerModal
+        isOpen={isCreateOpen}
+        onClose={() => setIsCreateOpen(false)}
+        onSelectTemplate={handleSelectTemplate}
+      />
     </div>
   );
 }

@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="vi" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <!-- 1. Tiêu đề trang web -->
+  <title data-field="site.title" 
+         data-label="Tiêu đề trang (SEO)" 
+         data-type="text" 
+         data-required="true">AuraSound Pro - Đỉnh Cao Âm Thanh Không Dây</title>
+  
+  <meta name="description" content="Khám phá tai nghe chống ồn chủ động AuraSound Pro với âm thanh vòm chuẩn rạp và thời lượng pin 40 giờ.">
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+              900: '#312e81',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  
+  <style>
+    /* Custom glassmorphism & utilities */
+    .glass-nav {
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+    .text-gradient {
+      background: linear-gradient(135deg, #a5b4fc 0%, #6366f1 50%, #f43f5e 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+  </style>
+</head>
+
+<body class="bg-slate-950 text-slate-100 font-sans antialiased selection:bg-indigo-500 selection:text-white">
+
+  <!-- ==================== HEADER ==================== -->
+  <header class="fixed top-0 left-0 right-0 z-50 glass-nav border-b border-slate-800 transition-all duration-300">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+      
+      <!-- Brand Logo -->
+      <a href="#" class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500 to-rose-500 flex items-center justify-center shadow-lg shadow-indigo-500/30">
+          <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+          </svg>
+        </div>
+        <span class="text-xl font-bold tracking-tight text-white"
+              data-field="header.logo_text" 
+              data-label="Tên Thương Hiệu" 
+              data-type="text" 
+              data-required="true">AuraSound</span>
+      </a>
+
+      <!-- Navigation links -->
+      <nav class="hidden md:flex items-center gap-8 text-sm font-medium text-slate-300">
+        <a href="#features" class="hover:text-indigo-400 transition" 
+           data-field="header.menu_features" 
+           data-label="Menu - Tính năng" 
+           data-type="text">Tính năng</a>
+        <a href="#specs" class="hover:text-indigo-400 transition" 
+           data-field="header.menu_specs" 
+           data-label="Menu - Thông số" 
+           data-type="text">Thông số</a>
+        <a href="#testimonials" class="hover:text-indigo-400 transition" 
+           data-field="header.menu_reviews" 
+           data-label="Menu - Đánh giá" 
+           data-type="text">Đánh giá</a>
+        <a href="#pricing" class="hover:text-indigo-400 transition" 
+           data-field="header.menu_pricing" 
+           data-label="Menu - Bảng giá" 
+           data-type="text">Giá bán</a>
+      </nav>
+
+      <!-- CTA Contact / Order -->
+      <div class="flex items-center gap-4">
+        <a href="#order" 
+           class="inline-flex items-center justify-center px-5 py-2.5 rounded-full text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-500 shadow-md shadow-indigo-600/30 transition-all duration-200"
+           data-field="header.cta_button_text" 
+           data-label="Nút Header Đặt Hàng" 
+           data-type="text">
+          Đặt Hàng Ngay
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- ==================== HERO SECTION ==================== -->
+  <section class="relative pt-36 pb-20 md:pt-48 md:pb-32 overflow-hidden">
+    <!-- Ambient light glow -->
+    <div class="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[550px] h-[550px] bg-indigo-600/20 rounded-full blur-[140px] pointer-events-none -z-10"></div>
+    <div class="absolute top-1/3 left-1/3 w-[300px] h-[300px] bg-rose-500/15 rounded-full blur-[120px] pointer-events-none -z-10"></div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+        
+        <!-- Left Content -->
+        <div class="lg:col-span-7 space-y-6 text-center lg:text-left">
+          
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-indigo-500/30 bg-indigo-950/40 text-indigo-400 text-xs font-semibold uppercase tracking-wider">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span data-field="hero.badge" data-label="Hero Badge" data-type="text">Phiên bản mới 2026</span>
+          </div>
+
+          <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.15]"
+              data-field="hero.title" 
+              data-label="Hero - Tiêu đề lớn" 
+              data-type="text" 
+              data-required="true">
+            Âm thanh tinh khiết, <br>
+            <span class="text-gradient">công nghệ dẫn đầu.</span>
+          </h1>
+
+          <p class="text-slate-400 text-base sm:text-lg max-w-2xl mx-auto lg:mx-0 font-normal leading-relaxed"
+             data-field="hero.subtitle" 
+             data-label="Hero - Đoạn mô tả" 
+             data-type="textarea"
+             data-placeholder="Nhập phần mô tả ngắn gọn về sản phẩm...">
+            Trải nghiệm công nghệ chống ồn chủ động thích ứng thế hệ mới cùng màng loa Titanium 40mm. Tái tạo chất âm chân thực chuẩn phòng thu với thời lượng pin lên đến 40 giờ liên tục.
+          </p>
+
+          <!-- Price & Buttons -->
+          <div class="pt-4 flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">
+            <a href="#order" 
+               class="w-full sm:w-auto px-8 py-4 rounded-xl text-base font-semibold text-white bg-indigo-600 hover:bg-indigo-500 shadow-xl shadow-indigo-600/30 transition transform hover:-translate-y-0.5 text-center"
+               data-field="hero.btn_buy_text" 
+               data-label="Hero - Chữ nút Mua Ngay" 
+               data-type="text">
+              Mua Ngay - Ưu Đãi 30%
+            </a>
+
+            <a href="https://youtube.com" 
+               class="w-full sm:w-auto px-6 py-4 rounded-xl text-base font-semibold text-slate-300 hover:text-white bg-slate-900 border border-slate-800 hover:border-slate-700 transition flex items-center justify-center gap-2"
+               data-field="hero.video_link" 
+               data-label="Hero - Link Video Review" 
+               data-type="link">
+              <svg class="w-5 h-5 text-indigo-400" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M6.3 2.841A1.5 1.5 0 004 4.11v11.78a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z"/>
+              </svg>
+              <span>Xem Video Trên Tay</span>
+            </a>
+          </div>
+
+          <!-- Highlight numbers / Highlights -->
+          <div class="pt-8 border-t border-slate-900 grid grid-cols-3 gap-6 text-center lg:text-left">
+            <div>
+              <div class="text-2xl sm:text-3xl font-extrabold text-white">
+                <span data-field="hero.stat1_num" data-label="Thống kê 1 - Số" data-type="text">40h</span>
+              </div>
+              <p class="text-xs text-slate-400 mt-1" data-field="hero.stat1_label" data-label="Thống kê 1 - Nhãn" data-type="text">Pin siêu khủng</p>
+            </div>
+            <div>
+              <div class="text-2xl sm:text-3xl font-extrabold text-white">
+                <span data-field="hero.stat2_num" data-label="Thống kê 2 - Số" data-type="text">-48dB</span>
+              </div>
+              <p class="text-xs text-slate-400 mt-1" data-field="hero.stat2_label" data-label="Thống kê 2 - Nhãn" data-type="text">Chống ồn ANC</p>
+            </div>
+            <div>
+              <div class="text-2xl sm:text-3xl font-extrabold text-white">
+                <span data-field="hero.stat3_num" data-label="Thống kê 3 - Số" data-type="text">Hi-Res</span>
+              </div>
+              <p class="text-xs text-slate-400 mt-1" data-field="hero.stat3_label" data-label="Thống kê 3 - Nhãn" data-type="text">Chuẩn âm thanh</p>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Right Product Image -->
+        <div class="lg:col-span-5 relative flex justify-center">
+          <div class="relative w-full max-w-md aspect-square rounded-3xl bg-gradient-to-b from-indigo-900/20 to-slate-900 border border-slate-800 p-8 flex items-center justify-center shadow-2xl">
+            <!-- Product visual -->
+            <img src="images/product-hero.png" 
+                 alt="Sản phẩm chính" 
+                 class="w-full h-full object-contain drop-shadow-[0_20px_50px_rgba(99,102,241,0.3)] transition transform hover:scale-105 duration-500"
+                 data-field="hero.product_image" 
+                 data-label="Hero - Ảnh Sản Phẩm Chính" 
+                 data-type="image">
+            
+            <!-- Floating badge -->
+            <div class="absolute -bottom-4 right-4 bg-slate-900/90 border border-slate-700/60 backdrop-blur-md rounded-2xl p-4 shadow-xl flex items-center gap-3">
+              <div class="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                </svg>
+              </div>
+              <div>
+                <p class="text-xs text-slate-400" data-field="hero.badge_tag_small" data-label="Thẻ nổi - Tiêu đề phụ" data-type="text">Bảo hành chính hãng</p>
+                <p class="text-sm font-bold text-white" data-field="hero.badge_tag_main" data-label="Thẻ nổi - Tiêu đề chính" data-type="text">1 Đổi 1 Trong 12 Tháng</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== FEATURES SECTION ==================== -->
+  <section id="features" class="py-24 bg-slate-900/50 border-t border-slate-900">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      
+      <div class="text-center max-w-3xl mx-auto mb-16 space-y-4">
+        <h2 class="text-xs font-bold text-indigo-400 uppercase tracking-widest"
+            data-field="features.tagline"
+            data-label="Tính năng - Phụ đề"
+            data-type="text">CÔNG NGHỆ ĐỘT PHÁ</h2>
+        
+        <h3 class="text-3xl sm:text-4xl font-extrabold text-white"
+            data-field="features.title"
+            data-label="Tính năng - Tiêu đề chính"
+            data-type="text">Mỗi chi tiết đều được kiến tạo để hoàn hảo</h3>
+        
+        <p class="text-slate-400 text-base"
+           data-field="features.description"
+           data-label="Tính năng - Mô tả"
+           data-type="textarea">
+          Không đơn thuần chỉ là thiết bị nghe nhìn, AuraSound Pro là sự kết hợp chuẩn mực giữa chất liệu cao cấp và giải thuật xử lý âm thanh kỹ thuật số tiên tiến.
+        </p>
+      </div>
+
+      <!-- Features Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        
+        <!-- Feature 1 -->
+        <div class="p-8 rounded-2xl bg-slate-900 border border-slate-800 hover:border-indigo-500/50 transition-all duration-300 group">
+          <div class="w-14 h-14 rounded-xl bg-indigo-600/10 text-indigo-400 flex items-center justify-center mb-6 group-hover:scale-110 transition duration-300">
+            <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+            </svg>
+          </div>
+          <h4 class="text-xl font-bold text-white mb-3"
+              data-field="feature.1.title"
+              data-label="Tính năng 1 - Tên"
+              data-type="text">Khử ồn ANC Thông Minh</h4>
+          <p class="text-slate-400 text-sm leading-relaxed"
+             data-field="feature.1.desc"
+             data-label="Tính năng 1 - Diễn giải"
+             data-type="textarea">
+            Hệ thống 6 micro thu âm cùng chip AI liên tục đo tiếng ồn môi trường 50,000 lần/giây để khử tạp âm chính xác mà không tạo áp lực lên tai.
+          </p>
+        </div>
+
+        <!-- Feature 2 -->
+        <div class="p-8 rounded-2xl bg-slate-900 border border-slate-800 hover:border-indigo-500/50 transition-all duration-300 group">
+          <div class="w-14 h-14 rounded-xl bg-indigo-600/10 text-indigo-400 flex items-center justify-center mb-6 group-hover:scale-110 transition duration-300">
+            <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+          </div>
+          <h4 class="text-xl font-bold text-white mb-3"
+              data-field="feature.2.title"
+              data-label="Tính năng 2 - Tên"
+              data-type="text">Sạc Nhanh FlashCharge</h4>
+          <p class="text-slate-400 text-sm leading-relaxed"
+             data-field="feature.2.desc"
+             data-label="Tính năng 2 - Diễn giải"
+             data-type="textarea">
+            Chỉ với 10 phút sạc nhanh chuẩn Type-C, bạn đã có ngay 5 giờ nghe nhạc liên tục. Tương thích công nghệ sạc không dây Qi tiện dụng.
+          </p>
+        </div>
+
+        <!-- Feature 3 -->
+        <div class="p-8 rounded-2xl bg-slate-900 border border-slate-800 hover:border-indigo-500/50 transition-all duration-300 group">
+          <div class="w-14 h-14 rounded-xl bg-indigo-600/10 text-indigo-400 flex items-center justify-center mb-6 group-hover:scale-110 transition duration-300">
+            <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064" />
+            </svg>
+          </div>
+          <h4 class="text-xl font-bold text-white mb-3"
+              data-field="feature.3.title"
+              data-label="Tính năng 3 - Tên"
+              data-type="text">Không Gian Âm Thanh 3D</h4>
+          <p class="text-slate-400 text-sm leading-relaxed"
+             data-field="feature.3.desc"
+             data-label="Tính năng 3 - Diễn giải"
+             data-type="textarea">
+            Cảm biến theo dõi chuyển động đầu động (Head Tracking) tạo trường âm vòm sống động như đang ngồi trực tiếp tại rạp chiếu phim hoặc khán phòng hòa nhạc.
+          </p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== SPECIFICATIONS SECTION ==================== -->
+  <section id="specs" class="py-24">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+        <!-- Specs Image -->
+        <div class="order-2 lg:order-1">
+          <img src="images/product-specs.png" 
+               alt="Chi tiết kỹ thuật" 
+               class="w-full rounded-2xl border border-slate-800 object-cover shadow-2xl"
+               data-field="specs.image" 
+               data-label="Thông số - Hình minh họa" 
+               data-type="image">
+        </div>
+
+        <!-- Specs List -->
+        <div class="order-1 lg:order-2 space-y-6">
+          <h2 class="text-xs font-bold text-indigo-400 uppercase tracking-widest"
+              data-field="specs.tagline" 
+              data-label="Thông số - Phụ đề" 
+              data-type="text">CẤU HÌNH PHẦN CỨNG</h2>
+          
+          <h3 class="text-3xl font-extrabold text-white"
+              data-field="specs.title" 
+              data-label="Thông số - Tiêu đề" 
+              data-type="text">Thông số kỹ thuật đẳng cấp Flagship</h3>
+
+          <div class="divide-y divide-slate-800 pt-4">
+            
+            <div class="py-3.5 flex justify-between items-center text-sm">
+              <span class="text-slate-400" data-field="specs.item1_name" data-label="Thông số 1 - Tên" data-type="text">Màng loa (Driver)</span>
+              <span class="font-semibold text-white" data-field="specs.item1_val" data-label="Thông số 1 - Giá trị" data-type="text">Titanium Diaphragm 40mm</span>
+            </div>
+
+            <div class="py-3.5 flex justify-between items-center text-sm">
+              <span class="text-slate-400" data-field="specs.item2_name" data-label="Thông số 2 - Tên" data-type="text">Chuẩn kết nối</span>
+              <span class="font-semibold text-white" data-field="specs.item2_val" data-label="Thông số 2 - Giá trị" data-type="text">Bluetooth 5.4 / LHDC / LDAC</span>
+            </div>
+
+            <div class="py-3.5 flex justify-between items-center text-sm">
+              <span class="text-slate-400" data-field="specs.item3_name" data-label="Thông số 3 - Tên" data-type="text">Thời gian dùng pin</span>
+              <span class="font-semibold text-white" data-field="specs.item3_val" data-label="Thông số 3 - Giá trị" data-type="text">40h (Bật ANC) / 60h (Tắt ANC)</span>
+            </div>
+
+            <div class="py-3.5 flex justify-between items-center text-sm">
+              <span class="text-slate-400" data-field="specs.item4_name" data-label="Thông số 4 - Tên" data-type="text">Kháng nước & bụi</span>
+              <span class="font-semibold text-white" data-field="specs.item4_val" data-label="Thông số 4 - Giá trị" data-type="text">Chuẩn IPX5</span>
+            </div>
+
+            <div class="py-3.5 flex justify-between items-center text-sm">
+              <span class="text-slate-400" data-field="specs.item5_name" data-label="Thông số 5 - Tên" data-type="text">Trọng lượng</span>
+              <span class="font-semibold text-white" data-field="specs.item5_val" data-label="Thông số 5 - Giá trị" data-type="text">245g (Đệm tai Memory Foam)</span>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ==================== PRICING & ORDER SECTION ==================== -->
+  <section id="pricing" class="py-24 bg-slate-900/40 border-t border-slate-900">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      
+      <div class="text-center max-w-3xl mx-auto mb-16 space-y-4">
+        <h2 class="text-xs font-bold text-indigo-400 uppercase tracking-widest"
+            data-field="pricing.tagline"
+            data-label="Bảng giá - Phụ đề"
+            data-type="text">ƯU ĐÃI ĐẶT TRƯỚC</h2>
+        
+        <h3 class="text-3xl sm:text-4xl font-extrabold text-white"
+            data-field="pricing.title"
+            data-label="Bảng giá - Tiêu đề"
+            data-type="text">Sở hữu ngay với mức giá tốt nhất hôm nay</h3>
+      </div>
+
+      <!-- Pricing Card Box -->
+      <div class="max-w-lg mx-auto rounded-3xl bg-slate-900 border-2 border-indigo-500/40 p-8 sm:p-10 shadow-2xl relative">
+        <div class="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-indigo-500 to-rose-500 text-white text-xs font-bold uppercase tracking-wider py-1 px-4 rounded-full shadow-md"
+             data-field="pricing.tag" 
+             data-label="Bảng giá - Nhãn Nổi Bật" 
+             data-type="text">
+          Hot Deal Trong Ngày
+        </div>
+
+        <div class="text-center pb-8 border-b border-slate-800">
+          <h4 class="text-2xl font-bold text-white" 
+              data-field="pricing.package_name" 
+              data-label="Gói sản phẩm" 
+              data-type="text">Combo AuraSound Pro Complete</h4>
+          
+          <div class="mt-4 flex items-baseline justify-center gap-3">
+            <span class="text-4xl sm:text-5xl font-extrabold text-white" 
+                  data-field="pricing.price" 
+                  data-label="Giá khuyến mãi" 
+                  data-type="text">3.490.000đ</span>
+            <span class="text-lg text-slate-500 line-through" 
+                  data-field="pricing.original_price" 
+                  data-label="Giá gốc niêm yết" 
+                  data-type="text">4.990.000đ</span>
+          </div>
+          
+          <p class="text-xs text-rose-400 mt-2 font-medium"
+             data-field="pricing.note" 
+             data-label="Ghi chú khuyến mãi" 
+             data-type="text">Miễn phí giao hàng hỏa tốc toàn quốc & Tặng hộp đựng bảo vệ</p>
+        </div>
+
+        <!-- Form Order trực tiếp -->
+        <form id="order" class="mt-8 space-y-4">
+          <div>
+            <label class="block text-xs font-medium text-slate-400 mb-1">Họ và tên của bạn</label>
+            <input type="text" 
+                   required
+                   placeholder="Nguyễn Văn A" 
+                   class="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-800 text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500 transition text-sm">
+          </div>
+
+          <div>
+            <label class="block text-xs font-medium text-slate-400 mb-1">Số điện thoại liên hệ</label>
+            <input type="tel" 
+                   required
+                   placeholder="0912 345 678" 
+                   class="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-800 text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500 transition text-sm">
+          </div>
+
+          <div>
+            <label class="block text-xs font-medium text-slate-400 mb-1">Địa chỉ nhận hàng</label>
+            <input type="text" 
+                   required
+                   placeholder="Số nhà, tên đường, phường/xã, tỉnh/thành" 
+                   class="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-800 text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500 transition text-sm">
+          </div>
+
+          <button type="submit" 
+                  class="w-full py-4 mt-2 rounded-xl text-base font-bold text-white bg-indigo-600 hover:bg-indigo-500 shadow-xl shadow-indigo-600/30 transition transform active:scale-95"
+                  data-field="pricing.btn_submit_text" 
+                  data-label="Nút gửi đơn đặt hàng" 
+                  data-type="text">
+            XÁC NHẬN ĐẶT HÀNG NGAY
+          </button>
+        </form>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== FOOTER ==================== -->
+  <footer class="border-t border-slate-900 bg-slate-950 py-12 text-slate-400 text-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-10">
+        
+        <!-- Col 1: Brand Info -->
+        <div class="space-y-4 md:col-span-2">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+              </svg>
+            </div>
+            <span class="text-lg font-bold text-white" 
+                  data-field="footer.brand_name" 
+                  data-label="Footer - Tên Công Ty" 
+                  data-type="text">AuraSound Việt Nam</span>
+          </div>
+          <p class="text-xs text-slate-400 max-w-sm"
+             data-field="footer.about_short" 
+             data-label="Footer - Giới thiệu ngắn" 
+             data-type="textarea">
+            Đơn vị phân phối chính hãng các dòng sản phẩm âm thanh công nghệ cao và phụ kiện thông minh. Cam kết chất lượng quốc tế và dịch vụ chăm sóc tận tâm.
+          </p>
+        </div>
+
+        <!-- Col 2: Hotline & Address -->
+        <div class="space-y-2">
+          <h5 class="text-white font-semibold text-sm mb-3">Hỗ Trợ Khách Hàng</h5>
+          <p>Hotline: <a href="tel:0901234567" class="text-indigo-400 font-medium" data-field="contact.phone" data-label="Số điện thoại Hotline" data-type="text">0901 234 567</a></p>
+          <p>Email: <a href="mailto:support@aurasound.vn" class="text-indigo-400 font-medium" data-field="contact.email" data-label="Email liên hệ" data-type="text">support@aurasound.vn</a></p>
+          <p>Giờ làm việc: <span data-field="contact.working_hours" data-label="Giờ làm việc" data-type="text">8:00 - 21:00 (T2 - CN)</span></p>
+        </div>
+
+        <!-- Col 3: Social Links -->
+        <div class="space-y-2">
+          <h5 class="text-white font-semibold text-sm mb-3">Kênh Mạng Xã Hội</h5>
+          <ul class="space-y-2 text-xs">
+            <li><a href="https://facebook.com" class="hover:text-white transition" data-field="social.fb" data-label="Link Fanpage Facebook" data-type="link">Facebook Fanpage</a></li>
+            <li><a href="https://zalo.me" class="hover:text-white transition" data-field="social.zalo" data-label="Link OA Zalo" data-type="link">Zalo Official Account</a></li>
+            <li><a href="https://tiktok.com" class="hover:text-white transition" data-field="social.tiktok" data-label="Link Kênh TikTok" data-type="link">TikTok Channel</a></li>
+          </ul>
+        </div>
+
+      </div>
+
+      <!-- Copyright bottom -->
+      <div class="pt-8 border-t border-slate-900 text-center text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <p data-field="footer.copyright" data-label="Bản quyền Footer" data-type="text">
+          © 2026 AuraSound Vietnam. Tất cả các quyền được bảo lưu.
+        </p>
+        <p class="text-slate-600">Được tối ưu hóa cho nền tảng OriginD</p>
+      </div>
+
+    </div>
+  </footer>
+
+  <!-- Script xử lý sự kiện form đặt hàng giả lập -->
+  <script>
+    document.getElementById('order').addEventListener('submit', function(e) {
+      e.preventDefault();
+      alert('Cảm ơn bạn! Đơn hàng của bạn đã được ghi nhận. Đội ngũ tư vấn sẽ liên hệ lại trong ít phút.');
+      this.reset();
+    });
+  </script>
+
+</body>
+</html>

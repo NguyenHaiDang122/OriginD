@@ -6,6 +6,7 @@ import type {
 import { uploadImage } from "../../services/uploadApi";
 import { useAuthStore } from "../../store/authStore";
 import { POPULAR_ICONS } from "./DynamicIcon";
+import { autoBeautifyElement } from "../../utils/builderOptimizer";
 import {
   Type,
   Palette,
@@ -22,6 +23,9 @@ import {
   ArrowLeftRight,
   ChevronLeft,
   ChevronRight,
+  Sparkles,
+  Plus,
+  Trash2,
 } from "lucide-react";
 
 interface BuilderPropertiesPanelProps {
@@ -313,6 +317,18 @@ export default function BuilderPropertiesPanel({
 
       {/* Tab Panels */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
+        {/* Quick auto beautify this element */}
+        <button
+          type="button"
+          onClick={() => {
+            onUpdateElement(id, (el) => autoBeautifyElement(el, 'cyber-indigo'));
+          }}
+          className="w-full py-2 px-3 rounded-xl bg-gradient-to-r from-indigo-500/15 via-purple-500/15 to-pink-500/15 hover:from-indigo-500/25 hover:to-pink-500/25 border border-indigo-500/30 text-indigo-300 text-xs font-bold flex items-center justify-center gap-1.5 transition shadow-sm"
+          title="Tự động chuẩn hóa màu sắc, kích thước font và lề đệm cho phần tử này"
+        >
+          <Sparkles size={13} className="text-indigo-400" />
+          <span>✨ Tự Động Tối Ưu Khối Này</span>
+        </button>
         {/* ================= CONTENT TAB ================= */}
         {activeTab === 'content' && (
           <div className="space-y-4">
@@ -705,6 +721,434 @@ export default function BuilderPropertiesPanel({
                     type="text"
                     value={props.copyright || ''}
                     onChange={(e) => updateProp('copyright', e.target.value)}
+                    className="w-full bg-white/5 border border-white/10 rounded-lg p-2 text-xs text-white"
+                  />
+                </div>
+              </>
+            )}
+
+            {/* Features specific */}
+            {type === 'features' && (
+              <>
+                <div>
+                  <label className="block text-xs font-semibold text-white/80 mb-1">Huy hiệu</label>
+                  <input
+                    type="text"
+                    value={props.badge || ''}
+                    onChange={(e) => updateProp('badge', e.target.value)}
+                    className="w-full bg-white/5 border border-white/10 rounded-lg p-2 text-xs text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-white/80 mb-1">Tiêu đề chính</label>
+                  <input
+                    type="text"
+                    value={props.title || ''}
+                    onChange={(e) => updateProp('title', e.target.value)}
+                    className="w-full bg-white/5 border border-white/10 rounded-lg p-2 text-xs text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-white/80 mb-1">Mô tả phụ</label>
+                  <textarea
+                    rows={2}
+                    value={props.subtitle || ''}
+                    onChange={(e) => updateProp('subtitle', e.target.value)}
+                    className="w-full bg-white/5 border border-white/10 rounded-lg p-2 text-xs text-white resize-none"
+                  />
+                </div>
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-semibold text-white/80">Danh sách tính năng ({props.items?.length || 0})</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const next = [...(props.items || []), { icon: 'Zap', title: 'Tính năng mới', description: 'Mô tả tính năng...' }];
+                        updateProp('items', next);
+                      }}
+                      className="text-[11px] text-indigo-400 font-bold hover:underline flex items-center gap-1"
+                    >
+                      <Plus size={12} /> Thêm mục
+                    </button>
+                  </div>
+                  <div className="space-y-3">
+                    {(props.items || []).map((it: any, idx: number) => (
+                      <div key={idx} className="p-3 bg-white/5 border border-white/10 rounded-xl space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[11px] font-bold text-indigo-300">Mục #{idx + 1}</span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const next = props.items.filter((_: any, i: number) => i !== idx);
+                              updateProp('items', next);
+                            }}
+                            className="text-red-400 hover:text-red-300 p-1"
+                          >
+                            <Trash2 size={12} />
+                          </button>
+                        </div>
+                        <input
+                          type="text"
+                          placeholder="Tiêu đề"
+                          value={it.title || ''}
+                          onChange={(e) => {
+                            const next = [...props.items];
+                            next[idx].title = e.target.value;
+                            updateProp('items', next);
+                          }}
+                          className="w-full bg-white/5 border border-white/10 rounded p-1.5 text-xs text-white"
+                        />
+                        <textarea
+                          rows={2}
+                          placeholder="Mô tả"
+                          value={it.description || ''}
+                          onChange={(e) => {
+                            const next = [...props.items];
+                            next[idx].description = e.target.value;
+                            updateProp('items', next);
+                          }}
+                          className="w-full bg-white/5 border border-white/10 rounded p-1.5 text-xs text-white resize-none"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
+
+            {/* Pricing specific */}
+            {type === 'pricing' && (
+              <>
+                <div>
+                  <label className="block text-xs font-semibold text-white/80 mb-1">Huy hiệu</label>
+                  <input
+                    type="text"
+                    value={props.badge || ''}
+                    onChange={(e) => updateProp('badge', e.target.value)}
+                    className="w-full bg-white/5 border border-white/10 rounded-lg p-2 text-xs text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-white/80 mb-1">Tiêu đề bảng giá</label>
+                  <input
+                    type="text"
+                    value={props.title || ''}
+                    onChange={(e) => updateProp('title', e.target.value)}
+                    className="w-full bg-white/5 border border-white/10 rounded-lg p-2 text-xs text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-white/80 mb-2">Các gói dịch vụ ({props.tiers?.length || 0})</label>
+                  <div className="space-y-3">
+                    {(props.tiers || []).map((t: any, idx: number) => (
+                      <div key={idx} className="p-3 bg-white/5 border border-white/10 rounded-xl space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[11px] font-bold text-indigo-300">Gói #{idx + 1}</span>
+                          <label className="flex items-center gap-1 text-[11px] text-white/70 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={t.isPopular === true}
+                              onChange={(e) => {
+                                const next = [...props.tiers];
+                                next[idx].isPopular = e.target.checked;
+                                updateProp('tiers', next);
+                              }}
+                              className="rounded text-indigo-600 w-3 h-3"
+                            />
+                            <span>Nổi bật</span>
+                          </label>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <input
+                            type="text"
+                            placeholder="Tên gói"
+                            value={t.name || ''}
+                            onChange={(e) => {
+                              const next = [...props.tiers];
+                              next[idx].name = e.target.value;
+                              updateProp('tiers', next);
+                            }}
+                            className="bg-white/5 border border-white/10 rounded p-1.5 text-xs text-white"
+                          />
+                          <input
+                            type="text"
+                            placeholder="Giá (VD: 599.000đ)"
+                            value={t.price || ''}
+                            onChange={(e) => {
+                              const next = [...props.tiers];
+                              next[idx].price = e.target.value;
+                              updateProp('tiers', next);
+                            }}
+                            className="bg-white/5 border border-white/10 rounded p-1.5 text-xs text-white"
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
+
+            {/* Testimonials specific */}
+            {type === 'testimonials' && (
+              <>
+                <div>
+                  <label className="block text-xs font-semibold text-white/80 mb-1">Tiêu đề đánh giá</label>
+                  <input
+                    type="text"
+                    value={props.title || ''}
+                    onChange={(e) => updateProp('title', e.target.value)}
+                    className="w-full bg-white/5 border border-white/10 rounded-lg p-2 text-xs text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-white/80 mb-2">Lời chứng thực ({props.items?.length || 0})</label>
+                  <div className="space-y-3">
+                    {(props.items || []).map((it: any, idx: number) => (
+                      <div key={idx} className="p-3 bg-white/5 border border-white/10 rounded-xl space-y-2">
+                        <div className="grid grid-cols-2 gap-2">
+                          <input
+                            type="text"
+                            placeholder="Tên khách hàng"
+                            value={it.name || ''}
+                            onChange={(e) => {
+                              const next = [...props.items];
+                              next[idx].name = e.target.value;
+                              updateProp('items', next);
+                            }}
+                            className="bg-white/5 border border-white/10 rounded p-1.5 text-xs text-white"
+                          />
+                          <input
+                            type="text"
+                            placeholder="Chức danh / Vai trò"
+                            value={it.role || ''}
+                            onChange={(e) => {
+                              const next = [...props.items];
+                              next[idx].role = e.target.value;
+                              updateProp('items', next);
+                            }}
+                            className="bg-white/5 border border-white/10 rounded p-1.5 text-xs text-white"
+                          />
+                        </div>
+                        <textarea
+                          rows={2}
+                          placeholder="Nội dung lời nhận xét..."
+                          value={it.content || ''}
+                          onChange={(e) => {
+                            const next = [...props.items];
+                            next[idx].content = e.target.value;
+                            updateProp('items', next);
+                          }}
+                          className="w-full bg-white/5 border border-white/10 rounded p-1.5 text-xs text-white resize-none"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
+
+            {/* FAQ specific */}
+            {type === 'faq' && (
+              <>
+                <div>
+                  <label className="block text-xs font-semibold text-white/80 mb-1">Tiêu đề FAQ</label>
+                  <input
+                    type="text"
+                    value={props.title || ''}
+                    onChange={(e) => updateProp('title', e.target.value)}
+                    className="w-full bg-white/5 border border-white/10 rounded-lg p-2 text-xs text-white"
+                  />
+                </div>
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-semibold text-white/80">Danh sách câu hỏi ({props.items?.length || 0})</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const next = [...(props.items || []), { q: 'Câu hỏi mới?', a: 'Câu trả lời...' }];
+                        updateProp('items', next);
+                      }}
+                      className="text-[11px] text-indigo-400 font-bold hover:underline flex items-center gap-1"
+                    >
+                      <Plus size={12} /> Thêm câu hỏi
+                    </button>
+                  </div>
+                  <div className="space-y-3">
+                    {(props.items || []).map((it: any, idx: number) => (
+                      <div key={idx} className="p-3 bg-white/5 border border-white/10 rounded-xl space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[11px] font-bold text-indigo-300">Câu hỏi #{idx + 1}</span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const next = props.items.filter((_: any, i: number) => i !== idx);
+                              updateProp('items', next);
+                            }}
+                            className="text-red-400 p-1"
+                          >
+                            <Trash2 size={12} />
+                          </button>
+                        </div>
+                        <input
+                          type="text"
+                          placeholder="Câu hỏi"
+                          value={it.q || ''}
+                          onChange={(e) => {
+                            const next = [...props.items];
+                            next[idx].q = e.target.value;
+                            updateProp('items', next);
+                          }}
+                          className="w-full bg-white/5 border border-white/10 rounded p-1.5 text-xs text-white"
+                        />
+                        <textarea
+                          rows={2}
+                          placeholder="Câu trả lời"
+                          value={it.a || ''}
+                          onChange={(e) => {
+                            const next = [...props.items];
+                            next[idx].a = e.target.value;
+                            updateProp('items', next);
+                          }}
+                          className="w-full bg-white/5 border border-white/10 rounded p-1.5 text-xs text-white resize-none"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
+
+            {/* Form specific */}
+            {type === 'form' && (
+              <>
+                <div>
+                  <label className="block text-xs font-semibold text-white/80 mb-1">Tiêu đề Form</label>
+                  <input
+                    type="text"
+                    value={props.title || ''}
+                    onChange={(e) => updateProp('title', e.target.value)}
+                    className="w-full bg-white/5 border border-white/10 rounded-lg p-2 text-xs text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-white/80 mb-1">Mô tả phụ</label>
+                  <textarea
+                    rows={2}
+                    value={props.subtitle || ''}
+                    onChange={(e) => updateProp('subtitle', e.target.value)}
+                    className="w-full bg-white/5 border border-white/10 rounded-lg p-2 text-xs text-white resize-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-white/80 mb-1">Chữ trên nút gửi</label>
+                  <input
+                    type="text"
+                    value={props.buttonText || ''}
+                    onChange={(e) => updateProp('buttonText', e.target.value)}
+                    className="w-full bg-white/5 border border-white/10 rounded-lg p-2 text-xs text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-white/80 mb-1">Thông báo gửi thành công</label>
+                  <input
+                    type="text"
+                    value={props.successMessage || ''}
+                    onChange={(e) => updateProp('successMessage', e.target.value)}
+                    className="w-full bg-white/5 border border-white/10 rounded-lg p-2 text-xs text-white"
+                  />
+                </div>
+              </>
+            )}
+
+            {/* Countdown specific */}
+            {type === 'countdown' && (
+              <>
+                <div>
+                  <label className="block text-xs font-semibold text-white/80 mb-1">Tiêu đề đếm ngược</label>
+                  <input
+                    type="text"
+                    value={props.title || ''}
+                    onChange={(e) => updateProp('title', e.target.value)}
+                    className="w-full bg-white/5 border border-white/10 rounded-lg p-2 text-xs text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-white/80 mb-1">Chữ trên nút ưu đãi</label>
+                  <input
+                    type="text"
+                    value={props.ctaText || ''}
+                    onChange={(e) => updateProp('ctaText', e.target.value)}
+                    className="w-full bg-white/5 border border-white/10 rounded-lg p-2 text-xs text-white"
+                  />
+                </div>
+              </>
+            )}
+
+            {/* Stats specific */}
+            {type === 'stats' && (
+              <div>
+                <label className="block text-xs font-semibold text-white/80 mb-2">Danh sách chỉ số ({props.items?.length || 0})</label>
+                <div className="space-y-3">
+                  {(props.items || []).map((it: any, idx: number) => (
+                    <div key={idx} className="p-3 bg-white/5 border border-white/10 rounded-xl space-y-2">
+                      <div className="grid grid-cols-2 gap-2">
+                        <input
+                          type="text"
+                          placeholder="Số liệu (VD: 10.000+)"
+                          value={it.value || ''}
+                          onChange={(e) => {
+                            const next = [...props.items];
+                            next[idx].value = e.target.value;
+                            updateProp('items', next);
+                          }}
+                          className="bg-white/5 border border-white/10 rounded p-1.5 text-xs text-white"
+                        />
+                        <input
+                          type="text"
+                          placeholder="Mô tả (VD: Khách hàng)"
+                          value={it.label || ''}
+                          onChange={(e) => {
+                            const next = [...props.items];
+                            next[idx].label = e.target.value;
+                            updateProp('items', next);
+                          }}
+                          className="bg-white/5 border border-white/10 rounded p-1.5 text-xs text-white"
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* CTA specific */}
+            {type === 'cta' && (
+              <>
+                <div>
+                  <label className="block text-xs font-semibold text-white/80 mb-1">Tiêu đề kêu gọi</label>
+                  <input
+                    type="text"
+                    value={props.title || ''}
+                    onChange={(e) => updateProp('title', e.target.value)}
+                    className="w-full bg-white/5 border border-white/10 rounded-lg p-2 text-xs text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-white/80 mb-1">Mô tả phụ</label>
+                  <textarea
+                    rows={2}
+                    value={props.subtitle || ''}
+                    onChange={(e) => updateProp('subtitle', e.target.value)}
+                    className="w-full bg-white/5 border border-white/10 rounded-lg p-2 text-xs text-white resize-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-white/80 mb-1">Nút chính (Primary CTA)</label>
+                  <input
+                    type="text"
+                    value={props.primaryButtonText || ''}
+                    onChange={(e) => updateProp('primaryButtonText', e.target.value)}
                     className="w-full bg-white/5 border border-white/10 rounded-lg p-2 text-xs text-white"
                   />
                 </div>

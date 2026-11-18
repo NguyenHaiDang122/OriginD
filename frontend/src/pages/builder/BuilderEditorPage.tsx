@@ -29,6 +29,9 @@ import BuilderSidebar from "../../components/builder/BuilderSidebar";
 import BuilderCanvas from "../../components/builder/BuilderCanvas";
 import BuilderPropertiesPanel from "../../components/builder/BuilderPropertiesPanel";
 import BuilderPublishModal from "../../components/builder/BuilderPublishModal";
+import BuilderAutoOptimizeModal from "../../components/builder/BuilderAutoOptimizeModal";
+import BuilderTemplatePickerModal from "../../components/builder/BuilderTemplatePickerModal";
+import type { PrebuiltSiteTemplate } from "../../utils/builderTemplates";
 import PageLoader from "../../components/common/PageLoader";
 import SEO from "../../components/common/SEO";
 
@@ -56,6 +59,8 @@ export default function BuilderEditorPage() {
   const [deviceMode, setDeviceMode] = useState<DeviceMode>("desktop");
   const [isPreview, setIsPreview] = useState(false);
   const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
+  const [isAutoOptimizeOpen, setIsAutoOptimizeOpen] = useState(false);
+  const [isTemplatePickerOpen, setIsTemplatePickerOpen] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'unsaved'>('saved');
   const [panelDock, setPanelDock] = useState<'right' | 'left'>('right');
   const [isPanelCollapsed, setIsPanelCollapsed] = useState(false);
@@ -381,6 +386,53 @@ export default function BuilderEditorPage() {
     setSaveStatus('saved');
   };
 
+  // Insert a custom pre-built element
+  const handleInsertCustomElement = (newElement: BuilderElement) => {
+    let next: BuilderElement[];
+    if (selectedId) {
+      const found = findElementById(elements, selectedId);
+      if (found && (found.element.type === 'section' || found.element.type === 'container')) {
+        next = insertElement(
+          elements,
+          newElement,
+          found.element.id,
+          found.element.children ? found.element.children.length : 0
+        );
+      } else if (found) {
+        next = insertElement(elements, newElement, found.parent ? found.parent.id : null, found.index + 1);
+      } else {
+        next = [...elements, newElement];
+      }
+    } else {
+      next = [...elements, newElement];
+    }
+
+    setElements(next);
+    pushHistory(next);
+    setSelectedId(newElement.id);
+  };
+
+  // Apply auto optimization
+  const handleApplyOptimization = (
+    newElements: BuilderElement[],
+    newSettings: BuilderSiteSettings
+  ) => {
+    setElements(newElements);
+    setSiteSettings(newSettings);
+    pushHistory(newElements);
+    setSaveStatus('unsaved');
+  };
+
+  // Apply chosen full-page template
+  const handleApplyTemplate = (template: PrebuiltSiteTemplate) => {
+    const newElements = template.createElements();
+    setElements(newElements);
+    setSiteSettings(template.settings);
+    pushHistory(newElements);
+    setSaveStatus('unsaved');
+    setIsTemplatePickerOpen(false);
+  };
+
   if (loading) {
     return (
       <div className="h-screen w-full bg-slate-950 flex items-center justify-center">
@@ -428,6 +480,8 @@ export default function BuilderEditorPage() {
           onTogglePreview={() => setIsPreview(!isPreview)}
           isPreview={isPreview}
           onOpenPublishModal={() => setIsPublishModalOpen(true)}
+          onOpenAutoOptimize={() => setIsAutoOptimizeOpen(true)}
+          onOpenTemplatePicker={() => setIsTemplatePickerOpen(true)}
           deviceMode={deviceMode}
           onChangeDeviceMode={setDeviceMode}
           onBack={() => navigate("/builder")}
@@ -440,6 +494,7 @@ export default function BuilderEditorPage() {
         {!isPreview && (
           <BuilderSidebar
             onAddElement={handleAddElement}
+            onInsertCustomElement={handleInsertCustomElement}
             elements={elements}
             selectedId={selectedId}
             onSelectElement={(el) => setSelectedId(el.id)}
@@ -507,6 +562,24 @@ export default function BuilderEditorPage() {
         slug={site.slug}
         onPublish={handlePublish}
         onUnpublish={handleUnpublish}
+      />
+
+      {/* Smart Auto Optimize Modal */}
+      <BuilderAutoOptimizeModal
+        isOpen={isAutoOptimizeOpen}
+        onClose={() => setIsAutoOptimizeOpen(false)}
+        elements={elements}
+        siteSettings={siteSettings}
+        onApplyOptimization={handleApplyOptimization}
+      />
+
+      {/* Switch / Apply Pre-built Template Modal */}
+      <BuilderTemplatePickerModal
+        isOpen={isTemplatePickerOpen}
+        onClose={() => setIsTemplatePickerOpen(false)}
+        titlePrompt="Áp Dụng Mẫu Giao Diện Mới"
+        confirmButtonText="Thay Thế Bằng Mẫu Này"
+        onSelectTemplate={handleApplyTemplate}
       />
     </div>
   );

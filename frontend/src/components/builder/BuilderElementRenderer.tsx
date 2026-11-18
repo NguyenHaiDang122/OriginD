@@ -16,6 +16,10 @@ import {
   Pin,
   PinOff,
   Check,
+  Star,
+  Send,
+  CheckCircle2,
+  Zap,
 } from "lucide-react";
 
 interface BuilderElementRendererProps {
@@ -57,6 +61,166 @@ function getEmbedVideoUrl(url: string): { type: 'youtube' | 'vimeo' | 'mp4'; emb
   }
 
   return { type: 'mp4', embedUrl: url };
+}
+
+// Countdown timer display component
+function CountdownTimerDisplay({ targetDate }: { targetDate?: string }) {
+  const [timeLeft, setTimeLeft] = useState<{ d: number; h: number; m: number; s: number }>({
+    d: 3,
+    h: 12,
+    m: 45,
+    s: 20,
+  });
+
+  useEffect(() => {
+    const calc = () => {
+      const target = targetDate ? new Date(targetDate).getTime() : Date.now() + 3 * 86400000;
+      const diff = Math.max(0, target - Date.now());
+      const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const s = Math.floor((diff % (1000 * 60)) / 1000);
+      setTimeLeft({ d, h, m, s });
+    };
+    calc();
+    const interval = setInterval(calc, 1000);
+    return () => clearInterval(interval);
+  }, [targetDate]);
+
+  return (
+    <div className="flex items-center justify-center gap-2.5 sm:gap-4 my-6 flex-wrap">
+      {[
+        { val: timeLeft.d, label: 'Ngày' },
+        { val: timeLeft.h, label: 'Giờ' },
+        { val: timeLeft.m, label: 'Phút' },
+        { val: timeLeft.s, label: 'Giây' },
+      ].map((item, idx) => (
+        <div key={idx} className="flex flex-col items-center">
+          <div className="w-16 sm:w-20 h-16 sm:h-20 rounded-2xl bg-slate-900/90 border border-white/20 flex items-center justify-center text-2xl sm:text-3xl font-black text-amber-400 font-mono shadow-2xl backdrop-blur-md">
+            {String(item.val).padStart(2, '0')}
+          </div>
+          <span className="text-[10px] sm:text-xs font-semibold text-white/60 mt-1.5 uppercase tracking-wider">
+            {item.label}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// Collapsible FAQ Accordion component
+function FaqAccordion({ items, isEditor }: { items: any[]; isEditor: boolean }) {
+  const [openIndex, setOpenIndex] = useState<number | null>(0);
+
+  return (
+    <div className="w-full max-w-3xl mx-auto space-y-3">
+      {items.map((item, idx) => {
+        const isOpen = openIndex === idx;
+        return (
+          <div
+            key={idx}
+            className="rounded-2xl border border-white/10 bg-white/5 hover:border-white/20 overflow-hidden transition"
+          >
+            <button
+              type="button"
+              onClick={(e) => {
+                if (isEditor) e.stopPropagation();
+                setOpenIndex(isOpen ? null : idx);
+              }}
+              className="w-full p-4 sm:p-5 flex items-center justify-between gap-4 text-left font-bold text-sm sm:text-base text-white hover:text-indigo-300 transition"
+            >
+              <span>{item.q || `Câu hỏi ${idx + 1}`}</span>
+              <ChevronDown
+                size={18}
+                className={`shrink-0 text-white/50 transition-transform duration-200 ${
+                  isOpen ? 'rotate-180 text-indigo-400' : ''
+                }`}
+              />
+            </button>
+            {isOpen && (
+              <div className="px-4 pb-5 sm:px-5 text-xs sm:text-sm text-white/70 leading-relaxed border-t border-white/5 pt-3">
+                {item.a || 'Nội dung giải đáp chi tiết...'}
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// Lead Capture Form component
+function LeadCaptureForm({ props, isEditor }: { props: any; isEditor: boolean }) {
+  const [submitted, setSubmitted] = useState(false);
+  const [formData, setFormData] = useState({ name: '', phone: '', email: '', message: '' });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (isEditor) return;
+    setSubmitted(true);
+    setTimeout(() => setSubmitted(false), 4000);
+  };
+
+  return (
+    <div className="w-full text-center sm:text-left">
+      {props.badge && (
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 mb-3">
+          <span>{props.badge}</span>
+        </div>
+      )}
+      <h3 className="text-xl sm:text-2xl font-bold text-white mb-2">{props.title || 'Đăng Ký Tư Vấn'}</h3>
+      <p className="text-xs sm:text-sm text-white/60 mb-6">{props.subtitle || 'Để lại thông tin...'}</p>
+
+      {submitted ? (
+        <div className="p-6 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-sm font-semibold flex items-center justify-center gap-2">
+          <CheckCircle2 size={20} />
+          <span>{props.successMessage || 'Gửi thông tin thành công!'}</span>
+        </div>
+      ) : (
+        <form onSubmit={handleSubmit} className="space-y-3.5">
+          <input
+            type="text"
+            required
+            placeholder={props.namePlaceholder || 'Họ và tên của bạn'}
+            value={formData.name}
+            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-xs sm:text-sm text-white placeholder-white/40 focus:outline-none focus:border-indigo-500 transition"
+          />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            <input
+              type="tel"
+              required
+              placeholder={props.phonePlaceholder || 'Số điện thoại'}
+              value={formData.phone}
+              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-xs sm:text-sm text-white placeholder-white/40 focus:outline-none focus:border-indigo-500 transition"
+            />
+            <input
+              type="email"
+              placeholder={props.emailPlaceholder || 'Email'}
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-xs sm:text-sm text-white placeholder-white/40 focus:outline-none focus:border-indigo-500 transition"
+            />
+          </div>
+          <textarea
+            rows={3}
+            placeholder={props.messagePlaceholder || 'Nội dung hoặc câu hỏi...'}
+            value={formData.message}
+            onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-xs sm:text-sm text-white placeholder-white/40 focus:outline-none focus:border-indigo-500 transition resize-none"
+          />
+          <button
+            type="submit"
+            className="w-full py-3.5 px-6 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm shadow-xl shadow-indigo-600/30 transition transform hover:-translate-y-0.5 active:translate-y-0 cursor-pointer flex items-center justify-center gap-2"
+          >
+            <Send size={16} />
+            <span>{props.buttonText || 'Gửi Thông Tin Ngay'}</span>
+          </button>
+        </form>
+      )}
+    </div>
+  );
 }
 
 export default function BuilderElementRenderer({
@@ -698,6 +862,307 @@ export default function BuilderElementRenderer({
         );
       }
 
+      case 'features': {
+        const items = Array.isArray(props.items) ? props.items : [];
+        return (
+          <div style={computedStyle} className="w-full">
+            <div className="max-w-6xl mx-auto text-center">
+              {props.badge && (
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 mb-3 backdrop-blur-sm">
+                  <span>{props.badge}</span>
+                </div>
+              )}
+              <h2 className="text-2xl sm:text-4xl font-extrabold text-white tracking-tight mb-3">
+                {props.title || 'Tính Năng Đột Phá'}
+              </h2>
+              <p className="text-sm sm:text-base text-white/60 max-w-2xl mx-auto mb-12 leading-relaxed">
+                {props.subtitle || 'Khám phá những điểm mạnh độc đáo được xây dựng riêng cho thành công của bạn.'}
+              </p>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
+                {items.map((it: any, idx: number) => (
+                  <div
+                    key={idx}
+                    className="p-6 sm:p-8 rounded-2xl border border-white/10 bg-white/5 hover:bg-white/[0.08] hover:border-indigo-500/40 hover:shadow-xl hover:shadow-indigo-500/10 transition duration-300 flex flex-col items-center text-center group"
+                  >
+                    <div className="w-14 h-14 rounded-2xl bg-indigo-500/15 border border-indigo-500/30 text-indigo-400 flex items-center justify-center mb-5 group-hover:scale-110 group-hover:bg-indigo-500 group-hover:text-white transition duration-300 shadow-lg">
+                      <DynamicIcon name={it.icon || 'Zap'} size={24} />
+                    </div>
+                    <h3 className="text-lg font-bold text-white mb-2.5 group-hover:text-indigo-300 transition">
+                      {it.title || `Tính năng ${idx + 1}`}
+                    </h3>
+                    <p className="text-xs sm:text-sm text-white/60 leading-relaxed">
+                      {it.description || 'Mô tả chi tiết về lợi ích của tính năng này mang lại cho khách hàng.'}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        );
+      }
+
+      case 'pricing': {
+        const tiers = Array.isArray(props.tiers) ? props.tiers : [];
+        return (
+          <div style={computedStyle} className="w-full">
+            <div className="max-w-6xl mx-auto text-center">
+              {props.badge && (
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 mb-3 backdrop-blur-sm">
+                  <span>{props.badge}</span>
+                </div>
+              )}
+              <h2 className="text-2xl sm:text-4xl font-extrabold text-white tracking-tight mb-3">
+                {props.title || 'Bảng Giá Dịch Vụ'}
+              </h2>
+              <p className="text-sm sm:text-base text-white/60 max-w-2xl mx-auto mb-12 leading-relaxed">
+                {props.subtitle || 'Lựa chọn gói dịch vụ phù hợp với nhu cầu và quy mô của bạn.'}
+              </p>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 items-stretch">
+                {tiers.map((t: any, idx: number) => {
+                  const isPop = t.isPopular === true;
+                  return (
+                    <div
+                      key={idx}
+                      className={`p-6 sm:p-8 rounded-3xl border flex flex-col justify-between transition-all duration-300 relative ${
+                        isPop
+                          ? 'border-indigo-400 bg-gradient-to-b from-indigo-900/30 to-slate-900/60 ring-2 ring-indigo-500/40 shadow-2xl shadow-indigo-500/20 md:-translate-y-2'
+                          : 'border-white/10 bg-white/5 hover:border-white/20'
+                      }`}
+                    >
+                      {isPop && (
+                        <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-md">
+                          Phổ Biến Nhất
+                        </div>
+                      )}
+
+                      <div className="text-left">
+                        <div className="text-sm font-bold text-indigo-400 mb-1">{t.name}</div>
+                        <div className="flex items-baseline gap-1 my-3">
+                          <span className="text-3xl sm:text-4xl font-black text-white">{t.price}</span>
+                          <span className="text-xs text-white/50">{t.period || '/tháng'}</span>
+                        </div>
+                        <p className="text-xs text-white/60 mb-6 leading-relaxed">{t.description}</p>
+
+                        <div className="space-y-2.5 mb-8 border-t border-white/10 pt-6">
+                          {Array.isArray(t.features) &&
+                            t.features.map((feat: string, fIdx: number) => (
+                              <div key={fIdx} className="flex items-center gap-2.5 text-xs text-white/80">
+                                <Check size={14} className="text-emerald-400 shrink-0" />
+                                <span>{feat}</span>
+                              </div>
+                            ))}
+                        </div>
+                      </div>
+
+                      <a
+                        href={isEditor ? undefined : (t.buttonUrl || '#')}
+                        onClick={(e) => isEditor && e.preventDefault()}
+                        className={`w-full py-3 rounded-xl font-bold text-xs sm:text-sm text-center transition cursor-pointer ${
+                          isPop
+                            ? 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/30'
+                            : 'bg-white/10 hover:bg-white/20 text-white'
+                        }`}
+                      >
+                        {t.buttonText || 'Chọn Gói Này'}
+                      </a>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        );
+      }
+
+      case 'testimonials': {
+        const items = Array.isArray(props.items) ? props.items : [];
+        return (
+          <div style={computedStyle} className="w-full">
+            <div className="max-w-6xl mx-auto text-center">
+              {props.badge && (
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 mb-3 backdrop-blur-sm">
+                  <span>{props.badge}</span>
+                </div>
+              )}
+              <h2 className="text-2xl sm:text-4xl font-extrabold text-white tracking-tight mb-3">
+                {props.title || 'Đánh Giá Từ Khách Hàng'}
+              </h2>
+              <p className="text-sm sm:text-base text-white/60 max-w-2xl mx-auto mb-12 leading-relaxed">
+                {props.subtitle || 'Lắng nghe những trải nghiệm thực tế từ các đối tác và khách hàng tin cậy.'}
+              </p>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
+                {items.map((it: any, idx: number) => (
+                  <div
+                    key={idx}
+                    className="p-6 sm:p-8 rounded-2xl border border-white/10 bg-white/5 hover:border-white/20 transition duration-300 flex flex-col justify-between text-left"
+                  >
+                    <div>
+                      {/* 5 Stars */}
+                      <div className="flex items-center gap-1 text-amber-400 mb-4">
+                        {[...Array(Number(it.rating) || 5)].map((_, sIdx) => (
+                          <Star key={sIdx} size={15} className="fill-amber-400 text-amber-400" />
+                        ))}
+                      </div>
+
+                      {/* Content */}
+                      <p className="text-xs sm:text-sm text-white/75 leading-relaxed italic mb-6">
+                        "{it.content || 'Dịch vụ tuyệt vời, chất lượng vượt ngoài kỳ vọng.'}"
+                      </p>
+                    </div>
+
+                    {/* Author */}
+                    <div className="flex items-center gap-3 pt-4 border-t border-white/10">
+                      {it.avatar ? (
+                        <img
+                          src={it.avatar}
+                          alt={it.name}
+                          className="w-10 h-10 rounded-full object-cover border border-indigo-500/40"
+                        />
+                      ) : (
+                        <div className="w-10 h-10 rounded-full bg-indigo-600/30 text-indigo-300 flex items-center justify-center font-bold text-xs">
+                          {it.name ? it.name[0] : 'U'}
+                        </div>
+                      )}
+                      <div>
+                        <div className="text-xs sm:text-sm font-bold text-white">{it.name}</div>
+                        <div className="text-[11px] text-white/50">{it.role}</div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        );
+      }
+
+      case 'faq': {
+        const items = Array.isArray(props.items) ? props.items : [];
+        return (
+          <div style={computedStyle} className="w-full">
+            <div className="max-w-4xl mx-auto text-center mb-8">
+              {props.badge && (
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 mb-3">
+                  <span>{props.badge}</span>
+                </div>
+              )}
+              <h2 className="text-2xl sm:text-4xl font-extrabold text-white tracking-tight mb-3">
+                {props.title || 'Câu Hỏi Thường Gặp (FAQ)'}
+              </h2>
+              <p className="text-sm sm:text-base text-white/60 max-w-xl mx-auto leading-relaxed">
+                {props.subtitle || 'Giải đáp nhanh chóng các thắc mắc phổ biến nhất của người dùng.'}
+              </p>
+            </div>
+            <FaqAccordion items={items} isEditor={isEditor} />
+          </div>
+        );
+      }
+
+      case 'form': {
+        return (
+          <div style={computedStyle}>
+            <LeadCaptureForm props={props} isEditor={isEditor} />
+          </div>
+        );
+      }
+
+      case 'countdown': {
+        return (
+          <div style={computedStyle} className="w-full">
+            <div className="max-w-3xl mx-auto">
+              {props.badge && (
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/40 mb-3">
+                  <span>{props.badge}</span>
+                </div>
+              )}
+              <h2 className="text-2xl sm:text-4xl font-black text-white tracking-tight mb-2">
+                {props.title || 'Chương Trình Khuyến Mãi Sắp Kết Thúc'}
+              </h2>
+              <p className="text-xs sm:text-base text-white/70 max-w-xl mx-auto leading-relaxed">
+                {props.subtitle || 'Nhanh tay nhận ngay ưu đãi đặc biệt trước khi đồng hồ điểm 00:00.'}
+              </p>
+
+              <CountdownTimerDisplay targetDate={props.targetDate} />
+
+              {props.ctaText && (
+                <a
+                  href={isEditor ? undefined : (props.ctaUrl || '#')}
+                  onClick={(e) => isEditor && e.preventDefault()}
+                  className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl font-bold text-slate-950 bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-300 hover:to-orange-400 shadow-xl shadow-amber-500/25 transition transform hover:-translate-y-0.5 active:translate-y-0 cursor-pointer text-sm"
+                >
+                  <Zap size={16} className="fill-slate-950" />
+                  <span>{props.ctaText}</span>
+                </a>
+              )}
+            </div>
+          </div>
+        );
+      }
+
+      case 'stats': {
+        const items = Array.isArray(props.items) ? props.items : [];
+        return (
+          <div style={computedStyle} className="w-full">
+            <div className="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+              {items.map((it: any, idx: number) => (
+                <div key={idx} className="p-4 flex flex-col items-center">
+                  <div className="w-10 h-10 rounded-xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center mb-2.5">
+                    <DynamicIcon name={it.icon || 'Award'} size={20} />
+                  </div>
+                  <div className="text-2xl sm:text-4xl font-black text-white font-mono tracking-tight mb-1">
+                    {it.value}
+                  </div>
+                  <div className="text-xs text-white/60 font-medium">{it.label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      }
+
+      case 'cta': {
+        return (
+          <div style={computedStyle} className="w-full">
+            <div className="max-w-3xl mx-auto flex flex-col items-center justify-center text-center">
+              {props.badge && (
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 mb-4 backdrop-blur-sm">
+                  <span>{props.badge}</span>
+                </div>
+              )}
+              <h2 className="text-2xl sm:text-5xl font-black text-white tracking-tight mb-4 leading-tight">
+                {props.title || 'Bắt Đầu Xây Dựng Website Ngay Hôm Nay'}
+              </h2>
+              <p className="text-sm sm:text-lg text-white/70 max-w-xl mb-8 leading-relaxed">
+                {props.subtitle || 'Giải pháp toàn diện giúp doanh nghiệp của bạn bứt phá doanh số mạnh mẽ.'}
+              </p>
+              <div className="flex items-center gap-3 flex-wrap justify-center">
+                {props.primaryButtonText && (
+                  <a
+                    href={isEditor ? undefined : (props.primaryButtonUrl || '#')}
+                    onClick={(e) => isEditor && e.preventDefault()}
+                    className="px-8 py-3.5 rounded-xl font-bold text-white bg-indigo-600 hover:bg-indigo-500 shadow-xl shadow-indigo-600/30 transition transform hover:-translate-y-0.5 active:translate-y-0 cursor-pointer text-sm"
+                  >
+                    {props.primaryButtonText}
+                  </a>
+                )}
+                {props.secondaryButtonText && (
+                  <a
+                    href={isEditor ? undefined : (props.secondaryButtonUrl || '#')}
+                    onClick={(e) => isEditor && e.preventDefault()}
+                    className="px-6 py-3.5 rounded-xl font-semibold text-white/80 hover:text-white bg-white/10 hover:bg-white/15 transition cursor-pointer text-sm"
+                  >
+                    {props.secondaryButtonText}
+                  </a>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      }
+
       case 'section':
       case 'container': {
         const Tag = type === 'section' ? 'section' : 'div';
@@ -781,6 +1246,14 @@ export default function BuilderElementRenderer({
     header: 'Header',
     footer: 'Footer',
     banner: 'Banner',
+    features: 'Tính Năng',
+    pricing: 'Bảng Giá',
+    testimonials: 'Đánh Giá',
+    faq: 'Hỏi Đáp',
+    form: 'Form',
+    countdown: 'Đếm Ngược',
+    stats: 'Thống Kê',
+    cta: 'CTA',
   };
 
   return (

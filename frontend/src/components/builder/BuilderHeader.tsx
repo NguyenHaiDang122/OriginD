@@ -14,6 +14,8 @@ import {
   Smartphone,
   Check,
   Loader2,
+  Sparkles,
+  LayoutTemplate,
 } from "lucide-react";
 
 interface BuilderHeaderProps {
@@ -30,6 +32,8 @@ interface BuilderHeaderProps {
   onTogglePreview: () => void;
   isPreview: boolean;
   onOpenPublishModal: () => void;
+  onOpenAutoOptimize?: () => void;
+  onOpenTemplatePicker?: () => void;
   deviceMode: DeviceMode;
   onChangeDeviceMode: (mode: DeviceMode) => void;
   onBack: () => void;
@@ -49,6 +53,8 @@ export default function BuilderHeader({
   onTogglePreview,
   isPreview,
   onOpenPublishModal,
+  onOpenAutoOptimize,
+  onOpenTemplatePicker,
   deviceMode,
   onChangeDeviceMode,
   onBack,
@@ -215,6 +221,33 @@ export default function BuilderHeader({
             </>
           )}
         </div>
+
+        {/* Templates Picker Button */}
+        {onOpenTemplatePicker && (
+          <button
+            type="button"
+            onClick={onOpenTemplatePicker}
+            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-white/10 hover:bg-white/15 text-white transition border border-white/10"
+            title="Chọn mẫu giao diện dựng sẵn có sẵn"
+          >
+            <LayoutTemplate size={14} className="text-indigo-400" />
+            <span>Mẫu Có Sẵn</span>
+          </button>
+        )}
+
+        {/* Auto Optimize Button */}
+        {onOpenAutoOptimize && (
+          <button
+            type="button"
+            onClick={onOpenAutoOptimize}
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold bg-gradient-to-r from-amber-500 via-pink-500 to-indigo-500 hover:opacity-95 text-white shadow-lg shadow-pink-500/20 transition transform active:scale-95 animate-pulse"
+            title="Tự động tối ưu bố cục, màu sắc, chữ và độ tương thích di động"
+          >
+            <Sparkles size={14} className="animate-spin" />
+            <span className="hidden sm:inline">Tự Động Tối Ưu</span>
+            <span className="sm:hidden">Tối Ưu</span>
+          </button>
+        )}
 
         {/* Save Button */}
         <button
