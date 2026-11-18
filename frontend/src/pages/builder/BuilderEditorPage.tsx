@@ -30,8 +30,6 @@ import BuilderCanvas from "../../components/builder/BuilderCanvas";
 import BuilderPropertiesPanel from "../../components/builder/BuilderPropertiesPanel";
 import BuilderPublishModal from "../../components/builder/BuilderPublishModal";
 import BuilderAutoOptimizeModal from "../../components/builder/BuilderAutoOptimizeModal";
-import BuilderTemplatePickerModal from "../../components/builder/BuilderTemplatePickerModal";
-import type { PrebuiltSiteTemplate } from "../../utils/builderTemplates";
 import PageLoader from "../../components/common/PageLoader";
 import SEO from "../../components/common/SEO";
 
@@ -60,7 +58,6 @@ export default function BuilderEditorPage() {
   const [isPreview, setIsPreview] = useState(false);
   const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
   const [isAutoOptimizeOpen, setIsAutoOptimizeOpen] = useState(false);
-  const [isTemplatePickerOpen, setIsTemplatePickerOpen] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'unsaved'>('saved');
   const [panelDock, setPanelDock] = useState<'right' | 'left'>('right');
   const [isPanelCollapsed, setIsPanelCollapsed] = useState(false);
@@ -423,16 +420,6 @@ export default function BuilderEditorPage() {
     setSaveStatus('unsaved');
   };
 
-  // Apply chosen full-page template
-  const handleApplyTemplate = (template: PrebuiltSiteTemplate) => {
-    const newElements = template.createElements();
-    setElements(newElements);
-    setSiteSettings(template.settings);
-    pushHistory(newElements);
-    setSaveStatus('unsaved');
-    setIsTemplatePickerOpen(false);
-  };
-
   if (loading) {
     return (
       <div className="h-screen w-full bg-slate-950 flex items-center justify-center">
@@ -481,7 +468,6 @@ export default function BuilderEditorPage() {
           isPreview={isPreview}
           onOpenPublishModal={() => setIsPublishModalOpen(true)}
           onOpenAutoOptimize={() => setIsAutoOptimizeOpen(true)}
-          onOpenTemplatePicker={() => setIsTemplatePickerOpen(true)}
           deviceMode={deviceMode}
           onChangeDeviceMode={setDeviceMode}
           onBack={() => navigate("/builder")}
@@ -571,15 +557,6 @@ export default function BuilderEditorPage() {
         elements={elements}
         siteSettings={siteSettings}
         onApplyOptimization={handleApplyOptimization}
-      />
-
-      {/* Switch / Apply Pre-built Template Modal */}
-      <BuilderTemplatePickerModal
-        isOpen={isTemplatePickerOpen}
-        onClose={() => setIsTemplatePickerOpen(false)}
-        titlePrompt="Áp Dụng Mẫu Giao Diện Mới"
-        confirmButtonText="Thay Thế Bằng Mẫu Này"
-        onSelectTemplate={handleApplyTemplate}
       />
     </div>
   );

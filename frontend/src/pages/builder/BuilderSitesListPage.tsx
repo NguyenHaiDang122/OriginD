@@ -12,8 +12,6 @@ import {
 import { useAuthStore } from "../../store/authStore";
 import GlassCard from "../../components/common/GlassCard";
 import SEO from "../../components/common/SEO";
-import BuilderTemplatePickerModal from "../../components/builder/BuilderTemplatePickerModal";
-import type { PrebuiltSiteTemplate } from "../../utils/builderTemplates";
 import {
   Plus,
   Edit,
@@ -25,6 +23,8 @@ import {
   Search,
   Check,
   Calendar,
+  X,
+  FileCode2,
 } from "lucide-react";
 
 export default function BuilderSitesListPage() {
@@ -38,6 +38,9 @@ export default function BuilderSitesListPage() {
 
   // Create modal state
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [newTitle, setNewTitle] = useState("");
+  const [starterMode, setStarterMode] = useState<'blank' | 'skeleton'>('blank');
+  const [creating, setCreating] = useState(false);
   const [copiedId, setCopiedId] = useState<number | null>(null);
 
   const loadSites = async () => {
@@ -61,20 +64,32 @@ export default function BuilderSitesListPage() {
     loadSites();
   }, [token]);
 
-  const handleSelectTemplate = async (template: PrebuiltSiteTemplate, customTitle: string) => {
+  const handleCreateSite = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newTitle.trim()) return;
+
+    setCreating(true);
     try {
       const newSite = await createBuilderSite(
         {
-          title: customTitle,
-          data: template.createElements(),
-          settings: template.settings,
+          title: newTitle.trim(),
+          data: starterMode === 'blank' ? [] : undefined, // empty array = blank canvas, undefined = default skeleton from backend
+          settings: {
+            metaTitle: newTitle.trim(),
+            metaDescription: "Website được thiết kế tự do bằng OriginD Website Builder",
+            fontFamily: "Inter, sans-serif",
+            backgroundColor: "#090d16",
+          },
         },
         token
       );
       setIsCreateOpen(false);
+      setNewTitle("");
       navigate(`/builder/${newSite.id}`);
     } catch (err: any) {
       alert("Tạo website thất bại: " + (err?.response?.data?.message || err.message));
+    } finally {
+      setCreating(false);
     }
   };
 
@@ -326,12 +341,143 @@ export default function BuilderSitesListPage() {
         </div>
       )}
 
-      {/* Create Website Modal with Template Picker */}
-      <BuilderTemplatePickerModal
-        isOpen={isCreateOpen}
-        onClose={() => setIsCreateOpen(false)}
-        onSelectTemplate={handleSelectTemplate}
-      />
+      {/* Create Website Modal: Blank Canvas by default */}
+      {isCreateOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md animate-fade-in">
+          <div className="w-full max-w-lg bg-slate-900 border border-indigo-500/30 rounded-3xl p-6 sm:p-7 shadow-[0_25px_60px_-15px_rgba(99,102,241,0.3)] relative text-white">
+            <div className="flex items-start justify-between pb-3 border-b border-white/10 mb-5">
+              <div>
+                <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-[11px] font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 mb-2">
+                  <Sparkles size={12} className="text-indigo-400" />
+                  <span>Website Builder Kéo Thả</span>
+                </div>
+                <h3 className="text-xl font-black text-white tracking-tight">
+                  Khởi Tạo Website Mới
+                </h3>
+                <p className="text-xs text-white/60 mt-0.5">
+                  Tự do thiết kế và sáng tạo giao diện theo phong cách riêng của bạn
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setIsCreateOpen(false)}
+                className="p-1.5 rounded-xl text-white/50 hover:text-white hover:bg-white/10 transition"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateSite} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-white/80 mb-1.5">
+                  Tên website
+                </label>
+                <input
+                  type="text"
+                  required
+                  autoFocus
+                  placeholder="VD: Landing Page Sản Phẩm, Portfolio Cá Nhân..."
+                  value={newTitle}
+                  onChange={(e) => setNewTitle(e.target.value)}
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-white/40 focus:outline-none focus:border-indigo-500 transition"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-white/80 mb-2">
+                  Chọn hình thức khởi tạo
+                </label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {/* Option 1: Blank Canvas (Default & Recommended) */}
+                  <div
+                    onClick={() => setStarterMode('blank')}
+                    className={`p-4 rounded-2xl border cursor-pointer transition relative flex flex-col justify-between ${
+                      starterMode === 'blank'
+                        ? 'border-indigo-400 bg-indigo-500/15 ring-2 ring-indigo-500/30 shadow-lg shadow-indigo-500/10'
+                        : 'border-white/10 bg-white/5 hover:bg-white/[0.08] text-white/70'
+                    }`}
+                  >
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="w-8 h-8 rounded-xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center">
+                          <Layers size={16} />
+                        </div>
+                        <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                          Khuyên dùng
+                        </span>
+                      </div>
+                      <div className="font-bold text-sm text-white mb-1">
+                        Trang Trắng Tinh
+                      </div>
+                      <p className="text-[11px] text-white/60 leading-relaxed">
+                        Bắt đầu từ con số 0. Tự do kéo thả, rê & ghim vị trí và thỏa sức sáng tạo bố cục.
+                      </p>
+                    </div>
+
+                    {starterMode === 'blank' && (
+                      <div className="mt-3 text-[11px] font-bold text-indigo-300 flex items-center gap-1">
+                        <Check size={12} className="stroke-[3]" /> Đang chọn
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Option 2: Starter Skeleton */}
+                  <div
+                    onClick={() => setStarterMode('skeleton')}
+                    className={`p-4 rounded-2xl border cursor-pointer transition relative flex flex-col justify-between ${
+                      starterMode === 'skeleton'
+                        ? 'border-indigo-400 bg-indigo-500/15 ring-2 ring-indigo-500/30 shadow-lg shadow-indigo-500/10'
+                        : 'border-white/10 bg-white/5 hover:bg-white/[0.08] text-white/70'
+                    }`}
+                  >
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="w-8 h-8 rounded-xl bg-white/10 text-white/70 flex items-center justify-center">
+                          <FileCode2 size={16} />
+                        </div>
+                        <span className="text-[10px] font-medium text-white/40">
+                          Mẫu sườn
+                        </span>
+                      </div>
+                      <div className="font-bold text-sm text-white mb-1">
+                        Khung Sườn Cơ Bản
+                      </div>
+                      <p className="text-[11px] text-white/60 leading-relaxed">
+                        Bao gồm sẵn khung sườn tối giản: Header, Banner, 1 Khối nội dung và Footer để tham khảo.
+                      </p>
+                    </div>
+
+                    {starterMode === 'skeleton' && (
+                      <div className="mt-3 text-[11px] font-bold text-indigo-300 flex items-center gap-1">
+                        <Check size={12} className="stroke-[3]" /> Đang chọn
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-4 border-t border-white/10 flex items-center justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setIsCreateOpen(false)}
+                  className="px-4 py-2 rounded-xl text-xs font-semibold text-white/70 hover:text-white hover:bg-white/5 transition"
+                >
+                  Hủy
+                </button>
+
+                <button
+                  type="submit"
+                  disabled={creating || !newTitle.trim()}
+                  className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white text-xs font-bold transition shadow-lg shadow-indigo-500/25 disabled:opacity-50"
+                >
+                  {creating ? 'Đang khởi tạo...' : 'Bắt Đầu Thiết Kế Ngay'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

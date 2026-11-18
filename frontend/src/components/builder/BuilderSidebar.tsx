@@ -5,7 +5,6 @@ import type {
 } from "../../types/builder";
 import {
   COMPONENT_DEFINITIONS,
-  PREBUILT_SECTION_TEMPLATES,
 } from "../../utils/builderDefaults";
 import {
   Layers,
@@ -23,7 +22,6 @@ import {
   Search,
   ListTree,
   Trash2,
-  LayoutTemplate,
   CreditCard,
   Star,
   HelpCircle,
@@ -66,13 +64,12 @@ const iconComponentMap: Record<string, any> = {
 
 export default function BuilderSidebar({
   onAddElement,
-  onInsertCustomElement,
   elements,
   selectedId,
   onSelectElement,
   onDeleteElement,
 }: BuilderSidebarProps) {
-  const [activeTab, setActiveTab] = useState<'components' | 'templates' | 'layers'>('components');
+  const [activeTab, setActiveTab] = useState<'components' | 'layers'>('components');
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
 
@@ -81,7 +78,7 @@ export default function BuilderSidebar({
     { id: 'layout', label: 'Bố cục' },
     { id: 'content', label: 'Nội dung' },
     { id: 'interactive', label: 'Tương tác' },
-    { id: 'prebuilt', label: 'Dựng sẵn' },
+    { id: 'prebuilt', label: 'Khối có sẵn' },
   ];
 
   const filteredComponents = COMPONENT_DEFINITIONS.filter((item) => {
@@ -154,45 +151,34 @@ export default function BuilderSidebar({
   return (
     <aside className="w-72 bg-slate-900/90 border-r border-white/10 flex flex-col h-full shrink-0 select-none z-20 backdrop-blur-md">
       {/* Sidebar Tabs */}
-      <div className="flex items-center border-b border-white/10 px-2 pt-2 text-xs">
+      <div className="flex items-center border-b border-white/10 px-3 pt-3">
         <button
           type="button"
           onClick={() => setActiveTab('components')}
-          className={`flex-1 pb-2 font-bold transition flex items-center justify-center gap-1 border-b-2 ${
+          className={`flex-1 pb-2.5 text-xs font-bold transition flex items-center justify-center gap-1.5 border-b-2 ${
             activeTab === 'components'
               ? 'text-indigo-400 border-indigo-500'
               : 'text-white/50 border-transparent hover:text-white/80'
           }`}
         >
-          <Box size={13} />
-          <span className="text-[11px]">Thành phần</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setActiveTab('templates')}
-          className={`flex-1 pb-2 font-bold transition flex items-center justify-center gap-1 border-b-2 ${
-            activeTab === 'templates'
-              ? 'text-indigo-400 border-indigo-500'
-              : 'text-white/50 border-transparent hover:text-white/80'
-          }`}
-        >
-          <LayoutTemplate size={13} />
-          <span className="text-[11px]">Mẫu Khối</span>
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+          <Box size={14} />
+          <span>Thành phần</span>
         </button>
 
         <button
           type="button"
           onClick={() => setActiveTab('layers')}
-          className={`flex-1 pb-2 font-bold transition flex items-center justify-center gap-1 border-b-2 ${
+          className={`flex-1 pb-2.5 text-xs font-bold transition flex items-center justify-center gap-1.5 border-b-2 ${
             activeTab === 'layers'
               ? 'text-indigo-400 border-indigo-500'
               : 'text-white/50 border-transparent hover:text-white/80'
           }`}
         >
-          <ListTree size={13} />
-          <span className="text-[11px]">Lớp ({elements.length})</span>
+          <ListTree size={14} />
+          <span>Cây phân cấp</span>
+          <span className="px-1.5 py-0.2 rounded-full bg-white/10 text-[10px] text-white/70">
+            {elements.length}
+          </span>
         </button>
       </div>
 
@@ -262,49 +248,6 @@ export default function BuilderSidebar({
                 );
               })}
             </div>
-          </div>
-        </div>
-      ) : activeTab === 'templates' ? (
-        <div className="flex-1 overflow-y-auto p-3 space-y-3 custom-scrollbar">
-          <div className="text-[11px] font-semibold text-white/40 uppercase tracking-wider px-1">
-            Bấm để thêm khối chuẩn đẹp vào trang
-          </div>
-
-          <div className="space-y-2.5">
-            {PREBUILT_SECTION_TEMPLATES.map((tpl) => {
-              const IconComp = iconComponentMap[tpl.icon] || LayoutTemplate;
-              return (
-                <div
-                  key={tpl.id}
-                  onClick={() => {
-                    const newElem = tpl.create();
-                    if (onInsertCustomElement) {
-                      onInsertCustomElement(newElem);
-                    } else {
-                      onAddElement(newElem.type);
-                    }
-                  }}
-                  className="p-3.5 rounded-2xl border border-white/10 bg-white/5 hover:bg-white/[0.08] hover:border-indigo-500/50 transition cursor-pointer group"
-                >
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="w-8 h-8 rounded-xl bg-indigo-500/15 border border-indigo-500/30 text-indigo-400 flex items-center justify-center group-hover:bg-indigo-500 group-hover:text-white transition">
-                      <IconComp size={16} />
-                    </div>
-                    <div className="flex-1 truncate">
-                      <div className="text-[10px] font-bold text-indigo-400 uppercase tracking-wider">
-                        {tpl.category}
-                      </div>
-                      <div className="text-xs font-bold text-white group-hover:text-indigo-300 transition truncate">
-                        {tpl.name}
-                      </div>
-                    </div>
-                  </div>
-                  <p className="text-[11px] text-white/50 leading-relaxed line-clamp-2">
-                    {tpl.description}
-                  </p>
-                </div>
-              );
-            })}
           </div>
         </div>
       ) : (

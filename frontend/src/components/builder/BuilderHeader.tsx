@@ -15,7 +15,6 @@ import {
   Check,
   Loader2,
   Sparkles,
-  LayoutTemplate,
 } from "lucide-react";
 
 interface BuilderHeaderProps {
@@ -33,7 +32,6 @@ interface BuilderHeaderProps {
   isPreview: boolean;
   onOpenPublishModal: () => void;
   onOpenAutoOptimize?: () => void;
-  onOpenTemplatePicker?: () => void;
   deviceMode: DeviceMode;
   onChangeDeviceMode: (mode: DeviceMode) => void;
   onBack: () => void;
@@ -54,7 +52,6 @@ export default function BuilderHeader({
   isPreview,
   onOpenPublishModal,
   onOpenAutoOptimize,
-  onOpenTemplatePicker,
   deviceMode,
   onChangeDeviceMode,
   onBack,
@@ -221,19 +218,6 @@ export default function BuilderHeader({
             </>
           )}
         </div>
-
-        {/* Templates Picker Button */}
-        {onOpenTemplatePicker && (
-          <button
-            type="button"
-            onClick={onOpenTemplatePicker}
-            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-white/10 hover:bg-white/15 text-white transition border border-white/10"
-            title="Chọn mẫu giao diện dựng sẵn có sẵn"
-          >
-            <LayoutTemplate size={14} className="text-indigo-400" />
-            <span>Mẫu Có Sẵn</span>
-          </button>
-        )}
 
         {/* Auto Optimize Button */}
         {onOpenAutoOptimize && (
